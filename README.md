@@ -1,0 +1,192 @@
+<div align="center">
+  <img src="/client/public/assets/logo-light.svg" alt="epress logo" width="200">
+  <h1><strong>epress: Decentralized Web3 Blog and Social Network</strong></h1>
+  <p align="center">A Web3-native personal blogging platform designed to build a truly decentralized content and social network</p>
+  <p>
+    <a href="https://github.com/epressworld/epress/actions/workflows/main.yml"><img src="https://github.com/epressworld/epress/actions/workflows/main.yml/badge.svg" alt="GitHub Actions Main"></a>
+    <a href="https://codecov.io/gh/epressworld/epress"><img src="https://codecov.io/gh/epressworld/epress/graph/badge.svg" /></a>
+    <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+    <a href="https://t.me/+mZMgNSIVy1MwMmVl"><img src="https://img.shields.io/badge/Telegram-Join%20Community-2CA5E0?logo=telegram&logoColor=white" alt="Telegram Community"></a>
+  </p>
+  <p align="center">
+    <a href="/docs/zh/README.md">中文</a> •
+    <a href="/docs/en/WHITEPAPER.md">White Paper</a> •
+    <a href="/docs/en/INSTALLATION.md">Installation</a>
+  </p>
+</div>
+
+---
+
+### What is epress?
+
+`epress`, derived from **E**thereum + **Press**, is an open-source Web3 personal blogging and social networking platform built on the Ethereum ecosystem. It aims to create a truly decentralized content and social network.
+
+It operates in two modes:
+* **Standalone Mode**: A fully-featured personal blog (similar to WordPress), allowing you to write, publish, and manage content on your own server.
+* **Networked Mode**: When connected to other nodes, it becomes part of the *epress world* decentralized social network. You can follow other nodes, syncing their content to your node, and choose whether to allow others to follow you, sharing your updates with them.
+
+Switching between these modes is seamless, depending on whether you choose to connect with others.
+
+## Why epress?
+
+With numerous social platforms available, including decentralized federated networks like Mastodon based on ActivityPub, why create epress? The answer stems from a personal experience and critical reflections.
+
+### A Decade of Memories Erased Overnight
+
+In 2011, I created a Sina Weibo account during my teenage years, documenting my life, building connections, and preserving countless memories over a decade. Recently, that account was banned without reason, warning, or appeal process. My attempts to recover it were met with silence.
+
+That moment revealed how fragile our "digital assets" are under platform rules. The content we pour our hearts into and the connections we build are never truly ours—platforms can take them away, reducing everything to zero.
+
+### Why Not Stick with X (Formerly Twitter)?
+
+X remains a top social network, but it’s fundamentally no different from Sina Weibo, carrying the same risks. Additionally, I recently wanted an AI to analyze my timeline for fun, only to discover that accessing my own timeline programmatically requires an expensive monthly API subscription. Without it, there’s no reliable way to access even my own posts. X offers no alternatives like RSS feeds, which I believe should be a basic feature for all users. This led to another realization: creators share content altruistically, yet platforms monetize it by locking access behind paywalls. Is this fair?
+
+### Is Federation the Final Answer?
+
+I explored federated social networks like Mastodon, built on ActivityPub. They’re a step forward, allowing migration between instances. But they don’t solve the core issue. We merely shift from trusting a "big center" (like X) to a "smaller center" (the instance admin). If that instance shuts down or abuses power, your content—your data—often remains on the old server, unportable. While you can migrate your identity and followers, your posts don’t always follow. True data sovereignty is still one step away.
+
+**epress was born to address these problems.**
+
+It pursues radical decentralization. Your identity is your Ethereum address, independent of any platform. Your data lives on your node, under your absolute control. Connections are free, and your content is yours—a social platform you can use from birth to old age.
+
+Before epress, projects like Mastodon, Nostr, and Bluesky tackled centralized platform issues to varying degrees. I don’t claim epress is the ultimate decentralized social network, but it fulfills my vision for one and may even unlock [possibilities beyond imagination](./docs/en/WHITEPAPER.md). This is the epress you see today.
+
+If you share this vision, join us in building a truly decentralized social network.
+
+### ✨ Key Features
+
+#### 📝 Web3 Personal Publishing Platform (Blog)
+
+- **Web3-Native Identity**: Use your Ethereum address for identity, managed via Sign-In With Ethereum (SIWE).
+- **Markdown Authoring**: Full Markdown support for distraction-free content creation.
+- **Multimedia Publishing**: Upload images, videos, PDFs, and more, each with independent descriptions.
+- **Personal Branding**: Customize your node’s title, bio, and avatar to reflect your unique identity.
+- **Comment System**: Supports dual authentication via email or wallet signatures.
+- **RSS Feed**: Share your content as an RSS feed, allowing anyone to subscribe via their preferred RSS reader.
+- **Node Control**: Full control over your node, including follow permissions and comment settings.
+
+#### 🌐 Fully Decentralized Social Network
+
+- **Node Connections**: Follow or be followed by other epress nodes to create social links.
+- **Signed Content**: Digitally sign your posts, which appear in your followers’ timelines.
+- **Content Hashing**: Every piece of content has a unique, network-wide Content Hash identifier.
+- **Personal Timeline**: Log in with your Ethereum account to view updates from all nodes you follow.
+- **Timeline RSS**: Use an authenticated token to access your social network timeline via RSS, enabling AI or other apps to fetch your timeline freely.
+
+### 🛠️ Tech Stack
+
+* **Backend**: Swiftify (built on Fastify and Objection.js)
+* **Frontend**: Next.js (React), Chakra UI
+* **Database**: SQLite (default)
+* **API**: GraphQL, RESTful (EWP)
+* **Testing**: Ava.js
+
+### 🚀 Get Started
+
+Run your own `epress` node in two ways:
+
+#### Option 1: Docker (Recommended)
+
+The fastest and easiest deployment method, using the official pre-built image `ghcr.io/epressworld/epress`.
+
+1. **Create a Data Volume**:
+    ```bash
+    docker volume create epress-data
+    ```
+
+2. **Run the Setup Wizard**:
+    ```bash
+    docker run -it --rm -v epress-data:/app/data ghcr.io/epressworld/epress install
+    ```
+    Follow the prompts to configure your node.
+
+3. **Start Your Node**:
+    ```bash
+    docker run -d -p 8543:8543 -p 8544:8544 -v epress-data:/app/data --name my-epress-node ghcr.io/epressworld/epress
+    ```
+
+For advanced Docker options (e.g., separating frontend/backend or custom builds), see [**`docs/en/INSTALLATION.md`**](./docs/en/INSTALLATION.md).
+
+#### Option 2: Run from Source
+
+Ideal for developers who want to customize or contribute.
+
+1. **Clone and Install Dependencies**:
+    ```bash
+    git clone https://github.com/epressworld/epress.git
+    cd epress
+    npm install
+    ```
+
+2. **Run the Setup Wizard**:
+    ```bash
+    node commands/install.mjs
+    ```
+    Follow the prompts to configure your node.
+
+3. **Build the Project**:
+    ```bash
+    npm run build
+    ```
+
+4. **Start Your Node**:
+    ```bash
+    npm run start
+    ```
+
+For more details, see [**`docs/en/INSTALLATION.md`**](./docs/en/INSTALLATION.md).
+
+### 👨‍💻 Developer Guide
+
+To contribute to epress or build on top of it:
+
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/epressworld/epress.git
+   cd epress
+   npm install
+   ```
+
+2. **Set Up Environment**:
+   ```bash
+   node commands/install.mjs
+   ```
+   Run this command to configure your node interactively, which also initializes the database. You can then further customize settings by editing the `.env` file. See `env.example` for all options.
+
+3. **Start Development Server**:
+   ```bash
+   npm run dev
+   ```
+   This launches the frontend and backend with hot reloading for real-time debugging.
+
+4. **Run Tests**:
+   ```bash
+   npm test
+   ```
+
+### 📁 Project Structure
+
+```
+.
+├── client/         # Frontend (Next.js)
+├── commands/       # Core CLI tools (install, migrate, start)
+├── docs/           # Design and specification docs
+├── server/         # Backend (Swiftify, Fastify)
+│   ├── graphql/    # GraphQL API implementation
+│   ├── models/     # Database models (Objection.js)
+│   └── routes/     # EWP RESTful API implementation
+└── test/           # Test cases (Ava.js)
+```
+
+### 🤝 Contributing
+
+We welcome contributions of all kinds! Please read our [**`CONTRIBUTING.md`**](./CONTRIBUTING.md) to learn how to get involved.
+
+## 👥 Community & Ecosystem
+
+*   **[Awesome Nodes](https://github.com/epressworld/awesome-nodes)**: A curated list of nodes in the `epress` network. The goal of this list is to provide a community-maintained resource for discovering reliable and interesting nodes to connect with.
+*   **[Telegram Group](https://t.me/+mZMgNSIVy1MwMmVl)**: Join our community for real-time discussions and support.
+
+### 📄 License
+
+This project is licensed under the [MIT License](./LICENSE).

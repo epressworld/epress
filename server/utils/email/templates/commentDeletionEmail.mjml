@@ -1,0 +1,66 @@
+<mjml>
+  <mj-head>
+    <mj-title>Confirm Comment Deletion on epress</mj-title>
+    <mj-font name="Inter" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" />
+    <mj-attributes>
+      <mj-text font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" color="#1a1a1a" />
+      <mj-button background-color="#dc2626" color="#ffffff" border-radius="8px" font-size="16px" font-weight="500" padding="16px 32px" />
+      <mj-section background-color="#ffffff" padding="0" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f8f9fa">
+    <!-- Header -->
+    <mj-section background-color="#000000" padding="32px 20px">
+      <mj-column>
+        <mj-text align="center" color="#ffffff" font-size="24px" font-weight="700" padding="0">
+          epress
+        </mj-text>
+        <mj-text align="center" color="#a0a0a0" font-size="14px" padding="8px 0 0 0">
+          Decentralized Publishing Platform
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Main Content -->
+    <mj-section background-color="#ffffff" padding="40px 20px">
+      <mj-column>
+        <mj-text font-size="20px" font-weight="600" color="#1a1a1a" padding="0 0 16px 0">
+          Confirm Comment Deletion
+        </mj-text>
+        
+        <mj-text font-size="16px" line-height="24px" color="#4a4a4a" padding="0 0 24px 0">
+          You have requested to delete your comment on epress. Please click the button below to confirm the deletion:
+        </mj-text>
+
+        <mj-button href="<%= deletionLink %>" align="center" background-color="#dc2626" color="#ffffff" border-radius="8px" font-size="16px" font-weight="500" padding="16px 32px">
+          🗑️ Confirm Deletion
+        </mj-button>
+
+        <mj-text font-size="14px" line-height="20px" color="#6b7280" padding="24px 0 0 0">
+          <strong>Important Notes:</strong>
+        </mj-text>
+        <mj-text font-size="14px" line-height="20px" color="#6b7280" padding="4px 0 0 0">
+          • This link will expire in 24 hours
+        </mj-text>
+        <mj-text font-size="14px" line-height="20px" color="#6b7280" padding="4px 0 0 0">
+          • This action cannot be undone, please proceed with caution
+        </mj-text>
+        <mj-text font-size="14px" line-height="20px" color="#6b7280" padding="4px 0 0 0">
+          • If you did not request to delete this comment, please ignore this email
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Footer -->
+    <mj-section background-color="#f8f9fa" padding="32px 20px">
+      <mj-column>
+        <mj-text align="center" font-size="14px" color="#6b7280" padding="0 0 8px 0">
+          The epress Team
+        </mj-text>
+        <mj-text align="center" font-size="12px" color="#9ca3af" padding="0">
+          This email was sent automatically, please do not reply
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

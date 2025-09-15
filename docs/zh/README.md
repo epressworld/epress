@@ -1,0 +1,201 @@
+<div align="center">
+  <img src="/client/public/assets/logo-light.svg" alt="epress logo" width="200">
+  <h1><strong>epress: 去中心化Web3博客&社交网络</strong></h1>
+  <p text-align="center">一个Web3时代原生的个人博客软件，用以构建真正去中心化的内容和社交网络</p>
+  <p>
+    <a href="https://github.com/epressworld/epress/actions/workflows/main.yml"><img src="https://github.com/epressworld/epress/actions/workflows/main.yml/badge.svg" alt="GitHub Actions Main"></a>
+    <a href="https://codecov.io/gh/epressworld/epress"><img src="https://codecov.io/gh/epressworld/epress/graph/badge.svg" /></a>
+    <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+    <a href="https://t.me/+mZMgNSIVy1MwMmVl"><img src="https://img.shields.io/badge/Telegram-Join%20Community-2CA5E0?logo=telegram&logoColor=white" alt="Telegram Community"></a>
+  </p>
+  <p align="center">
+    <a href="/README.md">English</a> •
+    <a href="/docs/zh/WHITEPAPER.md">White Paper</a> •
+    <a href="/docs/zh/INSTALLATION.md">Installation</a>
+  </p>
+</div>
+
+---
+
+### epress 是什么？
+
+`epress` 的名字源于 **E**thereum + **Press**，这是一款开源的基于以太坊生态的Web3个人博客和社交软件，旨在构建一个真正完全去中心化的内容和社交网络。
+
+它有两种存在形态：
+*   **当它独立运行时**，它是一个功能完善的个人博客（就像 WordPress），您可以在自己的服务器上写作、发布、管理内容。
+*   **当它与其他节点连接时**，它就成了 epress world 这个去中心化社交网络上众多节点的一员。您可以关注其他节点，他们的内容会同步到您的节点；同样，您也可以决定是否允许别人关注，如果别人关注了你，你的更新也会被你的关注者收到。
+
+这两种形态无缝切换，完全取决于您是否选择与他人建立连接。
+
+## 为什么会有 epress？
+
+市面上已经有很多社交产品，甚至也有了像 Mastodon 这样基于 ActivityPub 的去中心化联邦网络，为什么还要创造 epress？
+
+这一切源于作者的一段亲身经历和一些不解的思考。
+
+### 瞬间归零的十年记忆
+
+2011年，我在新浪微博注册了一个账号，那正值我的青春期。十多年来，我在上面记录生活、建立社交、沉淀了无数珍贵的回忆。然而就在不久前，这个账号被无故封禁。没有理由，没有警告，没有解封的时间表。我多次申诉，得到的只有沉默。
+
+那一刻我意识到，我们所谓的"数字资产"，在平台的规则面前是如此不堪一击。我们耗费心血创造的内容、建立的连接，其所有权从未真正属于我们。平台可以随时将它收回，让我们的一切归零。
+
+
+### 为什么不再使用X(原Twitter)
+
+不可否认 X 依然是当下社交网络的不二之选，但本质上其与新浪微博没有本质区别，随时面临同样的风险，另外还有另外一个原因，最近我想让AI帮我阅读我的时间线然后做一些有趣的事，但我发现仅仅是读取我自己的时间线，就需要每月支付不菲的API订阅费用，如果不支付这笔费用，几乎没有办法可靠稳定地读取我时间线上的内容（哪怕仅仅是我自己发布的内容），X也不提供除付费API以外的任何访问方式，即使我认为平台应该为每个在其平台上的用户提供基本的RSS输出功能。这就引申出了我的另一个思考，创作者们无偿创作的内容，其本意是无私分享，但平台却以此为壁垒向用户收取费用，这是否合理？
+
+### 联邦制，真的是最终答案吗？
+
+我也曾尝试过基于 ActivityPub 的联邦式社交网络。它们确实比传统中心化平台进了一步，允许用户在不同"联邦"（实例/服务器）之间迁移。
+
+但这并没有从根本上解决问题。我们只是从信任一个"大中心"（如 Twitter），变成了信任一个"小中心"（联邦实例的管理员）。如果这个小中心停止服务或滥用权力，我们虽然理论上可以将身份和关注列表迁移到另一个实例，但我们过往发布的所有内容（我们的数据本身）往往被遗留在旧的服务器上，无法随身带走。我们依然需要依赖和信任一个'小中心'，在不同的小中心间做出选择和迁移，这距离真正的数据主权还有一步之遥。
+
+**epress 的诞生，就是为了回应这些问题。**
+
+它追求的是一种更彻底的去中心化。在这里，**您的身份就是您的以太坊地址**，它不属于任何平台。**您的数据存储在您自己的节点上**，您拥有绝对的主权。连接是自由的，内容是属于您的，这是一个你真正可以从出生一直使用到老去的社交产品。
+
+在epress之前，已经有很多去中心化社交网络方面的探索，包括此前提到的Mastodon，还有Nostr、Bluesky等优秀项目，它们都在不同程度上尝试解决中心化平台的问题。我不知道epress的方式是否是去中心化社交网络的最终形态，但我清楚这个模式下可以真正实现我对去中心化社交网络的所有想象，甚至还可能带来一些[超越想象的东西](./docs/zh/WHITEPAPER.md)，因此就有了你今天看到的epress。
+
+如果你也认同这样的想法，欢迎加入我们一起构建一个真正的去中心化社交网络。
+
+### ✨ 核心特性
+
+#### 📝 Web3个人发布平台（个人博客）
+
+- **Web3 原生身份**: 使用以太坊地址作为身份，通过钱包签名（SIWE）登录管理
+- **Markdown 写作**: 全功能 Markdown 语法支持，专注内容创作
+- **多媒体发布**: 支持图片、视频、PDF 等任意文件类型，每个文件可附独立描述
+- **个人品牌定制**: 自定义节点标题、简介、头像，打造独特身份
+- **评论互动**: 支持邮件验证和钱包签名双重认证的评论系统
+- **RSS Feed**: 将你发布的内容以RSS输出，现在任何人都可以通过他们喜欢的RSS阅读工具订阅你的更新 
+- **节点设置**: 完全的节点管控权，包括关注权限、评论开关等
+
+#### 🌐 完全去中心化的社交网络
+
+- **节点连接**: 可以关注或被其他epress节点关注，创建社交连接
+- **签名发布**: 对内容进行数字签名，签名后你的关注者将在他们的时间线看到你发布的内容
+- **内容哈希**: 每份内容拥有全网唯一的 Content Hash 标识
+- **个人时间线**: 就像所有社交网络一样，使用你的以太坊账号登录，查看所有你关注节点的更新
+- **时间线RSS**: 使用授权你的Token可以用RSS形式访问你的社交网络时间线，现在你可以自由地让AI或者其他应用程序获取自己的时间线。
+
+### 🛠️ 技术栈
+
+*   **后端**: Swiftify (基于 Fastify, Objection.js)
+*   **前端**: Next.js (React), Chakra UI
+*   **数据库**: SQLite (默认)
+*   **API**: GraphQL, RESTful (EWP)
+*   **测试**: Ava.js
+
+### 🚀 快速开始
+
+我们提供两种方式来运行您自己的 `epress` 节点。
+
+#### 方式一: 使用 Docker (推荐)
+
+这是最简单、最快捷的部署方式，使用官方预构建的镜像 `ghcr.io/epressworld/epress`。
+
+1. **创建数据卷**:
+    ```bash
+    docker volume create epress-data
+    ```
+
+2. **首次运行安装向导**:
+    ```bash
+    docker run -it --rm -v epress-data:/app/data ghcr.io/epressworld/epress install
+    ```
+    根据向导提示完成配置。
+
+3. **启动节点**:
+    ```bash
+    docker run -d -p 8543:8543 -p 8544:8544 -v epress-data:/app/data --name my-epress-node ghcr.io/epressworld/epress
+    ```
+
+更多 Docker 安装选项（例如前后端分离或自定义构建），请查阅 [**`docs/en/INSTALLATION.md`**](./docs/zh/INSTALLATION.md)。
+
+#### 方式二: 从源码运行
+
+适合希望进行二次开发的开发者。
+
+1. **克隆并安装依赖**:
+    ```bash
+    git clone https://github.com/epressworld/epress.git
+    cd epress
+    npm install
+    ```
+
+2. **首次运行安装向导**:
+    ```bash
+    node commands/install.mjs
+    ```
+    根据向导提示完成配置。
+
+3. **构建项目**:
+    ```bash
+    npm run build
+    ```
+
+4. **启动节点**:
+    ```bash
+    npm run start
+    ```
+
+更多详情请查阅 [**`docs/INSTALLATION.md`**](./docs/zh/INSTALLATION.md)。
+
+### 👨‍💻 开发者指南
+
+如果您想参与 epress 的开发或基于 epress 进行二次开发：
+
+1. **克隆代码库**:
+   ```bash
+   git clone https://github.com/epressworld/epress.git
+   cd epress
+   npm install
+   ```
+
+2. **配置开发环境**:
+   ```bash
+   node commands/install.mjs
+   ```
+   运行此命令以交互方式配置您的节点，这也会初始化数据库。之后，您可以通过编辑 `.env` 文件进一步自定义设置。完整的配置选项可在 `env.example` 文件中找到。
+
+3. **启动开发环境**:
+   ```bash
+   npm run dev
+   ```
+   这会启动前后端的开发服务器，支持热重载和实时调试。
+
+4. **运行测试**:
+   ```bash
+   npm test
+   ```
+
+### 📁 项目结构
+
+```
+.
+├── client/         # 前端 (Next.js)
+├── commands/       # 核心命令行工具 (install, migrate, start)
+├── docs/           # 项目设计与规范文档
+├── server/         # 后端 (Swiftify, Fastify)
+│   ├── graphql/    # GraphQL API 实现
+│   ├── models/     # 数据库模型 (Objection.js)
+│   └── routes/     # EWP RESTful API 实现
+└── test/           # 测试用例 (Ava.js)
+```
+
+### 🤝 贡献
+
+我们欢迎任何形式的贡献！请阅读我们的 [**`CONTRIBUTING.md`**](./CONTRIBUTING.md) 文件来了解如何参与项目开发。
+
+## 👥 社区与生态
+
+我们有一个活跃的社区，欢迎您加入我们或发现社区成员们构建的有趣内容。
+
+*   **Awesome Nodes**: 一个由社区维护的 `epress` 网络节点列表。您可以在这里发现可靠、有趣的节点并与之连接。
+    *   仓库地址: [https://github.com/epressworld/awesome-nodes](https://github.com/epressworld/awesome-nodes)
+*   **Telegram**: 加入我们的 Telegram 群组，参与实时讨论。
+    *   入群链接: [https://t.me/+mZMgNSIVy1MwMmVl](https://t.me/+mZMgNSIVy1MwMmVl)
+
+### 📄 许可证
+
+本项目基于 [MIT License](./LICENSE) 开源。

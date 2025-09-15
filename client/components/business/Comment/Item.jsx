@@ -1,0 +1,372 @@
+"use client"
+
+import { useMutation } from "@apollo/client/react"
+import {
+  Avatar,
+  Badge,
+  Box,
+  Button,
+  Field,
+  HStack,
+  IconButton,
+  Input,
+  Link,
+  Text,
+  VStack,
+} from "@chakra-ui/react"
+import { useState } from "react"
+import { useForm } from "react-hook-form"
+import { FiTrash2 } from "react-icons/fi"
+import { AUTH_STATUS, useAuth } from "../../../contexts/AuthContext"
+import { useLanguage } from "../../../contexts/LanguageContext"
+import { usePage } from "../../../contexts/PageContext"
+import { DESTROY_COMMENT } from "../../../graphql/mutations"
+import { useTranslation } from "../../../hooks/useTranslation"
+import { useWallet } from "../../../hooks/useWallet"
+import { formatTime } from "../../../utils/dateFormat"
+import { deleteCommentTypedData } from "../../../utils/eip712"
+import { ConfirmDialog, InfoDialog } from "../../ui"
+import { toaster } from "../../ui/toaster"
+
+export const CommentItem = ({ comment, onCommentDeleted }) => {
+  const { authStatus, isNodeOwner } = useAuth()
+  const { profile } = usePage()
+  const { signEIP712Data } = useWallet()
+  const [destroyComment] = useMutation(DESTROY_COMMENT)
+  const { currentLanguage } = useLanguage()
+  const { status, dialog, common, comment: commentT } = useTranslation()
+
+  // 对话框状态
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  // 邮箱删除表单
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      email: "",
+    },
+  })
+
+  // 处理删除点击
+  const handleDeleteClick = () => {
+    // 已登录的节点所有者直接删除，不需要验证
+    if (authStatus === AUTH_STATUS.AUTHENTICATED && isNodeOwner) {
+      setDeleteDialogOpen(true)
+    } else {
+      // 普通用户需要通过相应的验证方式
+      if (comment.auth_type === "EMAIL") {
+        setEmailDialogOpen(true)
+      } else if (comment.auth_type === "ETHEREUM") {
+        setDeleteDialogOpen(true)
+      }
+    }
+  }
+
+  // 确认删除（以太坊认证）
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true)
+    try {
+      // 已登录的节点所有者可以直接删除，不需要签名
+      if (authStatus === AUTH_STATUS.AUTHENTICATED && isNodeOwner) {
+        await destroyComment({
+          variables: {
+            id: comment.id,
+          },
+        })
+      } else {
+        // 普通用户需要通过签名验证
+        if (!profile?.address) {
+          toaster.create({
+            description: common.nodeAddressNotAvailable(),
+            type: "error",
+          })
+          return
+        }
+
+        // 使用profile查询获取的节点地址
+        const nodeAddress = profile.address
+
+        // 创建EIP-712类型化数据
+        const typedData = deleteCommentTypedData(
+          nodeAddress, // 节点地址
+          parseInt(comment.id, 10), // 评论ID
+          comment.commenter_address, // 评论者地址
+        )
+
+        // 使用钱包签名
+        const signature = await signEIP712Data(typedData)
+
+        await destroyComment({
+          variables: {
+            id: comment.id,
+            signature: signature,
+          },
+        })
+      }
+
+      toaster.create({
+        description: commentT.commentDeleteSuccess(),
+        type: "success",
+      })
+
+      setDeleteDialogOpen(false)
+      if (onCommentDeleted) {
+        onCommentDeleted()
+      }
+    } catch (error) {
+      console.error("删除评论失败:", error)
+      toaster.create({
+        description:
+          error.message || `${common.deleteFailed()}, ${common.pleaseRetry()}`,
+        type: "error",
+      })
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  // 确认删除（邮箱认证）
+  const handleEmailDelete = async (data) => {
+    setIsDeleting(true)
+    try {
+      // 已登录的节点所有者可以直接删除，不需要邮箱验证
+      if (authStatus === AUTH_STATUS.AUTHENTICATED && isNodeOwner) {
+        await destroyComment({
+          variables: {
+            id: comment.id,
+          },
+        })
+
+        toaster.create({
+          description: commentT.commentDeleteSuccess(),
+          type: "success",
+        })
+      } else {
+        // 普通用户需要通过邮箱验证
+        await destroyComment({
+          variables: {
+            id: comment.id,
+            email: data.email,
+          },
+        })
+
+        toaster.create({
+          description: common.deleteRequestSent(),
+          type: "success",
+        })
+      }
+
+      setEmailDialogOpen(false)
+      reset()
+
+      if (onCommentDeleted) {
+        onCommentDeleted()
+      }
+    } catch (error) {
+      console.error("删除评论失败:", error)
+      toaster.create({
+        description:
+          error.message || `${common.deleteFailed()}, ${common.pleaseRetry()}`,
+        type: "error",
+      })
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  // 渲染用户信息
+  const renderUserInfo = () => {
+    if (comment.auth_type === "EMAIL") {
+      return (
+        <HStack gap={2}>
+          <Avatar.Root size="sm">
+            <Avatar.Fallback name={comment.commenter_username} />
+          </Avatar.Root>
+          <Text fontWeight="medium">{comment.commenter_username}</Text>
+        </HStack>
+      )
+    } else if (comment.auth_type === "ETHEREUM") {
+      // 检查是否是已知节点（通过commenter字段判断）
+      const isKnownNode = comment.commenter?.url
+
+      if (isKnownNode) {
+        return (
+          <HStack gap={2}>
+            <Avatar.Root size="sm">
+              <Avatar.Image
+                src={
+                  comment.commenter.url
+                    ? `${comment.commenter.url}/ewp/avatar`
+                    : undefined
+                }
+                alt={comment.commenter.title || comment.commenter_username}
+              />
+              <Avatar.Fallback
+                name={comment.commenter_username || comment.commenter.title}
+              />
+            </Avatar.Root>
+            <VStack gap={0} align="start">
+              <Link
+                href={comment.commenter.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                color="orange.500"
+                fontWeight="medium"
+                _hover={{ color: "orange.600" }}
+              >
+                {comment.commenter_username || comment.commenter.title}
+              </Link>
+              <Text fontSize="xs" color="gray.500" fontFamily="mono">
+                {comment.commenter_address}
+              </Text>
+            </VStack>
+          </HStack>
+        )
+      } else {
+        return (
+          <HStack gap={2}>
+            <Avatar.Root size="sm">
+              <Avatar.Fallback name={comment.commenter_username} />
+            </Avatar.Root>
+            <VStack gap={0} align="start">
+              <Text fontWeight="medium">{comment.commenter_username}</Text>
+              <Text fontSize="sm" color="gray.500" fontFamily="mono">
+                {comment.commenter_address}
+              </Text>
+            </VStack>
+          </HStack>
+        )
+      }
+    }
+    return null
+  }
+
+  return (
+    <>
+      <Box
+        border="1px"
+        borderColor="gray.100"
+        borderRadius="md"
+        className="group"
+      >
+        <VStack align="stretch">
+          {/* 用户信息和删除按钮 */}
+          <HStack justify="space-between" align="center">
+            <HStack gap={3}>{renderUserInfo()}</HStack>
+
+            {/* 删除按钮 - 悬停时显示 */}
+            <Box
+              opacity={0}
+              _groupHover={{ opacity: 1 }}
+              transition="opacity 0.2s ease-in-out"
+            >
+              <IconButton
+                size="sm"
+                variant="ghost"
+                colorPalette="red"
+                onClick={handleDeleteClick}
+              >
+                <FiTrash2 />
+              </IconButton>
+            </Box>
+          </HStack>
+
+          {/* 评论内容 */}
+          <Text>{comment.body}</Text>
+
+          {/* 时间和状态 */}
+          <HStack gap={2} align="center" justify="space-between">
+            <Text color="gray.500" fontSize="sm">
+              {formatTime(comment.created_at, currentLanguage)}
+            </Text>
+
+            {/* 评论状态（仅登录用户可见） */}
+            {authStatus === AUTH_STATUS.AUTHENTICATED && (
+              <Badge
+                size="sm"
+                colorPalette={
+                  comment.status === "CONFIRMED" ? "green" : "orange"
+                }
+                variant="subtle"
+              >
+                {comment.status === "CONFIRMED"
+                  ? status.confirmed()
+                  : status.pending()}
+              </Badge>
+            )}
+          </HStack>
+        </VStack>
+      </Box>
+
+      {/* 删除确认对话框（以太坊认证） */}
+      <ConfirmDialog
+        isOpen={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title={dialog.confirmDelete()}
+        message={dialog.deleteMessage()}
+        confirmText={dialog.confirmDeleteText()}
+        cancelText={common.cancel()}
+        confirmColorPalette="red"
+        isLoading={isDeleting}
+      />
+
+      {/* 邮箱输入对话框（邮箱认证） */}
+      <InfoDialog
+        isOpen={emailDialogOpen}
+        onClose={() => {
+          setEmailDialogOpen(false)
+          reset()
+        }}
+        title={dialog.confirmEmailDelete()}
+        content={
+          <form onSubmit={handleSubmit(handleEmailDelete)}>
+            <VStack gap={4} align="stretch">
+              <Text>{dialog.emailDeleteMessage()}</Text>
+              <Field.Root>
+                <Field.Label>{dialog.emailAddress()}</Field.Label>
+                <Input
+                  type="email"
+                  {...register("email", {
+                    required: dialog.enterEmailAddress(),
+                    pattern: {
+                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                      message: dialog.enterValidEmail(),
+                    },
+                  })}
+                  placeholder={dialog.emailPlaceholder()}
+                />
+                {errors.email && (
+                  <Field.ErrorText>{errors.email.message}</Field.ErrorText>
+                )}
+              </Field.Root>
+              <HStack justify="end" gap={2}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setEmailDialogOpen(false)
+                    reset()
+                  }}
+                >
+                  {common.cancel()}
+                </Button>
+                <Button type="submit" colorPalette="red" loading={isDeleting}>
+                  {dialog.confirmDeleteText()}
+                </Button>
+              </HStack>
+            </VStack>
+          </form>
+        }
+        showCloseButton={false}
+        isPreformatted={false}
+      />
+    </>
+  )
+}

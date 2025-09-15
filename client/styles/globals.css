@@ -1,0 +1,389 @@
+/* 全局样式 */
+@import "highlight.js/styles/github.css";
+
+/* GitHub Markdown CSS - 使用浅色版本作为基础 */
+@import "github-markdown-css/github-markdown-light.css";
+
+/* Header 组件样式 */
+.header-container {
+  /* 确保header容器不会溢出 */
+  overflow: hidden;
+}
+
+.header-main-content {
+  /* 确保主要内容区域可以正确收缩 */
+  min-width: 0;
+}
+
+.header-description {
+  /* 确保description文本正确截断 */
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* 响应式Header样式 */
+@media (max-width: 640px) {
+  .header-main-content {
+    /* 在小屏幕时，确保左侧内容有足够空间 */
+    gap: 8px;
+  }
+
+  .header-actions {
+    /* 确保右侧按钮区域不会挤压左侧内容 */
+    flex-shrink: 0;
+    min-width: auto;
+  }
+
+  .header-title {
+    /* 在小屏幕时，标题可以更灵活地截断 */
+    max-width: calc(100vw - 200px); /* 为头像和按钮留出空间 */
+  }
+}
+
+/* Publication Item 悬停效果 */
+.publication-item .publication-item-actions {
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.publication-item:hover .publication-item-actions {
+  opacity: 1;
+}
+
+/* TipTap 编辑器样式 */
+.ProseMirror {
+  outline: none;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  -webkit-font-variant-ligatures: none;
+  font-variant-ligatures: none;
+  padding: 4px;
+  line-height: 1.5;
+  tab-size: 2;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  color: #adb5bd;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.ProseMirror h1 {
+  font-size: 2em;
+  font-weight: 700;
+  margin: 0.67em 0;
+  color: #1a202c;
+  line-height: 1.25;
+}
+
+.ProseMirror h2 {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin: 0.75em 0;
+  color: #2d3748;
+  line-height: 1.3;
+}
+
+.ProseMirror h3 {
+  font-size: 1.17em;
+  font-weight: 600;
+  margin: 0.83em 0;
+  color: #4a5568;
+  line-height: 1.4;
+}
+
+/* Dark mode styles */
+.dark .ProseMirror h1 {
+  color: #f7fafc;
+}
+
+.dark .ProseMirror h2 {
+  color: #e2e8f0;
+}
+
+.dark .ProseMirror h3 {
+  color: #cbd5e0;
+}
+
+/* Card中的markdown内容样式 */
+.markdown-content h1:first-child {
+  margin-top: 0;
+}
+
+.markdown-content h2:first-child {
+  margin-top: 0;
+}
+
+.markdown-content h3:first-child {
+  margin-top: 0;
+}
+
+.markdown-content h4:first-child {
+  margin-top: 0;
+}
+
+.markdown-content h5:first-child {
+  margin-top: 0;
+}
+
+.markdown-content h6:first-child {
+  margin-top: 0;
+}
+
+.ProseMirror h4 {
+  font-size: 1em;
+  margin: 1.12em 0;
+}
+
+.ProseMirror h5 {
+  font-size: 0.83em;
+  margin: 1.5em 0;
+}
+
+.ProseMirror h6 {
+  font-size: 0.75em;
+  margin: 1.67em 0;
+}
+
+.ProseMirror blockquote {
+  border-left: 3px solid #ddd;
+  margin-left: 0;
+  padding-left: 1em;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  padding-left: 1em;
+}
+
+.ProseMirror li {
+  margin: 0.5em 0;
+}
+
+.ProseMirror code {
+  background-color: #f4f4f4;
+  border-radius: 3px;
+  padding: 0.2em 0.4em;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+.ProseMirror em {
+  font-style: italic;
+}
+
+.ProseMirror s {
+  text-decoration: line-through;
+}
+
+.ProseMirror strong {
+  font-weight: bold;
+}
+
+.ProseMirror a {
+  color: #ea580c; /* orange-600 - 与主色调一致的橙色 */
+  text-decoration: underline;
+  cursor: default;
+  pointer-events: none;
+}
+
+.ProseMirror a:hover {
+  color: #c2410c; /* orange-700 - 悬停时更深的橙色 */
+}
+
+.dark .ProseMirror a {
+  color: #fb923c; /* orange-400 - 深色模式下的橙色 */
+}
+
+.dark .ProseMirror a:hover {
+  color: #fdba74; /* orange-300 - 深色模式悬停时的橙色 */
+}
+
+.ProseMirror pre {
+  background-color: #f4f4f4;
+  border-radius: 3px;
+  padding: 1em;
+  margin: 1em 0;
+}
+
+.ProseMirror pre code {
+  background-color: transparent;
+  padding: 0;
+}
+
+.ProseMirror table {
+  border-collapse: collapse;
+  margin: 0;
+  overflow: hidden;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.ProseMirror table td,
+.ProseMirror table th {
+  border: 2px solid #ced4da;
+  box-sizing: border-box;
+  min-width: 1em;
+  padding: 3px 5px;
+  position: relative;
+  vertical-align: top;
+}
+
+.ProseMirror table th {
+  background-color: #f1f3f4;
+  font-weight: bold;
+}
+
+.ProseMirror table .selectedCell:after {
+  background: rgba(200, 200, 255, 0.4);
+  content: "";
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+}
+
+.ProseMirror table .column-resize-handle {
+  background-color: #adf;
+  bottom: -2px;
+  position: absolute;
+  right: -2px;
+  pointer-events: none;
+  top: 0;
+  width: 4px;
+}
+
+.ProseMirror table p {
+  margin: 0;
+}
+
+.ProseMirror .tableWrapper {
+  margin: 1em 0;
+  overflow-x: auto;
+}
+
+.ProseMirror .resize-cursor {
+  /* cursor: ew-resize; */
+  cursor: col-resize;
+}
+
+/* Markdown内容样式 - 使用github-markdown-css作为基础 */
+.markdown-content {
+  /* 项目特定的样式覆盖 */
+  line-height: 1.6;
+}
+
+/* 应用GitHub Markdown样式到markdown-content */
+.markdown-content.markdown-body {
+  /* GitHub Markdown CSS 样式已通过 @import 导入，无需额外样式 */
+  box-sizing: border-box;
+}
+
+/* 深色模式支持 - 覆盖浅色主题为深色主题 */
+.dark .markdown-content {
+  /* 深色模式背景和文字 */
+  background-color: #0d1117 !important;
+  color: #c9d1d9 !important;
+}
+
+.dark .markdown-content h1,
+.dark .markdown-content h2,
+.dark .markdown-content h3,
+.dark .markdown-content h4,
+.dark .markdown-content h5,
+.dark .markdown-content h6 {
+  color: #f0f6fc !important;
+}
+
+.dark .markdown-content h1 {
+  border-bottom-color: #30363d !important;
+}
+
+.dark .markdown-content h2 {
+  border-bottom-color: #30363d !important;
+}
+
+.dark .markdown-content blockquote {
+  color: #8b949e !important;
+  border-left-color: #30363d !important;
+}
+
+.dark .markdown-content code {
+  background-color: #161b22 !important;
+  color: #f0f6fc !important;
+}
+
+.dark .markdown-content pre {
+  background-color: #161b22 !important;
+  color: #f0f6fc !important;
+}
+
+.dark .markdown-content table th,
+.dark .markdown-content table td {
+  border-color: #30363d !important;
+}
+
+.dark .markdown-content table th {
+  background-color: #161b22 !important;
+}
+
+.dark .markdown-content table tr:nth-child(2n) {
+  background-color: #161b22 !important;
+}
+
+.dark .markdown-content hr {
+  background-color: #30363d !important;
+}
+
+/* 项目特定的链接颜色覆盖 */
+.markdown-content a {
+  color: #ea580c !important; /* orange-600 - 与主色调一致的橙色 */
+  text-decoration: none;
+}
+
+.dark .markdown-content a {
+  color: #fb923c !important; /* orange-400 - 深色模式下的橙色 */
+}
+
+.markdown-content a:hover {
+  color: #c2410c !important; /* orange-700 - 悬停时更深的橙色 */
+  text-decoration: underline;
+}
+
+.dark .markdown-content a:hover {
+  color: #fdba74 !important; /* orange-300 - 深色模式悬停时的橙色 */
+}
+
+/* 确保图片响应式 */
+.markdown-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

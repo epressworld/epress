@@ -1,0 +1,26 @@
+# Git
+.git
+.gitignore
+
+# Node
+node_modules
+
+# Logs and data
+logs
+data
+
+# OS-specific
+.DS_Store
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor-specific
+.idea
+.vscode
+
+# Docs and other non-essential files
+README.md
+CONTRIBUTING.md
+LICENSE
+GEMINI.md

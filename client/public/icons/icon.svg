@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Created with Vectornator (http://vectornator.io/) -->
+<svg height="100%" stroke-miterlimit="10" style="fill-rule:nonzero;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;" version="1.1" viewBox="0 0 70 70" width="100%" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:vectornator="http://vectornator.io" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs/>
+<clipPath id="ArtboardFrame">
+<rect height="70" width="70" x="0" y="0"/>
+</clipPath>
+<g clip-path="url(#ArtboardFrame)" id="页面1" vectornator:layerName="页面1">
+<g opacity="1">
+<g opacity="1">
+<path d="M12.6596 28.484C12.6596 18.7162 20.5779 10.7979 30.3457 10.7979C40.1135 10.7979 48.0319 18.7162 48.0319 28.484C48.0319 38.2518 40.1135 46.1702 30.3457 46.1702C20.5779 46.1702 12.6596 38.2518 12.6596 28.484Z" fill="#e95420" fill-rule="evenodd" opacity="1" stroke="none"/>
+<path d="M46.1702 46.9149C46.1702 42.8021 49.5043 39.4681 53.617 39.4681C57.7298 39.4681 61.0638 42.8021 61.0638 46.9149C61.0638 51.0277 57.7298 54.3617 53.617 54.3617C49.5043 54.3617 46.1702 51.0277 46.1702 46.9149Z" fill="#e95420" fill-rule="evenodd" opacity="1" stroke="none"/>
+<path d="M-4.76837e-07 38.3511C-4.76837e-07 35.2665 2.50054 32.766 5.58511 32.766C8.66967 32.766 11.1702 35.2665 11.1702 38.3511C11.1702 41.4356 8.66967 43.9362 5.58511 43.9362C2.50054 43.9362-4.76837e-07 41.4356-4.76837e-07 38.3511Z" fill="#e95420" fill-rule="evenodd" opacity="1" stroke="none"/>
+<path d="M-4.76837e-07 9.30851C-4.76837e-07 4.16756 4.16756-4.76837e-07 9.30851-4.76837e-07C14.4495-4.76837e-07 18.617 4.16756 18.617 9.30851C18.617 14.4495 14.4495 18.617 9.30851 18.617C4.16756 18.617-4.76837e-07 14.4495-4.76837e-07 9.30851Z" fill="#e95420" fill-rule="evenodd" opacity="1" stroke="none"/>
+<path d="M47.6596 11.1702C47.6596 5.00107 52.6606-4.76837e-07 58.8298-4.76837e-07C64.9989-4.76837e-07 70 5.00107 70 11.1702C70 17.3394 64.9989 22.3404 58.8298 22.3404C52.6606 22.3404 47.6596 17.3394 47.6596 11.1702Z" fill="#e95420" fill-rule="evenodd" opacity="1" stroke="none"/>
+<path d="M8.19149 58.8298C8.19149 52.6606 13.1926 47.6596 19.3617 47.6596C25.5308 47.6596 30.5319 52.6606 30.5319 58.8298C30.5319 64.9989 25.5308 70 19.3617 70C13.1926 70 8.19149 64.9989 8.19149 58.8298Z" fill="#e95420" fill-rule="evenodd" opacity="1" stroke="none"/>
+</g>
+</g>
+</g>
+</svg>

@@ -1,0 +1,24 @@
+<svg width="265" height="73" xmlns="http://www.w3.org/2000/svg">
+ <!-- Generator: Sketch 54 (76480) - https://sketchapp.com -->
+
+ <title>bitpress 2</title>
+ <desc>Created with Sketch.</desc>
+ <g>
+  <title>background</title>
+  <rect fill="none" id="canvas_background" height="402" width="582" y="-1" x="-1"/>
+ </g>
+ <g>
+  <title>Layer 1</title>
+  <g fill="#E95420" id="bitpress-logo">
+   <circle fill="#ffffff" r="17.686171" cy="31.484043" cx="30.345745" id="椭圆形"/>
+   <circle fill="#ffffff" r="7.446808" cy="49.914894" cx="53.617021" id="椭圆形"/>
+   <circle fill="#ffffff" r="5.585106" cy="41.351064" cx="5.585106" id="椭圆形"/>
+   <circle fill="#ffffff" r="9.308511" cy="12.308511" cx="9.308511" id="椭圆形"/>
+   <circle fill="#ffffff" r="11.170213" cy="14.170213" cx="58.829787" id="椭圆形"/>
+   <circle fill="#ffffff" r="11.170213" cy="61.829787" cx="19.361702" id="椭圆形"/>
+  </g>
+  <text fill="#ffffff" font-weight="bold" font-style="italic" font-size="60" font-family="Ubuntu-BoldItalic, Ubuntu" id="epress">
+   <tspan id="svg_1" y="56" x="70">epress</tspan>
+  </text>
+ </g>
+</svg>
