@@ -1,5 +1,9 @@
 # epress: A Decentralized Content and Social Network
 
+**Version 1.0**  
+**by Garbin Huang ([garbin.blog](https://garbin.blog))**  
+**September 24, 2025**
+
 ## Abstract
 
 Mainstream centralized networks place users' digital identities, content, and social relationships under the control of third-party platforms, leading to a systemic loss of sovereignty and inherent platform risks. This paper proposes a decentralized content and social network architecture named epress, designed to fundamentally solve this problem.
