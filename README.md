@@ -20,13 +20,14 @@
 
 ### What is epress?
 
-`epress`, derived from **E**thereum + **Press**, is an open-source Web3 personal blogging and social networking platform built on the Ethereum ecosystem. It aims to create a truly decentralized content and social network.
+epress is an open-source software and protocol for a truly decentralized content and social network. It is built on a simple, powerful idea: **your node is your sovereign territory.**
 
-It operates in two modes:
-* **Standalone Mode**: A fully-featured personal blog (similar to WordPress), allowing you to write, publish, and manage content on your own server.
-* **Networked Mode**: When connected to other nodes, it becomes part of the *epress world* decentralized social network. You can follow other nodes, syncing their content to your node, and choose whether to allow others to follow you, sharing your updates with them.
+Unlike platforms where you are a "user," in epress, you are an "owner." You run your own **Node**—a self-hosted website cryptographically tied to your **Ethereum identity**. The name `epress` itself derives from **E**thereum + **Press**, reflecting these technical roots and its focus on publishing.
 
-Switching between these modes is seamless, depending on whether you choose to connect with others.
+This node is your digital homestead:
+
+*   **As a personal space**, it's a fully-featured blog and content management system.
+*   **As a social entity**, it connects to other nodes, forming a resilient, peer-to-peer network where you control the rules.
 
 ## Why epress?
 
@@ -50,9 +51,27 @@ I explored federated social networks like Mastodon, built on ActivityPub. They�
 
 It pursues radical decentralization. Your identity is your Ethereum address, independent of any platform. Your data lives on your node, under your absolute control. Connections are free, and your content is yours—a social platform you can use from birth to old age.
 
-Before epress, projects like Mastodon, Nostr, and Bluesky tackled centralized platform issues to varying degrees. I don’t claim epress is the ultimate decentralized social network, but it fulfills my vision for one and may even unlock [possibilities beyond imagination](./docs/en/WHITEPAPER.md). This is the epress you see today.
+Before epress, projects like Mastodon, Nostr, and Bluesky tackled centralized platform issues to varying degrees. I don’t claim epress is the ultimate decentralized social network, but it fulfills my vision for one and may even unlock [possibilities beyond imagination](/docs/en/WHITEPAPER.md). This is the epress you see today.
 
 If you share this vision, join us in building a truly decentralized social network.
+
+### How It Works: The Core Principles
+
+epress achieves radical decentralization through a few key primitives, detailed in our [White Paper](/docs/en/WHITEPAPER.md):
+
+*   **Self-Hosting First**: Instead of relying on a federated or relay-based model, epress returns to the internet's origins. Each user hosts their own node, ensuring true data ownership and eliminating third-party trust.
+*   **Verifiable Content**: All content shared on the network is cryptographically signed as a "Proof of Source" (PoS). This makes every piece of information traceable, tamper-proof, and uniquely identifiable.
+*   **Peer-to-Peer Replication**: Content flows directly between nodes via an open protocol (EWP). A "Notify-Pull" mechanism allows for efficient and resilient content distribution without central servers.
+
+---
+
+🚀 **Ready to dive in?**
+
+*   **[Get Started with Docker](#option-1-docker-recommended)** — The fastest way to launch your own node.
+*   **[Read the White Paper](/docs/en/WHITEPAPER.md)** — For a deep dive into the protocol and philosophy.
+*   **[Join our Telegram](https://t.me/+mZMgNSIVy1MwMmVl)** — To connect with the community.
+
+---
 
 ### ✨ Key Features
 
@@ -106,7 +125,7 @@ The fastest and easiest deployment method, using the official pre-built image `g
     docker run -d -p 8543:8543 -p 8544:8544 -v epress-data:/app/data --name my-epress-node ghcr.io/epressworld/epress
     ```
 
-For advanced Docker options (e.g., separating frontend/backend or custom builds), see [**`docs/en/INSTALLATION.md`**](./docs/en/INSTALLATION.md).
+For advanced Docker options (e.g., separating frontend/backend or custom builds), see [**`docs/en/INSTALLATION.md`**](/docs/en/INSTALLATION.md).
 
 #### Option 2: Run from Source
 
@@ -135,7 +154,7 @@ Ideal for developers who want to customize or contribute.
     npm run start
     ```
 
-For more details, see [**`docs/en/INSTALLATION.md`**](./docs/en/INSTALLATION.md).
+For more details, see [**`docs/en/INSTALLATION.md`**](/docs/en/INSTALLATION.md).
 
 ### 👨‍💻 Developer Guide
 
@@ -181,7 +200,7 @@ To contribute to epress or build on top of it:
 
 ### 🤝 Contributing
 
-We welcome contributions of all kinds! Please read our [**`CONTRIBUTING.md`**](./CONTRIBUTING.md) to learn how to get involved.
+We welcome contributions of all kinds! Please read our [**`CONTRIBUTING.md`**](/CONTRIBUTING.md) to learn how to get involved.
 
 ## 👥 Community & Ecosystem
 
@@ -190,4 +209,4 @@ We welcome contributions of all kinds! Please read our [**`CONTRIBUTING.md`**](.
 
 ### 📄 License
 
-This project is licensed under the [MIT License](./LICENSE).
+This project is licensed under the [MIT License](/LICENSE).
