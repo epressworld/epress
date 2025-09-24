@@ -1,7 +1,7 @@
 <div align="center">
   <img src="/client/public/assets/logo-light.svg" alt="epress logo" width="200">
-  <h1><strong>epress: Decentralized Web3 Blog and Social Network</strong></h1>
-  <p align="center">A Web3-native personal blogging platform designed to build a truly decentralized content and social network</p>
+  <h1><strong>epress: A Decentralized Content and Social Network</strong></h1>
+  <p align="center">Building a fully decentralized content and social network, self-hosted by everyone.</p>
   <p>
     <a href="https://github.com/epressworld/epress/actions/workflows/main.yml"><img src="https://github.com/epressworld/epress/actions/workflows/main.yml/badge.svg" alt="GitHub Actions Main"></a>
     <a href="https://codecov.io/gh/epressworld/epress"><img src="https://codecov.io/gh/epressworld/epress/graph/badge.svg" /></a>
@@ -11,6 +11,7 @@
   <p align="center">
     <a href="/docs/zh/README.md">中文</a> •
     <a href="/docs/en/WHITEPAPER.md">White Paper</a> •
+    <a href="https://youtu.be/BB1Zn3oFDVc">Video Demo</a> •
     <a href="/docs/en/INSTALLATION.md">Installation</a>
   </p>
 </div>
@@ -33,7 +34,7 @@ With numerous social platforms available, including decentralized federated netw
 
 ### A Decade of Memories Erased Overnight
 
-In 2011, I created a Sina Weibo account during my teenage years, documenting my life, building connections, and preserving countless memories over a decade. Recently, that account was banned without reason, warning, or appeal process. My attempts to recover it were met with silence.
+In 2010, I created a Sina Weibo account during my teenage years, documenting my life, building connections, and preserving countless memories over a decade. Recently, that account was banned without reason, warning, or appeal process. My attempts to recover it were met with silence.
 
 That moment revealed how fragile our "digital assets" are under platform rules. The content we pour our hearts into and the connections we build are never truly ours—platforms can take them away, reducing everything to zero.
 

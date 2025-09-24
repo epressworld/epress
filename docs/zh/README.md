@@ -1,7 +1,7 @@
 <div align="center">
   <img src="/client/public/assets/logo-light.svg" alt="epress logo" width="200">
-  <h1><strong>epress: 去中心化Web3博客&社交网络</strong></h1>
-  <p text-align="center">一个Web3时代原生的个人博客软件，用以构建真正去中心化的内容和社交网络</p>
+  <h1><strong>epress: 一个去中心化的内容与社交网络</strong></h1>
+  <p text-align="center">构建一个人人自托管的完全去中心化内容和社交网络</p>
   <p>
     <a href="https://github.com/epressworld/epress/actions/workflows/main.yml"><img src="https://github.com/epressworld/epress/actions/workflows/main.yml/badge.svg" alt="GitHub Actions Main"></a>
     <a href="https://codecov.io/gh/epressworld/epress"><img src="https://codecov.io/gh/epressworld/epress/graph/badge.svg" /></a>
@@ -10,8 +10,9 @@
   </p>
   <p align="center">
     <a href="/README.md">English</a> •
-    <a href="/docs/zh/WHITEPAPER.md">White Paper</a> •
-    <a href="/docs/zh/INSTALLATION.md">Installation</a>
+    <a href="/docs/zh/WHITEPAPER.md">白皮书</a> •
+    <a href="https://youtu.be/BB1Zn3oFDVc">视频演示</a> •
+    <a href="/docs/zh/INSTALLATION.md">安装说明</a>
   </p>
 </div>
 
@@ -35,7 +36,7 @@
 
 ### 瞬间归零的十年记忆
 
-2011年，我在新浪微博注册了一个账号，那正值我的青春期。十多年来，我在上面记录生活、建立社交、沉淀了无数珍贵的回忆。然而就在不久前，这个账号被无故封禁。没有理由，没有警告，没有解封的时间表。我多次申诉，得到的只有沉默。
+2010年，我在新浪微博注册了一个账号，那正值我的青春期。十多年来，我在上面记录生活、建立社交、沉淀了无数珍贵的回忆。然而就在不久前，这个账号被无故封禁。没有理由，没有警告，没有解封的时间表。我多次申诉，得到的只有沉默。
 
 那一刻我意识到，我们所谓的"数字资产"，在平台的规则面前是如此不堪一击。我们耗费心血创造的内容、建立的连接，其所有权从未真正属于我们。平台可以随时将它收回，让我们的一切归零。
 
