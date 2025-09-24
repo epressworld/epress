@@ -43,9 +43,11 @@ That moment revealed how fragile our "digital assets" are under platform rules. 
 
 X remains a top social network, but it’s fundamentally no different from Sina Weibo, carrying the same risks. Additionally, I recently wanted an AI to analyze my timeline for fun, only to discover that accessing my own timeline programmatically requires an expensive monthly API subscription. Without it, there’s no reliable way to access even my own posts. X offers no alternatives like RSS feeds, which I believe should be a basic feature for all users. This led to another realization: creators share content altruistically, yet platforms monetize it by locking access behind paywalls. Is this fair?
 
-### Is Federation the Final Answer?
+### Will Federation Be the Final Answer?
 
-I also tried federated social networks like Mastodon and Bluesky. They are indeed a step forward from traditional centralized platforms, but they don't solve the fundamental problem. We merely shift our trust from a "big center" (like X) to a "smaller center" (the admin of a federated instance). This "small center" not only holds the power to censor or shut down, but its significant operational costs also create inevitable pressure to commercialize, leading back to the same dilemmas found on centralized platforms. Our data and identity are, in essence, still hosted in someone else's hands. We are still "digital tenants," not "digital homeowners." This is still the most crucial step away from true data sovereignty.
+I also tried federated social networks like Mastodon and Bluesky. They are indeed a step forward from traditional centralized platforms, but they don't solve the fundamental problem.
+
+We merely shift our trust from a "big center" (like X) to a "smaller center" (the admin of a federated instance). This "small center" not only holds the power to censor or shut down, but its significant operational costs also create inevitable pressure to commercialize, leading back to the same dilemmas found on centralized platforms. Our data and identity are, in essence, still hosted in someone else's hands, and I am skeptical of its stability and sustainability.
 
 **epress was born to address these problems.**
 
