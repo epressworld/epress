@@ -45,7 +45,7 @@ X remains a top social network, but it’s fundamentally no different from Sina 
 
 ### Is Federation the Final Answer?
 
-I explored federated social networks like Mastodon, built on ActivityPub. They’re a step forward, allowing migration between instances. But they don’t solve the core issue. We merely shift from trusting a "big center" (like X) to a "smaller center" (the instance admin). If that instance shuts down or abuses power, your content—your data—often remains on the old server, unportable. While you can migrate your identity and followers, your posts don’t always follow. True data sovereignty is still one step away.
+I also tried federated social networks like Mastodon and Bluesky. They are indeed a step forward from traditional centralized platforms, but they don't solve the fundamental problem. We merely shift our trust from a "big center" (like X) to a "smaller center" (the admin of a federated instance). This "small center" not only holds the power to censor or shut down, but its significant operational costs also create inevitable pressure to commercialize, leading back to the same dilemmas found on centralized platforms. Our data and identity are, in essence, still hosted in someone else's hands. We are still "digital tenants," not "digital homeowners." This is still the most crucial step away from true data sovereignty.
 
 **epress was born to address these problems.**
 
