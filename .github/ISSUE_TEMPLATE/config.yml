@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ask a question
+    url: https://github.com/epressworld/epress/discussions/new?category=q-a
+    about: Ask the community for help
+  - name: Report a security vulnerability
+    url: https://github.com/epressworld/epress/security/policy
+    about: Learn how to notify us about a security vulnerability

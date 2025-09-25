@@ -1,43 +1,154 @@
-# epress 项目贡献指南
+# Contributing to epress
 
-欢迎您为 epress 项目贡献代码！为了确保代码质量和项目一致性，请遵循以下指南。
+First of all, thank you for considering contributing to epress! We welcome every contributor with open arms.
 
-## API 设计原则 (GraphQL)
+This guide provides a clear contribution process to ensure your efforts can be smoothly integrated into the project. Following this guide helps us maintain consistent, high-quality code and orderly project development.
 
-在设计和实现 GraphQL API 时，请务必遵循以下核心原则：
+## Table of Contents
+- [Code of Conduct](#code-of-conduct)
+- [How to Contribute](#how-to-contribute)
+  - [Step 0: Find or Create an Issue](#step-0-find-or-create-an-issue)
+  - [Step 1: Fork & Clone the Repository](#step-1-fork--clone-the-repository)
+  - [Step 2: Set Up Your Local Environment](#step-2-set-up-your-local-environment)
+  - [Step 3: Create Your Development Branch](#step-3-create-your-development-branch)
+  - [Step 4: Start Coding!](#step-4-start-coding)
+  - [Step 5: Write and Run Tests](#step-5-write-and-run-tests)
+  - [Step 6: Maintain Code Style Consistency](#step-6-maintain-code-style-consistency)
+  - [Step 7: Commit Your Changes](#step-7-commit-your-changes)
+  - [Step 8: Push Your Branch to Your Fork](#step-8-push-your-branch-to-your-fork)
+  - [Step 9: Create a Pull Request](#step-9-create-a-pull-request)
+  - [Step 10: Code Review and Merge](#step-10-code-review-and-merge)
+- [Style Guides](#style-guides)
+  - [Git Commit Message Convention](#git-commit-message-convention)
+  - [Code Style Convention](#code-style-convention)
 
-### 1. 优先使用强类型 (Strongly-Typed)
+## Code of Conduct
 
-*   **避免使用通用 `JSON` 类型**: 除非在极少数无法预先确定结构的情况下，否则请避免在 GraphQL Schema 中使用通用的 `JSON` 类型作为字段或输入。
-*   **利用 GraphQL 的类型系统**: 充分利用 GraphQL 的强类型特性，为所有数据结构定义明确的 `type` 和 `input`。这能提供类型安全、增强可发现性，并支持客户端工具的自动代码生成。
+We are committed to fostering an open, friendly, and respectful community. All contributors and maintainers are expected to adhere to our Code of Conduct. Before you start contributing, please take the time to read the [Code of Conduct](CODE_OF_CONDUCT.md).
 
-### 2. 变更 (Mutations) 必须使用 `Input` 类型
+## How to Contribute
 
-*   **封装参数**: 对于所有变更 (Mutations)，请将输入参数封装在一个专门的 `Input` 类型中（例如 `CreateUser` 对应 `CreateUserInput`）。
-*   **可选字段**: `Input` 类型中的字段应根据实际需求设置为可选 (Optional)，以便客户端可以灵活地只提供需要更新的字段。
-*   **可扩展性**: 使用 `Input` 类型可以确保未来在不破坏现有客户端的情况下，轻松添加新的输入字段。
+We use the standard GitHub Flow for collaboration. Here are the complete contribution steps:
 
-### 3. 追求语义的精确性 (Semantic Clarity)
+### Step 0: Find or Create an Issue
 
-*   **区分概念**: 即使两个类型在当前字段上看起来相同，如果它们代表的概念不同，也应定义独立的类型。
-*   **示例**: 
-    *   `Profile` 类型应专门用于表示**本节点**的公开资料，其字段应仅限于公开且直接展示的信息（例如 `ethereumAddress`, `url`, `title`, `description`），不包含内部 `id` 或时间戳等元数据。
-    *   `Node` 类型则用于表示网络中的**任意一个节点**，特别是在处理关联关系（如关注列表、文章作者）时。
-*   **避免歧义**: 通过精确的类型定义，消除 API 使用者对数据含义的猜测。
+All changes should revolve around an Issue.
 
-### 4. 统一命名约定 (Naming Conventions)
+- **If you want to fix a bug**: First, search the [Issues list](https://github.com/epressworld/epress/issues) to see if a related issue already exists. If not, create a new issue using the "Bug" label. Describe the steps to reproduce, expected behavior, and actual behavior in detail.
+- **If you want to propose a new feature**: Create a new issue using the "Feature" label. Describe your idea, the problem it solves, and the proposed implementation in detail.
 
-*   **字段名 (Field Names)**: 必须使用 **小驼峰命名法 (lower camelCase)**。
-    *   **示例**: `allowFollow`, `clientSettings`, `someSecretKey`。
-    *   **缩写**: 对于常用缩写（如 `RSS`, `URL`, `ID`），在小驼峰中保持其大写形式（例如 `enableRSS`）。
-*   **类型名 (Type Names)**: 必须使用 **大驼峰命名法 (PascalCase)**（例如 `User`, `Publication`, `Settings`, `Profile`）。
-*   **枚举值 (Enum Values)**: 必须使用 **全大写和下划线 (UPPER_CASE_SNAKE_CASE)**（例如 `POST`, `FILE`, `PENDING_VERIFICATION`）。
+Before you start coding, please leave a comment on the issue indicating you'd like to work on it and wait for a maintainer's confirmation to avoid duplicate work.
 
-### 5. 考虑未来扩展性与安全性
+### Step 1: Fork & Clone the Repository
 
-*   **公共/私有数据分离**: 在设计类型时，始终考虑哪些数据是公开的，哪些是私有的。确保公共接口不会意外暴露敏感或内部数据。
-*   **非破坏性变更**: 尽量设计能够向前兼容的 API，避免引入破坏性变更。
+1.  Fork the main repository to your own GitHub account.
+2.  Clone your forked repository to your local machine:
+    ```bash
+    git clone https://github.com/YOUR_USERNAME/epress.git
+    cd epress
+    ```
+
+### Step 2: Set Up Your Local Environment
+
+In the project root directory, run the following command to install all dependencies:
+
+```bash
+npm install
+```
+
+Then, you can start the local development server:
+
+```bash
+npm run dev
+```
+
+### Step 3: Create Your Development Branch
+
+Create a new branch from `main` to house your code. Please follow this naming convention:
+
+- **New Feature**: `feature/ISSUE-NUMBER-short-description` (e.g., `feature/123-user-profile-page`)
+- **Bug Fix**: `bugfix/ISSUE-NUMBER-short-description` (e.g., `bugfix/456-fix-login-button`)
+
+```bash
+git checkout -b feature/123-my-new-feature
+```
+
+### Step 4: Start Coding!
+
+Now you can start making your code changes and developments.
+
+### Step 5: Write and Run Tests
+
+Quality is our lifeline. Please write necessary tests for your changes:
+
+- If you add a new feature, write new test cases to cover it.
+- If you fix a bug, write a test case to verify the bug is fixed (i.e., a test that would fail before the fix and pass after).
+
+Run the following command to ensure all tests pass:
+
+```bash
+npm test
+```
+
+### Step 6: Maintain Code Style Consistency
+
+This project uses [Biome](https://biomejs.dev/) to unify code style. Before committing your code, please run the following command to format your code and fix linting errors:
+
+```bash
+npm run lint:fix
+```
+
+### Step 7: Commit Your Changes
+
+We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification for writing commit messages. This helps in auto-generating changelogs and version management.
+
+The commit message format is: `<type>(<scope>): <subject>`
+
+- **type**: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, etc.
+- **scope** (optional): The scope of the change, e.g., `client`, `server`, `graphql`.
+- **subject**: A short description of the change.
+
+**Examples:**
+```bash
+git commit -m "feat(client): Add user profile page"
+git commit -m "fix(server): Correct avatar upload path validation"
+```
+
+### Step 8: Push Your Branch to Your Fork
+
+```bash
+git push origin feature/123-my-new-feature
+```
+
+### Step 9: Create a Pull Request
+
+1.  Go to your forked repository page on GitHub. You will see a prompt to create a Pull Request.
+2.  Ensure your PR targets the `main` branch of the main repository.
+3.  Fill in a clear title and description for your PR.
+4.  In the description, use the keyword `Closes #ISSUE-NUMBER` to link the issue you are addressing (e.g., `Closes #123`). This ensures the corresponding issue is automatically closed when the PR is merged.
+
+### Step 10: Code Review and Merge
+
+After submitting your PR, project maintainers will review your code. Please pay attention to comments on the PR and make changes based on the feedback. Once your code passes the review, a maintainer will merge it into the `main` branch.
+
+## Style Guides
+
+### Git Commit Message Convention
+
+We strictly follow the [Conventional Commits](https://www.conventionalcommits.org/) specification. Please ensure every one of your commits adheres to this format.
+
+- `feat`: A new feature
+- `fix`: A bug fix
+- `docs`: Documentation only changes
+- `style`: Changes that do not affect the meaning of the code (white-space, formatting, etc)
+- `refactor`: A code change that neither fixes a bug nor adds a feature
+- `test`: Adding missing tests or correcting existing tests
+- `chore`: Changes to the build process or auxiliary tools and libraries such as documentation generation
+
+### Code Style Convention
+
+We use [Biome](https://biomejs.dev/). All code style issues should be resolved by running `npm run lint:fix`. Please do not manually change code formatting unrelated to functionality in your PRs.
 
 ---
 
-感谢您的贡献！请在提交代码前，确保您的设计和实现符合上述原则。
+Thank you again for your valuable contribution!
