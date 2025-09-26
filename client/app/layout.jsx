@@ -1,6 +1,6 @@
 import { Page } from "../components/layout"
 import { PwaRegistry } from "../components/ui/PwaRegistry"
-import { executeServerQueries } from "../graphql"
+import { executeServerQueries, getRequestApolloClient } from "../graphql"
 import { PAGE_DATA } from "../graphql/queries"
 
 import "../styles/globals.css"
@@ -65,8 +65,10 @@ export default async function RootLayout({ children }) {
     },
   ]
 
+  // 为本次请求获取可复用的 ApolloClient，并传入批量查询
+  const requestClient = getRequestApolloClient()
   const { data: serverDataMap, errors: serverErrors } =
-    await executeServerQueries(globalQueryConfigs)
+    await executeServerQueries(globalQueryConfigs, requestClient)
 
   return (
     <html lang="en" suppressHydrationWarning>

@@ -163,8 +163,7 @@ export class Content extends Model {
       })
 
       // 计算哈希
-      let contentHash
-      contentHash = await hash.sha256(fileBuffer)
+      const contentHash = await hash.sha256(fileBuffer)
 
       // 创建本地路径和目录
       const localPath = `${contentHash.substring(0, 2)}/${contentHash}`

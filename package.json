@@ -10,7 +10,7 @@
     "seed:make": "node commands/migrate.mjs seed make",
     "test": "NODE_ENV=test ava",
     "lint": "biome check .",
-    "lint:fix": "biome check --apply-unsafe . && biome format --write ."
+    "lint:fix": "biome check . --write"
   },
   "lint-staged": {
     "*.{js,jsx,mjs}": [
