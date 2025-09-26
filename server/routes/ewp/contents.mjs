@@ -45,7 +45,7 @@ router.get("/contents/:content_hash", async (request, reply) => {
 
     if (timestamp) {
       const unixTimestamp = parseInt(timestamp, 10)
-      if (isNaN(unixTimestamp)) {
+      if (Number.isNaN(unixTimestamp)) {
         return reply.code(400).send({ error: "INVALID_TIMESTAMP" })
       }
       const startTime = new Date(unixTimestamp * 1000)

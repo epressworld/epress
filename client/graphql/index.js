@@ -1,21 +1,29 @@
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client"
+import { cache as reactCache } from "react"
 
 const uri = `${process.env.EPRESS_API_URL || "http://localhost:8544"}/api/graphql`
-const httpLink = new HttpLink({ uri, fetch: fetch })
+const httpLink = new HttpLink({ uri, fetch })
 
-const client = new ApolloClient({
-  link: httpLink,
-  cache: new InMemoryCache().restore({}),
-  ssrMode: true,
-  defaultOptions: {
-    watchQuery: {
-      fetchPolicy: "network-only",
+// 生产环境下避免跨请求共享缓存：为每个请求创建全新的 ApolloClient
+export const createServerApolloClient = () =>
+  new ApolloClient({
+    link: httpLink,
+    cache: new InMemoryCache(),
+    ssrMode: true,
+    defaultOptions: {
+      watchQuery: {
+        fetchPolicy: "no-cache", // 不读写缓存
+      },
+      query: {
+        fetchPolicy: "no-cache", // 不读写缓存
+      },
     },
-    query: {
-      fetchPolicy: "network-only",
-    },
-  },
-})
+  })
+
+// 在同一请求范围内复用同一个 ApolloClient 实例
+export const getRequestApolloClient = reactCache(() =>
+  createServerApolloClient(),
+)
 
 // 通用的服务器端查询执行函数
 export async function executeServerQuery(
@@ -23,12 +31,14 @@ export async function executeServerQuery(
   queryDocument,
   variables = {},
   options = {},
+  client,
 ) {
   try {
-    const { data } = await client.query({
+    const localClient = client || getRequestApolloClient()
+    const { data } = await localClient.query({
       query: queryDocument,
       variables,
-      fetchPolicy: "network-only",
+      fetchPolicy: "no-cache",
       context: {
         timeout: options.timeout || 5000,
       },
@@ -64,13 +74,15 @@ export async function executeServerQuery(
 }
 
 // 批量执行多个服务器端查询
-export async function executeServerQueries(queryConfigs) {
+export async function executeServerQueries(queryConfigs, client) {
+  const requestClient = client || createServerApolloClient()
   const promises = queryConfigs.map((config) =>
     executeServerQuery(
       config.queryKey,
       config.query,
       config.variables,
       config.options,
+      requestClient,
     ),
   )
 
