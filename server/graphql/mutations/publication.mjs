@@ -22,28 +22,6 @@ async function distributeToFollowers({ publication, signature, request }) {
       `Distributing publication ${publication.id} to ${followers.length} followers.`,
     )
 
-    // 构造用于分发的 typedData，包含时间戳
-    const distributionTypedData = {
-      domain: { name: "epress world", version: "1", chainId: 1 },
-      types: {
-        ContentSignature: [
-          { name: "contentHash", type: "bytes32" },
-          { name: "publisherAddress", type: "address" },
-          { name: "timestamp", type: "uint64" },
-        ],
-      },
-      primaryType: "ContentSignature",
-      message: {
-        contentHash:
-          publication.content?.content_hash || publication.content_hash,
-        publisherAddress:
-          publication.author?.address || publication.author_address,
-        timestamp: Math.floor(
-          new Date(publication.created_at).getTime() / 1000,
-        ), // 使用 publication 的创建时间
-      },
-    }
-
     for (const follower of followers) {
       try {
         await fetch(`${follower.url}/ewp/replications`, {
@@ -52,7 +30,10 @@ async function distributeToFollowers({ publication, signature, request }) {
             "Content-Type": "application/json",
             "X-Epress-Profile-Version": profileVersion.toString(),
           },
-          body: JSON.stringify({ typedData: distributionTypedData, signature }),
+          body: JSON.stringify({
+            typedData: publication.statementOfSource,
+            signature,
+          }),
         })
         request.log.info(
           `Successfully sent replication request to ${follower.url}`,
@@ -421,24 +402,7 @@ const publicationMutations = {
       }
 
       // 3. 验证 EIP-712 签名
-      const typedData = {
-        domain: { name: "epress world", version: "1", chainId: 1 },
-        types: {
-          ContentSignature: [
-            { name: "contentHash", type: "bytes32" },
-            { name: "publisherAddress", type: "address" },
-            { name: "timestamp", type: "uint64" },
-          ],
-        },
-        primaryType: "ContentSignature",
-        message: {
-          contentHash: publication.content.content_hash,
-          publisherAddress: publication.author.address,
-          timestamp: Math.floor(
-            new Date(publication.created_at).getTime() / 1000,
-          ), // 使用 publication 的创建时间
-        },
-      }
+      const typedData = publication.statementOfSource
 
       const isValid = await verifyTypedData({
         address: user.sub,

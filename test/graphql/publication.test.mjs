@@ -355,32 +355,26 @@ async function createTestPublication(
   isSigned = false,
 ) {
   const content = await Content.create({ type: "post", body: contentText })
-  let signature = null
-
-  // If needed, generate a real signature for content hash
-  if (isSigned) {
-    const typedData = {
-      domain: { name: "epress world", version: "1", chainId: 1 },
-      types: {
-        ContentSignature: [
-          { name: "contentHash", type: "bytes32" },
-          { name: "publisherAddress", type: "address" },
-        ],
-      },
-      primaryType: "ContentSignature",
-      message: {
-        contentHash: content.content_hash,
-        publisherAddress: authorNode.address,
-      },
-    }
-    signature = await generateSignature(authorAccount, typedData, "typedData")
-  }
 
   const publication = await Publication.query().insertAndFetch({
     content_hash: content.content_hash,
     author_address: authorNode.address,
-    signature: signature,
   })
+
+  // If needed, generate a real signature for content hash
+  if (isSigned) {
+    const typedData = Publication.createStatementOfSource(
+      content.content_hash,
+      authorNode.address,
+      Math.floor(new Date(publication.created_at).getTime() / 1000),
+    )
+    const signature = await generateSignature(
+      authorAccount,
+      typedData,
+      "typedData",
+    )
+    await publication.$query().patchAndFetch({ signature })
+  }
   return { content, publication }
 }
 
@@ -785,25 +779,6 @@ test("destroyPublication: Failure path - Deleting non-existent publication shoul
   t.is(errors[0].extensions.code, "NOT_FOUND", "Error code should be NOT_FOUND")
 })
 
-const EIP712_DOMAIN = {
-  name: "epress world",
-  version: "1",
-  chainId: 1,
-}
-
-const CONTENT_SIGNATURE_TYPES = {
-  EIP712Domain: [
-    { name: "name", type: "string" },
-    { name: "version", type: "string" },
-    { name: "chainId", type: "uint256" },
-  ],
-  ContentSignature: [
-    { name: "contentHash", type: "bytes32" },
-    { name: "publisherAddress", type: "address" },
-    { name: "timestamp", type: "uint64" },
-  ],
-}
-
 test("signPublication: Success path - should sign and push content to all followers", async (t) => {
   // 清理之前的 nock 状态
   nock.cleanAll()
@@ -825,16 +800,11 @@ test("signPublication: Success path - should sign and push content to all follow
   )
 
   // 3. Setup: Generate EIP-712 signature for the content
-  const typedData = {
-    domain: EIP712_DOMAIN,
-    types: CONTENT_SIGNATURE_TYPES,
-    primaryType: "ContentSignature",
-    message: {
-      contentHash: content.content_hash,
-      publisherAddress: selfNode.address,
-      timestamp: Math.floor(new Date(publication.created_at).getTime() / 1000), // 使用 publication 的创建时间
-    },
-  }
+  const typedData = Publication.createStatementOfSource(
+    content.content_hash,
+    selfNode.address,
+    Math.floor(new Date(publication.created_at).getTime() / 1000),
+  )
   const signature = await generateSignature(
     TEST_ACCOUNT_NODE_A,
     typedData,
@@ -972,18 +942,11 @@ test.serial(
 
     // 1. Prepare a wrong signature (e.g., signed with a different account)
     const otherAccount = generateTestAccount()
-    const typedData = {
-      domain: EIP712_DOMAIN,
-      types: CONTENT_SIGNATURE_TYPES,
-      primaryType: "ContentSignature",
-      message: {
-        contentHash: content.content_hash,
-        publisherAddress: selfNode.address,
-        timestamp: Math.floor(
-          new Date(publication.created_at).getTime() / 1000,
-        ), // 使用 publication 的创建时间
-      },
-    }
+    const typedData = Publication.createStatementOfSource(
+      content.content_hash,
+      selfNode.address,
+      Math.floor(new Date(publication.created_at).getTime() / 1000),
+    )
     const wrongSignature = await generateSignature(
       otherAccount,
       typedData,

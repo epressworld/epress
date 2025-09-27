@@ -44,23 +44,13 @@ test.serial(
     const textContent = "# Test Post\n\nThis is a test post."
     const contentHash = await calculateContentHash(textContent)
 
+    const createdAt = new Date()
     // 生成有效的签名
-    const typedData = {
-      domain: { name: "epress world", version: "1", chainId: 1 },
-      types: {
-        ContentSignature: [
-          { name: "contentHash", type: "bytes32" },
-          { name: "publisherAddress", type: "address" },
-          { name: "timestamp", type: "uint64" },
-        ],
-      },
-      primaryType: "ContentSignature",
-      message: {
-        contentHash: contentHash,
-        publisherAddress: TEST_ACCOUNT_NODE_A.address,
-        timestamp: Math.floor(Date.now() / 1000), // 使用当前时间戳
-      },
-    }
+    const typedData = Publication.createStatementOfSource(
+      contentHash,
+      TEST_ACCOUNT_NODE_A.address,
+      Math.floor(createdAt.getTime() / 1000),
+    )
     const signature = await generateSignature(
       TEST_ACCOUNT_NODE_A,
       typedData,
@@ -82,7 +72,7 @@ test.serial(
             author_address: testNode.address,
             signature: signature,
             comment_count: 5,
-            created_at: new Date().toISOString(),
+            created_at: createdAt.toISOString(),
           },
         ],
         pagination: {
@@ -166,22 +156,11 @@ test.serial(
     const contentHash = await calculateContentHash(fileContent.toString())
 
     // 生成有效的签名
-    const typedData = {
-      domain: { name: "epress world", version: "1", chainId: 1 },
-      types: {
-        ContentSignature: [
-          { name: "contentHash", type: "bytes32" },
-          { name: "publisherAddress", type: "address" },
-          { name: "timestamp", type: "uint64" },
-        ],
-      },
-      primaryType: "ContentSignature",
-      message: {
-        contentHash: contentHash,
-        publisherAddress: TEST_ACCOUNT_NODE_A.address,
-        timestamp: Math.floor(Date.now() / 1000), // 使用当前时间戳
-      },
-    }
+    const typedData = Publication.createStatementOfSource(
+      contentHash,
+      TEST_ACCOUNT_NODE_A.address,
+      Math.floor(Date.now() / 1000),
+    )
     const signature = await generateSignature(
       TEST_ACCOUNT_NODE_A,
       typedData,
@@ -340,44 +319,22 @@ test.serial(
     const contentHash2 = await calculateContentHash(textContent2)
 
     // 生成有效的签名
-    const typedData1 = {
-      domain: { name: "epress world", version: "1", chainId: 1 },
-      types: {
-        ContentSignature: [
-          { name: "contentHash", type: "bytes32" },
-          { name: "publisherAddress", type: "address" },
-          { name: "timestamp", type: "uint64" },
-        ],
-      },
-      primaryType: "ContentSignature",
-      message: {
-        contentHash: contentHash1,
-        publisherAddress: testNode.address,
-        timestamp: Math.floor(Date.now() / 1000), // 添加时间戳
-      },
-    }
+    const typedData1 = Publication.createStatementOfSource(
+      contentHash1,
+      testNode.address,
+      Math.floor(Date.now() / 1000),
+    )
     const signature1 = await generateSignature(
       TEST_ACCOUNT_NODE_A,
       typedData1,
       "typedData",
     )
 
-    const typedData2 = {
-      domain: { name: "epress world", version: "1", chainId: 1 },
-      types: {
-        ContentSignature: [
-          { name: "contentHash", type: "bytes32" },
-          { name: "publisherAddress", type: "address" },
-          { name: "timestamp", type: "uint64" },
-        ],
-      },
-      primaryType: "ContentSignature",
-      message: {
-        contentHash: contentHash2,
-        publisherAddress: testNode.address,
-        timestamp: Math.floor(Date.now() / 1000), // 添加时间戳
-      },
-    }
+    const typedData2 = Publication.createStatementOfSource(
+      contentHash2,
+      testNode.address,
+      Math.floor(Date.now() / 1000),
+    )
     const signature2 = await generateSignature(
       TEST_ACCOUNT_NODE_A,
       typedData2,
@@ -491,22 +448,11 @@ test.serial(
     const contentHash2 = await calculateContentHash(textContent2)
 
     // 生成有效的签名
-    const typedData1 = {
-      domain: { name: "epress world", version: "1", chainId: 1 },
-      types: {
-        ContentSignature: [
-          { name: "contentHash", type: "bytes32" },
-          { name: "publisherAddress", type: "address" },
-          { name: "timestamp", type: "uint64" },
-        ],
-      },
-      primaryType: "ContentSignature",
-      message: {
-        contentHash: contentHash1,
-        publisherAddress: testNode.address,
-        timestamp: Math.floor(Date.now() / 1000), // 添加时间戳
-      },
-    }
+    const typedData1 = Publication.createStatementOfSource(
+      contentHash1,
+      testNode.address,
+      Math.floor(Date.now() / 1000),
+    )
     const signature1 = await generateSignature(
       TEST_ACCOUNT_NODE_A,
       typedData1,
@@ -597,22 +543,11 @@ test.serial(
     const contentHash = await calculateContentHash(textContent)
 
     // 生成有效的签名
-    const typedData = {
-      domain: { name: "epress world", version: "1", chainId: 1 },
-      types: {
-        ContentSignature: [
-          { name: "contentHash", type: "bytes32" },
-          { name: "publisherAddress", type: "address" },
-          { name: "timestamp", type: "uint64" },
-        ],
-      },
-      primaryType: "ContentSignature",
-      message: {
-        contentHash: contentHash,
-        publisherAddress: TEST_ACCOUNT_NODE_A.address,
-        timestamp: Math.floor(Date.now() / 1000), // 使用当前时间戳
-      },
-    }
+    const typedData = Publication.createStatementOfSource(
+      contentHash,
+      TEST_ACCOUNT_NODE_A.address,
+      Math.floor(Date.now() / 1000),
+    )
     const signature = await generateSignature(
       TEST_ACCOUNT_NODE_A,
       typedData,
@@ -695,22 +630,11 @@ test.serial("Node.sync.publication should skip existing content", async (t) => {
   })
 
   // 生成有效的签名
-  const typedData = {
-    domain: { name: "epress world", version: "1", chainId: 1 },
-    types: {
-      ContentSignature: [
-        { name: "contentHash", type: "bytes32" },
-        { name: "publisherAddress", type: "address" },
-        { name: "timestamp", type: "uint64" },
-      ],
-    },
-    primaryType: "ContentSignature",
-    message: {
-      contentHash: contentHash,
-      publisherAddress: TEST_ACCOUNT_NODE_A.address,
-      timestamp: Math.floor(created_at.getTime() / 1000), // 使用当前时间戳created_at,
-    },
-  }
+  const typedData = Publication.createStatementOfSource(
+    contentHash,
+    TEST_ACCOUNT_NODE_A.address,
+    Math.floor(created_at.getTime() / 1000),
+  )
   const signature = await generateSignature(
     TEST_ACCOUNT_NODE_A,
     typedData,
@@ -743,22 +667,11 @@ test.serial(
     const contentHash = await calculateContentHash("test content")
 
     // 构造 typedData
-    const typedData = {
-      domain: { name: "epress world", version: "1", chainId: 1 },
-      types: {
-        ContentSignature: [
-          { name: "contentHash", type: "bytes32" },
-          { name: "publisherAddress", type: "address" },
-          { name: "timestamp", type: "uint64" },
-        ],
-      },
-      primaryType: "ContentSignature",
-      message: {
-        contentHash: contentHash,
-        publisherAddress: TEST_ACCOUNT_NODE_A.address,
-        timestamp: Math.floor(Date.now() / 1000), // 使用当前时间戳
-      },
-    }
+    const typedData = Publication.createStatementOfSource(
+      contentHash,
+      TEST_ACCOUNT_NODE_A.addres,
+      Math.floor(Date.now() / 1000),
+    )
 
     // Act: 执行同步（不提供签名）
     const result = await testNode.sync.publication(typedData, null)
@@ -792,22 +705,11 @@ test.serial(
     const invalidSignature = "0xinvalid1234567890"
 
     // 构造 typedData
-    const typedData = {
-      domain: { name: "epress world", version: "1", chainId: 1 },
-      types: {
-        ContentSignature: [
-          { name: "contentHash", type: "bytes32" },
-          { name: "publisherAddress", type: "address" },
-          { name: "timestamp", type: "uint64" },
-        ],
-      },
-      primaryType: "ContentSignature",
-      message: {
-        contentHash: contentHash,
-        publisherAddress: TEST_ACCOUNT_NODE_A.address,
-        timestamp: Math.floor(Date.now() / 1000), // 使用当前时间戳
-      },
-    }
+    const typedData = Publication.createStatementOfSource(
+      contentHash,
+      TEST_ACCOUNT_NODE_A.address,
+      Math.floor(Date.now() / 1000),
+    )
 
     // Act: 执行同步（提供无效签名）
     const result = await testNode.sync.publication(typedData, invalidSignature)

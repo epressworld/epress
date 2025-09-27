@@ -70,7 +70,7 @@ export const deleteConnectionTypedData = (
 }
 
 // 内容签名的EIP-712数据结构
-export const contentSignatureTypedData = (
+export const statementOfSourceTypedData = (
   contentHash,
   publisherAddress,
   timestamp,
@@ -81,14 +81,14 @@ export const contentSignatureTypedData = (
       version: "1",
       chainId: 1,
     },
-    primaryType: "ContentSignature",
+    primaryType: "StatementOfSource",
     types: {
       EIP712Domain: [
         { name: "name", type: "string" },
         { name: "version", type: "string" },
         { name: "chainId", type: "uint256" },
       ],
-      ContentSignature: [
+      StatementOfSource: [
         { name: "contentHash", type: "bytes32" },
         { name: "publisherAddress", type: "address" },
         { name: "timestamp", type: "uint64" },

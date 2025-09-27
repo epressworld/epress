@@ -81,4 +81,40 @@ export class Publication extends Model {
 
     return count
   }
+
+  get statementOfSource() {
+    return Publication.createStatementOfSource(
+      this.content_hash,
+      this.author_address,
+      Math.floor(new Date(this.created_at).getTime() / 1000),
+    )
+  }
+
+  static createStatementOfSource(contentHash, publisherAddress, timestamp) {
+    return {
+      domain: {
+        name: "epress world",
+        version: "1",
+        chainId: 1,
+      },
+      primaryType: "StatementOfSource",
+      types: {
+        EIP712Domain: [
+          { name: "name", type: "string" },
+          { name: "version", type: "string" },
+          { name: "chainId", type: "uint256" },
+        ],
+        StatementOfSource: [
+          { name: "contentHash", type: "bytes32" },
+          { name: "publisherAddress", type: "address" },
+          { name: "timestamp", type: "uint64" },
+        ],
+      },
+      message: {
+        contentHash,
+        publisherAddress,
+        timestamp,
+      },
+    }
+  }
 }

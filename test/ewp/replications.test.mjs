@@ -12,35 +12,17 @@ import {
 import { hash } from "../../server/utils/crypto.mjs"
 import { generateSignature, generateTestAccount } from "../setup.mjs"
 
-const EIP712_DOMAIN = {
-  name: "epress world",
-  version: "1",
-  chainId: 1,
-}
-
-const REPLICATION_TYPES = {
-  ContentSignature: [
-    { name: "contentHash", type: "bytes32" },
-    { name: "publisherAddress", type: "address" },
-    { name: "timestamp", type: "uint64" },
-  ],
-}
-
 // Helper to create the typed data for signing
-const createContentSignatureTypedData = (
+const createStatementOfSourceTypedData = (
   contentHash,
   publisherAddress,
   timestamp,
-) => ({
-  domain: EIP712_DOMAIN,
-  types: REPLICATION_TYPES,
-  primaryType: "ContentSignature",
-  message: {
+) =>
+  Publication.createStatementOfSource(
     contentHash,
     publisherAddress,
-    timestamp: timestamp || Math.floor(Date.now() / 1000), // 默认使用当前时间戳
-  },
-})
+    timestamp || Math.floor(Date.now() / 1000),
+  )
 
 test.beforeEach(async (t) => {
   // Get the self node created in global setup
@@ -79,7 +61,7 @@ test("Success: should replicate content from a followed node", async (t) => {
     .reply(200, mockContent, { "Content-Type": "text/markdown" })
 
   // 2. Create and sign the replication request from Node B
-  const typedData = createContentSignatureTypedData(
+  const typedData = createStatementOfSourceTypedData(
     contentHash,
     followeeNode.address,
   )
@@ -138,7 +120,7 @@ test("Success: should replicate a FILE from a followed node", async (t) => {
     })
 
   // 3. Construct and sign request
-  const typedData = createContentSignatureTypedData(
+  const typedData = createStatementOfSourceTypedData(
     contentHash,
     followeeNode.address,
     timestamp,
@@ -224,7 +206,7 @@ test("Success: should replicate a FILE with URL-encoded description from a follo
     })
 
   // 3. Construct and sign request
-  const typedData = createContentSignatureTypedData(
+  const typedData = createStatementOfSourceTypedData(
     contentHash,
     followeeNode.address,
   )
@@ -297,7 +279,7 @@ test("Failure: should reject replication from an unfollowed node", async (t) => 
   const mockContent = "# Malicious Content"
   const contentHash = `0x${await hash.sha256(mockContent)}`
 
-  const typedData = createContentSignatureTypedData(
+  const typedData = createStatementOfSourceTypedData(
     contentHash,
     nodeCAccount.address,
   )
@@ -336,7 +318,7 @@ test("Failure: should reject replication if content hash mismatches", async (t) 
     .query(true)
     .reply(200, wrongContent, { "Content-Type": "text/markdown" })
 
-  const typedData = createContentSignatureTypedData(
+  const typedData = createStatementOfSourceTypedData(
     contentHash,
     followeeNode.address,
   )
@@ -368,7 +350,7 @@ test("Failure: should handle error when content fetch fails", async (t) => {
     .query(true)
     .reply(500, { error: "PUBLISHER_ERROR" })
 
-  const typedData = createContentSignatureTypedData(
+  const typedData = createStatementOfSourceTypedData(
     contentHash,
     followeeNode.address,
   )
@@ -406,7 +388,7 @@ test("Failure: should reject replication if content already exists", async (t) =
     signature: "a-pre-existing-signature",
   })
 
-  const typedData = createContentSignatureTypedData(
+  const typedData = createStatementOfSourceTypedData(
     contentHash,
     followeeNode.address,
   )
@@ -434,7 +416,7 @@ test("Failure: should reject replication with invalid signature", async (t) => {
   const mockContent = "# Some Content"
   const contentHash = `0x${await hash.sha256(mockContent)}`
 
-  const typedData = createContentSignatureTypedData(
+  const typedData = createStatementOfSourceTypedData(
     contentHash,
     followeeNode.address,
   )
@@ -475,8 +457,7 @@ test("Failure: should reject replication if file content is missing Content-Desc
     .reply(200, mockFileBuffer, { "Content-Type": mockFileType })
   // Note: Intentionally not include 'Content-Description' header here
 
-  // 3. Construct and sign request
-  const typedData = createContentSignatureTypedData(
+  const typedData = createStatementOfSourceTypedData(
     contentHash,
     followeeNode.address,
   )
@@ -538,7 +519,7 @@ test("Success: should trigger profile sync if X-Epress-Profile-Version is higher
   })
 
   // 4. Create and sign the replication request from Node B
-  const typedData = createContentSignatureTypedData(
+  const typedData = createStatementOfSourceTypedData(
     contentHash,
     followeeNode.address,
   )

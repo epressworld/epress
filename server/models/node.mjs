@@ -409,29 +409,13 @@ export class Node extends Model {
                     continue
                   }
 
-                  // 构造 typedData - publisherAddress 应该是被同步节点的地址
-                  const typedData = {
-                    domain: { name: "epress world", version: "1", chainId: 1 },
-                    types: {
-                      ContentSignature: [
-                        { name: "contentHash", type: "bytes32" },
-                        { name: "publisherAddress", type: "address" },
-                        { name: "timestamp", type: "uint64" },
-                      ],
-                    },
-                    primaryType: "ContentSignature",
-                    message: {
-                      contentHash: pub.content_hash,
-                      publisherAddress: pub.author_address, // 使用 pub.author_address 作为被同步节点的地址
-                      timestamp: Math.floor(
-                        new Date(pub.created_at).getTime() / 1000,
-                      ), // 使用 publication 的创建时间
-                    },
-                  }
-
                   // 使用 syncPublication 方法同步单个内容
                   const syncResult = await this.sync.publication(
-                    typedData,
+                    Publication.createStatementOfSource(
+                      pub.content_hash,
+                      pub.author_address,
+                      Math.floor(new Date(pub.created_at).getTime() / 1000),
+                    ),
                     pub.signature,
                     { timeout },
                   )
