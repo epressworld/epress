@@ -286,15 +286,20 @@ const FollowingList = ({ initialData, loading, error }) => {
         )}
 
         {following.length === 0 && !currentLoading && (
-          <VStack spacing={4} py={8}>
-            <Icon as={LuUsers} boxSize={12} color="gray.400" />
-            <Text color="gray.500" fontSize="lg">
+          <Box textAlign="center" py={12}>
+            <Icon as={LuUsers} boxSize={16} color="gray.300" mb={4} />
+            <Text
+              color="gray.500"
+              _dark={{ color: "gray.400" }}
+              fontSize="lg"
+              mb={2}
+            >
               {connection.noFollowing()}
             </Text>
-            <Text color="gray.400" fontSize="sm">
+            <Text color="gray.400" _dark={{ color: "gray.500" }} fontSize="sm">
               {connection.noFollowingDescription()}
             </Text>
-          </VStack>
+          </Box>
         )}
       </VStack>
 
