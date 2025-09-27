@@ -27,6 +27,7 @@ const PublicationList = ({
   const { signEIP712Data } = useWallet()
   const { publication: pub, common } = useTranslation()
   const [hasMore, setHasMore] = useState(true)
+  const [hasAttemptedLoadMore, setHasAttemptedLoadMore] = useState(false)
 
   // 对话框状态
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -77,6 +78,7 @@ const PublicationList = ({
     if (!hasMore || loading) return
 
     try {
+      setHasAttemptedLoadMore(true)
       await fetchMore({
         variables: {
           after: data?.search?.pageInfo?.endCursor,
@@ -288,7 +290,7 @@ const PublicationList = ({
           </HStack>
         )}
 
-        {!hasMore && publications.length > 0 && (
+        {!hasMore && publications.length > 0 && hasAttemptedLoadMore && (
           <Text
             textAlign="center"
             color="gray.500"

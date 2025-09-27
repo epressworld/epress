@@ -22,6 +22,7 @@ import { toaster } from "../../ui/toaster"
 
 const FollowingList = ({ initialData, loading, error }) => {
   const [hasMore, setHasMore] = useState(true)
+  const [hasAttemptedLoadMore, setHasAttemptedLoadMore] = useState(false)
   const [selectedNode, setSelectedNode] = useState(null)
   const [isOpen, setIsOpen] = useState(false)
   const { isNodeOwner } = useAuth()
@@ -70,6 +71,7 @@ const FollowingList = ({ initialData, loading, error }) => {
     if (!hasMore || loading) return
 
     try {
+      setHasAttemptedLoadMore(true)
       await fetchMore({
         variables: {
           after: data?.search?.pageInfo?.endCursor,
@@ -273,7 +275,7 @@ const FollowingList = ({ initialData, loading, error }) => {
           </HStack>
         )}
 
-        {!hasMore && following.length > 0 && (
+        {!hasMore && following.length > 0 && hasAttemptedLoadMore && (
           <Text
             textAlign="center"
             color="gray.400"
