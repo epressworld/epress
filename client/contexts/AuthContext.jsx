@@ -12,7 +12,6 @@ import {
 import { useAccount, useDisconnect, useWalletClient } from "wagmi"
 import { SIGN_IN_WITH_ETHEREUM } from "../graphql/mutations"
 import { GET_SIWE_MESSAGE, IS_FOLLOWER } from "../graphql/queries"
-import { isTokenExpired } from "../utils/jwt"
 import { usePage } from "./PageContext"
 
 // 1. 定义清晰的状态枚举
@@ -101,20 +100,30 @@ export function AuthProvider({ children }) {
       setAuthStatus(AUTH_STATUS.DISCONNECTED)
       if (token) {
         setToken(null)
-        localStorage.removeItem("authToken")
       }
       return
     }
 
     if (safeIsConnected) {
-      const storedToken = localStorage.getItem("authToken")
-
-      if (storedToken && !isTokenExpired(storedToken)) {
-        setAuthStatus(AUTH_STATUS.AUTHENTICATED)
-        setToken(storedToken)
-      } else {
-        setAuthStatus(AUTH_STATUS.CONNECTED)
-      }
+      // 通过服务端路由检测 HttpOnly cookie 是否存在，作为登录状态依据
+      ;(async () => {
+        try {
+          const res = await fetch("/api/auth/token", { method: "GET" })
+          if (res.ok) {
+            const json = await res.json()
+            if (json?.authenticated) {
+              setAuthStatus(AUTH_STATUS.AUTHENTICATED)
+            } else {
+              setAuthStatus(AUTH_STATUS.CONNECTED)
+            }
+          } else {
+            setAuthStatus(AUTH_STATUS.CONNECTED)
+          }
+        } catch (e) {
+          console.error("Auth status check failed:", e)
+          setAuthStatus(AUTH_STATUS.CONNECTED)
+        }
+      })()
     }
   }, [
     isClient,
@@ -169,7 +178,16 @@ export function AuthProvider({ children }) {
       const newToken = authData?.signInWithEthereum
       if (!newToken) throw new Error("登录验证失败")
 
-      localStorage.setItem("authToken", newToken)
+      // 将 token 写入 HttpOnly Cookie，供所有请求（通过中间件）注入 Authorization
+      try {
+        await fetch("/api/auth/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: newToken }),
+        })
+      } catch (e) {
+        console.error("Failed to set auth cookie:", e)
+      }
       setToken(newToken)
       setAuthStatus(AUTH_STATUS.AUTHENTICATED)
       // 登录后清空缓存并主动触发所有活跃查询重新获取，避免 AbortError
@@ -181,7 +199,12 @@ export function AuthProvider({ children }) {
       }
     } catch (error) {
       console.error("SIWE登录失败:", error)
-      localStorage.removeItem("authToken")
+      // 清除 HttpOnly Cookie
+      try {
+        await fetch("/api/auth/token", { method: "DELETE" })
+      } catch (e) {
+        console.error("Failed to clear auth cookie:", e)
+      }
       setToken(null)
       setAuthStatus(AUTH_STATUS.CONNECTED)
       throw error
@@ -197,7 +220,10 @@ export function AuthProvider({ children }) {
 
   // 登出逻辑
   const logout = useCallback(() => {
-    localStorage.removeItem("authToken")
+    // 清除 HttpOnly Cookie
+    fetch("/api/auth/token", { method: "DELETE" }).catch((e) =>
+      console.error("Failed to clear auth cookie:", e),
+    )
     setToken(null)
     setAuthStatus(AUTH_STATUS.CONNECTED)
     // 登出后清空缓存并重新获取活跃查询，回到匿名视图

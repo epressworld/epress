@@ -17,7 +17,9 @@ import { LoadingSkeleton } from "../../ui"
 
 export function FollowersList({ initialData, loading, error, onRefetch }) {
   const [page, setPage] = useState(1)
-  const [hasMore, setHasMore] = useState(true)
+  const [hasMore, setHasMore] = useState(
+    initialData?.search?.pageInfo?.hasNextPage ?? true,
+  )
   const { connection, common } = useTranslation()
 
   // 使用传入的数据或查询数据
@@ -26,6 +28,7 @@ export function FollowersList({ initialData, loading, error, onRefetch }) {
     loading: queryLoading,
     error: queryError,
     refetch,
+    networkStatus,
   } = useQuery(SEARCH_NODES, {
     variables: {
       filterBy: { type: "followers" },
@@ -33,12 +36,17 @@ export function FollowersList({ initialData, loading, error, onRefetch }) {
       first: 20,
       after: page > 1 ? ((page - 1) * 20).toString() : undefined,
     },
+    notifyOnNetworkStatusChange: true,
+    // 始终进行网络校验，确保关注关系变更后能及时刷新
     fetchPolicy: "cache-and-network",
-    skip: !!initialData, // 如果有初始数据就跳过查询
+    nextFetchPolicy: "cache-and-network",
+    // 在服务器端跳过，依赖 initialData，避免 SSR 时不必要的 loading=true
+    skip: typeof window === "undefined",
   })
 
   // 使用传入的数据或查询的数据
-  const currentData = initialData || data
+  // 优先使用实时查询数据；如果尚未返回，则使用 initialData
+  const currentData = data ?? initialData
   const currentLoading = loading || queryLoading
   const currentError = error || queryError
 
@@ -49,7 +57,7 @@ export function FollowersList({ initialData, loading, error, onRefetch }) {
   }, [currentData])
 
   const handleLoadMore = () => {
-    if (!hasMore || currentLoading) return
+    if (!hasMore || networkStatus === 2) return
     setPage((prev) => prev + 1)
   }
 
@@ -64,7 +72,7 @@ export function FollowersList({ initialData, loading, error, onRefetch }) {
   }
 
   // 处理加载更多时的错误
-  if (currentLoading && page === 1) {
+  if (currentLoading && page === 1 && !initialData) {
     return <LoadingSkeleton count={3} />
   }
 
@@ -87,6 +95,14 @@ export function FollowersList({ initialData, loading, error, onRefetch }) {
   }
 
   const followers = currentData?.search?.edges || []
+  console.log(
+    currentLoading,
+    followers,
+    "============",
+    loading,
+    queryLoading,
+    typeof window === "undefined",
+  )
 
   // 处理空状态
   if (followers.length === 0 && !currentLoading) {
@@ -118,11 +134,11 @@ export function FollowersList({ initialData, loading, error, onRefetch }) {
         <Box textAlign="center" py={6}>
           <Button
             onClick={handleLoadMore}
-            loading={currentLoading}
+            loading={networkStatus === 2}
             colorPalette="orange"
             variant="ghost"
             size="sm"
-            disabled={currentLoading}
+            disabled={networkStatus === 2}
           >
             <LuEllipsis />
           </Button>

@@ -2,12 +2,20 @@ import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client"
 import { cache as reactCache } from "react"
 
 const uri = `${process.env.EPRESS_API_URL || "http://localhost:8544"}/api/graphql`
-const httpLink = new HttpLink({ uri, fetch })
+const baseHttpLink = new HttpLink({ uri, fetch })
 
-// 生产环境下避免跨请求共享缓存：为每个请求创建全新的 ApolloClient
-export const createServerApolloClient = () =>
-  new ApolloClient({
-    link: httpLink,
+// 统一的服务端 ApolloClient 工厂：可选传入 headers 或 authorization
+export const createServerApolloClient = (options = {}) => {
+  const headers =
+    options.headers ||
+    (options.authorization
+      ? { authorization: options.authorization }
+      : undefined)
+
+  const link = headers ? new HttpLink({ uri, fetch, headers }) : baseHttpLink
+
+  return new ApolloClient({
+    link,
     cache: new InMemoryCache(),
     ssrMode: true,
     defaultOptions: {
@@ -19,10 +27,11 @@ export const createServerApolloClient = () =>
       },
     },
   })
+}
 
-// 在同一请求范围内复用同一个 ApolloClient 实例
-export const getRequestApolloClient = reactCache(() =>
-  createServerApolloClient(),
+// 在同一请求范围内复用同一个 ApolloClient 实例（无认证头）
+export const getRequestApolloClient = reactCache((headers) =>
+  createServerApolloClient({ headers }),
 )
 
 // 通用的服务器端查询执行函数

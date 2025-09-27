@@ -21,7 +21,9 @@ import { ConfirmDialog, LoadingSkeleton } from "../../ui"
 import { toaster } from "../../ui/toaster"
 
 const FollowingList = ({ initialData, loading, error }) => {
-  const [hasMore, setHasMore] = useState(true)
+  const [hasMore, setHasMore] = useState(
+    initialData?.search?.pageInfo?.hasNextPage ?? true,
+  )
   const [hasAttemptedLoadMore, setHasAttemptedLoadMore] = useState(false)
   const [selectedNode, setSelectedNode] = useState(null)
   const [isOpen, setIsOpen] = useState(false)
@@ -35,6 +37,7 @@ const FollowingList = ({ initialData, loading, error }) => {
     loading: queryLoading,
     error: queryError,
     fetchMore,
+    networkStatus,
   } = useQuery(SEARCH_NODES, {
     variables: {
       filterBy: { type: "following" },
@@ -42,12 +45,16 @@ const FollowingList = ({ initialData, loading, error }) => {
       first: 20,
     },
     notifyOnNetworkStatusChange: true,
+    // 始终进行网络校验，确保关注关系变更后能及时刷新
     fetchPolicy: "cache-and-network",
-    skip: !!initialData, // 如果有初始数据就跳过查询
+    nextFetchPolicy: "cache-and-network",
+    // 在服务器端跳过，依赖 initialData，避免 SSR 时不必要的 loading=true
+    skip: typeof window === "undefined",
   })
 
   // 使用传入的数据或查询的数据
-  const currentData = initialData || data
+  // 优先使用实时查询数据；如果尚未返回，则使用 initialData
+  const currentData = data ?? initialData
   const currentLoading = loading || queryLoading
   const currentError = error || queryError
 
@@ -68,13 +75,15 @@ const FollowingList = ({ initialData, loading, error }) => {
       event.stopPropagation()
     }
 
-    if (!hasMore || loading) return
+    if (!hasMore || networkStatus === 3) return
 
     try {
       setHasAttemptedLoadMore(true)
       await fetchMore({
         variables: {
-          after: data?.search?.pageInfo?.endCursor,
+          after:
+            data?.search?.pageInfo?.endCursor ||
+            initialData?.search?.pageInfo?.endCursor,
         },
         updateQuery: (prev, { fetchMoreResult }) => {
           if (!fetchMoreResult) return prev
@@ -262,7 +271,7 @@ const FollowingList = ({ initialData, loading, error }) => {
           <HStack justify="center" py={4}>
             <Button
               onClick={loadMore}
-              loading={currentLoading}
+              loading={networkStatus === 3}
               variant="ghost"
               size="sm"
               colorPalette="orange"

@@ -94,9 +94,6 @@ export function useProfileForm() {
 
         const response = await fetch("/api/graphql", {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-          },
           body: formData,
         })
 
