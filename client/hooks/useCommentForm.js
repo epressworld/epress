@@ -6,15 +6,19 @@ import { useForm } from "react-hook-form"
 import { useAccount } from "wagmi"
 import { toaster } from "../components/ui/toaster"
 import { usePage } from "../contexts/PageContext"
-import { CREATE_COMMENT } from "../graphql/mutations"
+import { CONFIRM_COMMENT, CREATE_COMMENT } from "../graphql/mutations"
 import { commentSignatureTypedData } from "../utils/eip712"
 import { useTranslation } from "./useTranslation"
 import { useWallet } from "./useWallet"
 
-export function useCommentForm(publicationId, onCommentCreated) {
+export function useCommentForm(
+  publicationId,
+  onCommentCreated,
+  onPendingChange,
+) {
   const { profile } = usePage()
   const { signEIP712Data } = useWallet()
-  const { comment, common } = useTranslation()
+  const { comment, common, connection } = useTranslation()
   const { openConnectModal } = useConnectModal()
 
   // 直接使用wagmi的hooks获取最新状态
@@ -24,6 +28,8 @@ export function useCommentForm(publicationId, onCommentCreated) {
   const [isWaitingForWallet, setIsWaitingForWallet] = useState(false)
   const [walletConnectionTimeout, setWalletConnectionTimeout] = useState(null)
   const [authType, setAuthType] = useState("EMAIL") // 默认值，稍后根据连接状态更新
+  const [isConfirming, setIsConfirming] = useState(false)
+  const [pendingComment, setPendingComment] = useState(null) // { id, body, publicationId, commenterAddress }
 
   // 使用react-hook-form
   const commentForm = useForm({
@@ -37,6 +43,7 @@ export function useCommentForm(publicationId, onCommentCreated) {
 
   // GraphQL mutations
   const [createComment] = useMutation(CREATE_COMMENT)
+  const [confirmComment] = useMutation(CONFIRM_COMMENT)
 
   // 监听钱包连接状态变化，设置默认认证方式
   useEffect(() => {
@@ -124,8 +131,8 @@ export function useCommentForm(publicationId, onCommentCreated) {
       if (data.authType === "EMAIL") {
         input.commenter_email = data.email
       } else if (data.authType === "ETHEREUM") {
+        // 两步流程：先创建为待确认评论，然后再触发钱包签名进行确认
         if (!address) {
-          // 如果选择以太坊认证但钱包未连接，提示用户先连接钱包
           toaster.create({
             description: common.pleaseConnectWallet(),
             type: "warning",
@@ -136,27 +143,14 @@ export function useCommentForm(publicationId, onCommentCreated) {
           throw new Error("节点地址未获取到，请刷新页面重试")
         }
 
-        // 生成评论内容的哈希
-        const commentBodyHash = `0x${sha256(data.body)}`
-
-        // 创建EIP-712类型化数据
-        const typedData = commentSignatureTypedData(
-          profile.address, // 节点地址
-          address, // 评论者地址
-          parseInt(publicationId, 10), // 发布ID
-          commentBodyHash, // 评论内容哈希
-        )
-
-        // 使用钱包签名
-        const signature = await signEIP712Data(typedData)
-
         input.commenter_address = address
-        input.signature = signature
       }
 
-      await createComment({
+      const createResp = await createComment({
         variables: { input },
       })
+
+      const created = createResp?.data?.createComment
 
       // 根据认证类型显示不同的成功消息
       if (data.authType === "EMAIL") {
@@ -165,10 +159,29 @@ export function useCommentForm(publicationId, onCommentCreated) {
           type: "success",
         })
       } else {
-        toaster.create({
-          description: comment.commentSubmitSuccessShort(),
-          type: "success",
-        })
+        // 以太坊：已创建为待确认，随后触发签名流程
+        // 构造待确认上下文
+        const ctx = {
+          id: created?.id,
+          body: created?.body || data.body,
+          publicationId: parseInt(publicationId, 10),
+          commenterAddress: address,
+          commenterUsername: created?.commenter_username || data.username,
+          status: created?.status || "PENDING",
+          createdAt: created?.created_at,
+          authType: "ETHEREUM",
+        }
+        // 保存待确认上下文，供后续签名重试按钮使用
+        setPendingComment(ctx)
+        // 通知外部待确认状态变更（用于列表显示和重试）
+        if (onPendingChange) {
+          onPendingChange(ctx, async () => {
+            await confirmPendingComment({ skipToast: false, context: ctx })
+          })
+        }
+
+        // 立即尝试进行签名确认（避免使用尚未更新的状态，直接传入上下文）
+        await confirmPendingComment({ skipToast: false, context: ctx })
       }
 
       // 重置表单
@@ -179,8 +192,8 @@ export function useCommentForm(publicationId, onCommentCreated) {
         authType: isConnected ? "ETHEREUM" : "EMAIL", // 根据当前钱包状态设置默认值
       })
 
-      // 通知父组件刷新评论列表
-      if (onCommentCreated) {
+      // 邮箱认证：创建后立即刷新一次；以太坊认证：确认后再刷新
+      if (onCommentCreated && data.authType === "EMAIL") {
         onCommentCreated()
       }
 
@@ -198,13 +211,89 @@ export function useCommentForm(publicationId, onCommentCreated) {
     }
   }
 
+  // 重新触发钱包签名并确认待确认评论
+  const confirmPendingComment = async ({ skipToast, context } = {}) => {
+    const ctx = context || pendingComment
+    if (!ctx) return
+    if (!profile?.address) {
+      toaster.create({
+        description: connection.cannotGetNodeInfo(),
+        type: "error",
+      })
+      return
+    }
+    if (!ctx.commenterAddress) {
+      toaster.create({
+        description: common.pleaseConnectWallet(),
+        type: "warning",
+      })
+      openConnectModal?.()
+      return
+    }
+
+    try {
+      setIsConfirming(true)
+
+      // 生成评论内容哈希并构造EIP-712数据
+      const commentBodyHash = `0x${sha256(ctx.body)}`
+      const timestampSec = Math.floor(new Date(ctx.createdAt).getTime() / 1000)
+      const typedData = commentSignatureTypedData(
+        profile.address,
+        ctx.commenterAddress,
+        ctx.publicationId,
+        commentBodyHash,
+        timestampSec,
+      )
+
+      const signature = await signEIP712Data(typedData)
+      if (!signature) {
+        toaster.create({ description: common.signFailed(), type: "error" })
+        return
+      }
+
+      // 调用确认评论的Mutation
+      const _resp = await confirmComment({
+        variables: { id: ctx.id, tokenOrSignature: signature },
+      })
+
+      if (!skipToast) {
+        toaster.create({
+          description: comment.commentSubmitSuccess(),
+          type: "success",
+        })
+      }
+
+      // 清除待确认状态
+      setPendingComment(null)
+      if (onPendingChange) {
+        onPendingChange(null, null)
+      }
+
+      // 再次刷新评论列表（确认后刷新）
+      if (onCommentCreated) {
+        onCommentCreated()
+      }
+    } catch (error) {
+      console.error("确认评论签名失败:", error)
+      toaster.create({
+        description: error.message || common.pleaseRetry(),
+        type: "error",
+      })
+    } finally {
+      setIsConfirming(false)
+    }
+  }
+
   return {
     commentForm,
     isSubmitting,
     isWaitingForWallet,
+    isConfirming,
     authType,
     isConnected,
     handleAuthTypeChange,
     handleSubmit,
+    pendingComment,
+    confirmPendingComment,
   }
 }

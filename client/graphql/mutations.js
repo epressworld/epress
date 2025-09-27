@@ -150,9 +150,9 @@ export const DESTROY_COMMENT = gql`
   }
 `
 
-export const CONFIRM_COMMENT_EMAIL = gql`
-  mutation ConfirmCommentEmail($token: String!) {
-    confirmCommentEmail(token: $token) {
+export const CONFIRM_COMMENT = gql`
+  mutation ConfirmComment($id: ID, $tokenOrSignature: String!) {
+    confirmComment(id: $id, tokenOrSignature: $tokenOrSignature) {
       id
       body
       status

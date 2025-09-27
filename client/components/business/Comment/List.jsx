@@ -10,7 +10,13 @@ import { LoadingSkeleton } from "../../ui"
 import { toaster } from "../../ui/toaster"
 import { CommentItem } from "./Item"
 
-const CommentList = ({ publicationId, onCommentDeleted }) => {
+const CommentList = ({
+  publicationId,
+  onCommentDeleted,
+  localPendingComment,
+  onRetrySignature,
+  onSetRefetch,
+}) => {
   const [hasMore, setHasMore] = useState(true)
   const [hasAttemptedLoadMore, setHasAttemptedLoadMore] = useState(false)
   const { common } = useTranslation()
@@ -21,7 +27,7 @@ const CommentList = ({ publicationId, onCommentDeleted }) => {
     {
       variables: {
         filterBy: { publication_id: publicationId },
-        orderBy: "created_at",
+        orderBy: "-created_at",
         first: 10,
       },
       notifyOnNetworkStatusChange: true,
@@ -35,6 +41,14 @@ const CommentList = ({ publicationId, onCommentDeleted }) => {
       setHasMore(data.search.pageInfo.hasNextPage)
     }
   }, [data])
+
+  // 将 refetch 暴露给父组件，便于外部触发刷新
+  useEffect(() => {
+    if (onSetRefetch && refetch) {
+      // 通过函数式更新避免 React 将函数视为 updater 并调用它
+      onSetRefetch(() => refetch)
+    }
+  }, [onSetRefetch, refetch])
 
   // 处理评论删除后的回调
   const handleCommentDeleted = () => {
@@ -60,6 +74,8 @@ const CommentList = ({ publicationId, onCommentDeleted }) => {
       await fetchMore({
         variables: {
           after: data?.search?.pageInfo?.endCursor,
+          // 保持与初次查询一致的排序
+          orderBy: "-created_at",
         },
         updateQuery: (prev, { fetchMoreResult }) => {
           if (!fetchMoreResult) return prev
@@ -101,6 +117,25 @@ const CommentList = ({ publicationId, onCommentDeleted }) => {
 
   return (
     <VStack gap={4} align="stretch">
+      {/* 本地待确认评论置顶显示 */}
+      {localPendingComment && (
+        <CommentItem
+          key={`local-pending-${localPendingComment.id}`}
+          comment={{
+            id: localPendingComment.id,
+            body: localPendingComment.body,
+            status: "PENDING",
+            auth_type: "ETHEREUM",
+            commenter_username: localPendingComment.commenterUsername,
+            commenter_address: localPendingComment.commenterAddress,
+            created_at: localPendingComment.createdAt,
+          }}
+          onCommentDeleted={handleCommentDeleted}
+          isLocalPending={true}
+          onRetrySignature={onRetrySignature}
+        />
+      )}
+
       {comments.map((comment, index) => (
         <CommentItem
           key={`${comment.id}-${index}`}
@@ -132,7 +167,7 @@ const CommentList = ({ publicationId, onCommentDeleted }) => {
         </Text>
       )}
 
-      {comments.length === 0 && !loading && (
+      {comments.length === 0 && !loading && !localPendingComment && (
         <Text textAlign="center" color="gray.500" py={8}>
           {common.noComments()}
         </Text>

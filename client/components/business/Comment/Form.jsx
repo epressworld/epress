@@ -14,17 +14,24 @@ import { FiMessageCircle } from "react-icons/fi"
 import { useCommentForm } from "../../../hooks/useCommentForm"
 import { useTranslation } from "../../../hooks/useTranslation"
 
-export const CommentForm = ({ publicationId, onCommentCreated }) => {
-  const { comment, common } = useTranslation()
+export const CommentForm = ({
+  publicationId,
+  onCommentCreated,
+  onPendingCommentChange,
+}) => {
+  const { comment, common, form } = useTranslation()
 
   const {
     commentForm,
     isSubmitting,
     isWaitingForWallet,
+    isConfirming,
     authType,
+    pendingComment,
     handleAuthTypeChange,
     handleSubmit,
-  } = useCommentForm(publicationId, onCommentCreated)
+    confirmPendingComment,
+  } = useCommentForm(publicationId, onCommentCreated, onPendingCommentChange)
 
   // 默认认证方式：如果钱包已连接则选择以太坊，否则选择邮箱
 
@@ -97,7 +104,7 @@ export const CommentForm = ({ publicationId, onCommentCreated }) => {
             rows={4}
             error={commentForm.formState.errors.body?.message}
             {...commentForm.register("body", {
-              required: "评论内容是必填项",
+              required: form.commentContentRequired(),
             })}
           />
 
@@ -107,12 +114,20 @@ export const CommentForm = ({ publicationId, onCommentCreated }) => {
             colorPalette="orange"
             size="md"
             width="100%"
-            loading={isSubmitting || isWaitingForWallet}
+            loading={isSubmitting || isWaitingForWallet || isConfirming}
             loadingText={
               isWaitingForWallet
                 ? common.waitingForWallet()
-                : comment.submitting()
+                : isConfirming
+                  ? comment.verifyingComment()
+                  : comment.submitting()
             }
+            onClick={(e) => {
+              if (authType === "ETHEREUM" && pendingComment) {
+                e.preventDefault()
+                confirmPendingComment()
+              }
+            }}
           >
             <FiMessageCircle />
             {isWaitingForWallet

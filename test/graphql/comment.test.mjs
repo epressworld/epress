@@ -55,6 +55,7 @@ const COMMENT_SIGNATURE_TYPES = {
     { name: "commenterAddress", type: "address" },
     { name: "publicationId", type: "uint256" },
     { name: "commentBodyHash", type: "bytes32" },
+    { name: "timestamp", type: "uint256" },
   ],
 }
 
@@ -121,31 +122,11 @@ test("createComment: Should be able to create comment through EMAIL authenticati
 
 // Test case 2: Ethereum authentication - Success
 test.serial(
-  "createComment: Should be able to create comment through ETHEREUM authentication with CONFIRMED status",
+  "createComment: Should create ETHEREUM authenticated comment with PENDING status (two-step)",
   async (t) => {
-    const { graphqlClient, publicationId, selfNode, testPublication } =
-      t.context
+    const { graphqlClient, publicationId } = t.context
 
     const commentBody = "This is a test comment through Ethereum."
-    const commentBodyHash = `0x${await hash.sha256(commentBody)}`
-
-    const typedData = {
-      domain: COMMENT_SIGNATURE_DOMAIN,
-      types: COMMENT_SIGNATURE_TYPES,
-      primaryType: "CommentSignature",
-      message: {
-        nodeAddress: selfNode.address,
-        commenterAddress: TEST_ACCOUNT_NODE_A.address,
-        publicationId: testPublication.id,
-        commentBodyHash: commentBodyHash,
-      },
-    }
-
-    const signature = await generateSignature(
-      TEST_ACCOUNT_NODE_A,
-      typedData,
-      "typedData",
-    )
 
     const mutation = `
     mutation CreateComment($input: CreateCommentInput!) {
@@ -167,7 +148,6 @@ test.serial(
       commenter_username: "Ethereum User",
       auth_type: "ETHEREUM",
       commenter_address: TEST_ETHEREUM_ADDRESS_NODE_A,
-      signature: signature,
     }
 
     const { data, errors } = await graphqlClient.query(mutation, {
@@ -179,9 +159,9 @@ test.serial(
     t.is(data.createComment.body, input.body, "Comment body should match")
     t.is(
       data.createComment.status,
-      "CONFIRMED",
-      "Ethereum authentication comment status should be CONFIRMED",
-    ) // Based on UI specification
+      "PENDING",
+      "Ethereum authentication comment status should be PENDING",
+    )
     t.is(
       data.createComment.auth_type,
       input.auth_type,
@@ -206,26 +186,153 @@ test.serial(
     // Verify comment was saved to database
     const commentInDb = await Comment.query().findById(data.createComment.id)
     t.truthy(commentInDb, "Comment should be saved to database")
-    t.is(
-      commentInDb.status,
-      "CONFIRMED",
-      "Status in database should be confirmed",
-    )
+    t.is(commentInDb.status, "PENDING", "Status in database should be PENDING")
     t.is(
       commentInDb.signature,
-      signature,
-      "Signature should be saved to database",
+      null,
+      "Signature should not be saved at creation",
+    )
+  },
+)
+
+// Test Case: confirmComment - ETHEREUM path should require id when using signature
+test("confirmComment: missing id for ETHEREUM signature should return VALIDATION_FAILED", async (t) => {
+  const { graphqlClient, publicationId, selfNode, testPublication } = t.context
+  const commentBody = "missing id case"
+  const commentBodyHash = `0x${await hash.sha256(commentBody)}`
+
+  // Create comment
+  const createMutation = `
+    mutation CreateComment($input: CreateCommentInput!) {
+      createComment(input: $input) { id created_at }
+    }
+  `
+  const { data: createData } = await graphqlClient.query(createMutation, {
+    variables: {
+      input: {
+        publication_id: publicationId,
+        body: commentBody,
+        commenter_username: "id-missing",
+        auth_type: "ETHEREUM",
+        commenter_address: TEST_ETHEREUM_ADDRESS_NODE_A,
+      },
+    },
+  })
+
+  const timestampSec = Math.floor(
+    new Date(createData.createComment.created_at).getTime() / 1000,
+  )
+  const typedData = {
+    domain: COMMENT_SIGNATURE_DOMAIN,
+    types: COMMENT_SIGNATURE_TYPES,
+    primaryType: "CommentSignature",
+    message: {
+      nodeAddress: selfNode.address,
+      commenterAddress: TEST_ACCOUNT_NODE_A.address,
+      publicationId: testPublication.id,
+      commentBodyHash,
+      timestamp: timestampSec,
+    },
+  }
+  const signature = await generateSignature(
+    TEST_ACCOUNT_NODE_A,
+    typedData,
+    "typedData",
+  )
+
+  const confirmMutation = `
+    mutation ConfirmComment($tokenOrSignature: String!) {
+      confirmComment(tokenOrSignature: $tokenOrSignature) { id }
+    }
+  `
+  const { data, errors } = await graphqlClient.query(confirmMutation, {
+    variables: { tokenOrSignature: signature },
+  })
+  t.is(data, null, "Data should be null")
+  t.truthy(errors, "Should return GraphQL errors")
+  t.is(
+    errors[0].extensions.code,
+    "VALIDATION_FAILED",
+    "Error code should be VALIDATION_FAILED",
+  )
+})
+
+// Test Case: confirmComment - ETHEREUM path should reject expired signatures
+test.serial(
+  "confirmComment: expired signature should return EXPIRED_SIGNATURE",
+  async (t) => {
+    const { graphqlClient, publicationId, selfNode, testPublication } =
+      t.context
+    const commentBody = "expired signature case"
+    const commentBodyHash = `0x${await hash.sha256(commentBody)}`
+
+    // Create comment
+    const createMutation = `
+    mutation CreateComment($input: CreateCommentInput!) {
+      createComment(input: $input) { id created_at }
+    }
+  `
+    const { data: createData } = await graphqlClient.query(createMutation, {
+      variables: {
+        input: {
+          publication_id: publicationId,
+          body: commentBody,
+          commenter_username: "expired-user",
+          auth_type: "ETHEREUM",
+          commenter_address: TEST_ETHEREUM_ADDRESS_NODE_A,
+        },
+      },
+    })
+    const createdId = createData.createComment.id
+
+    // Patch created_at to earlier than validity window
+    const pastDate = new Date(Date.now() - 601 * 1000)
+    await Comment.query().findById(createdId).patch({ created_at: pastDate })
+
+    const timestampSec = Math.floor(pastDate.getTime() / 1000)
+    const typedData = {
+      domain: COMMENT_SIGNATURE_DOMAIN,
+      types: COMMENT_SIGNATURE_TYPES,
+      primaryType: "CommentSignature",
+      message: {
+        nodeAddress: selfNode.address,
+        commenterAddress: TEST_ACCOUNT_NODE_A.address,
+        publicationId: testPublication.id,
+        commentBodyHash,
+        timestamp: timestampSec,
+      },
+    }
+    const signature = await generateSignature(
+      TEST_ACCOUNT_NODE_A,
+      typedData,
+      "typedData",
+    )
+
+    const confirmMutation = `
+    mutation ConfirmComment($id: ID, $tokenOrSignature: String!) {
+      confirmComment(id: $id, tokenOrSignature: $tokenOrSignature) { id }
+    }
+  `
+    const { data, errors } = await graphqlClient.query(confirmMutation, {
+      variables: { id: createdId, tokenOrSignature: signature },
+    })
+    t.is(data, null, "Data should be null")
+    t.truthy(errors, "Should return GraphQL errors")
+    t.is(
+      errors[0].extensions.code,
+      "EXPIRED_SIGNATURE",
+      "Error code should be EXPIRED_SIGNATURE",
     )
   },
 )
 
 // New test case: ETHEREUM authentication but signature missing
-test("createComment: ETHEREUM authentication but signature missing should return error", async (t) => {
+test("createComment: ETHEREUM authentication without signature should create PENDING comment (two-step)", async (t) => {
   const { graphqlClient, publicationId } = t.context
 
   const mutation = `
     mutation CreateComment($input: CreateCommentInput!) {
-      createComment(input: $input) { id }
+      createComment(input: $input) { id status auth_type commenter_address }
     }
   `
 
@@ -235,29 +342,55 @@ test("createComment: ETHEREUM authentication but signature missing should return
     commenter_username: "Test User",
     auth_type: "ETHEREUM",
     commenter_address: TEST_ETHEREUM_ADDRESS_NODE_A,
-    // signature: missing
+    // signature intentionally omitted in two-step flow
   }
 
   const { data, errors } = await graphqlClient.query(mutation, {
     variables: { input },
   })
 
-  t.truthy(errors, "Should return GraphQL errors")
-  t.is(data, null, "Data field should be null")
+  t.falsy(errors, "Should not return GraphQL errors on creation")
+  t.truthy(data?.createComment?.id, "Should return created comment id")
+  t.is(data.createComment.status, "PENDING", "Status should be PENDING")
+  t.is(data.createComment.auth_type, "ETHEREUM", "Auth type should be ETHEREUM")
   t.is(
-    errors[0].extensions.code,
-    "VALIDATION_FAILED",
-    "Error code should be VALIDATION_FAILED",
+    data.createComment.commenter_address,
+    TEST_ETHEREUM_ADDRESS_NODE_A,
+    "Commenter address should match",
   )
 })
 
-// New test case: ETHEREUM authentication but invalid signature
-test("createComment: ETHEREUM authentication but invalid signature should return error", async (t) => {
+// New test case: ETHEREUM confirmation with invalid signature should return error
+test("confirmComment: ETHEREUM confirmation with invalid signature should return INVALID_SIGNATURE", async (t) => {
   const { graphqlClient, publicationId, selfNode, testPublication } = t.context
 
   const commentBody = "Valid content."
   const commentBodyHash = `0x${await hash.sha256(commentBody)}`
 
+  // Step 1: Create comment (PENDING)
+  const createMutation = `
+    mutation CreateComment($input: CreateCommentInput!) {
+      createComment(input: $input) { id created_at }
+    }
+  `
+
+  const { data: createData } = await graphqlClient.query(createMutation, {
+    variables: {
+      input: {
+        publication_id: publicationId,
+        body: commentBody,
+        commenter_username: "Test User",
+        auth_type: "ETHEREUM",
+        commenter_address: TEST_ETHEREUM_ADDRESS_NODE_A,
+      },
+    },
+  })
+
+  const createdId = createData.createComment.id
+  const createdAt = createData.createComment.created_at
+  const timestampSec = Math.floor(new Date(createdAt).getTime() / 1000)
+
+  // Step 2: Build typedData and sign with wrong account
   const typedData = {
     domain: COMMENT_SIGNATURE_DOMAIN,
     types: COMMENT_SIGNATURE_TYPES,
@@ -266,38 +399,30 @@ test("createComment: ETHEREUM authentication but invalid signature should return
       nodeAddress: selfNode.address,
       commenterAddress: TEST_ACCOUNT_NODE_A.address,
       publicationId: testPublication.id,
-      commentBodyHash: commentBodyHash,
+      commentBodyHash,
+      timestamp: timestampSec,
     },
   }
 
-  // Use different account to sign, making it invalid
   const invalidSignature = await generateSignature(
     TEST_ACCOUNT_NODE_B,
     typedData,
     "typedData",
   )
 
-  const mutation = `
-    mutation CreateComment($input: CreateCommentInput!) {
-      createComment(input: $input) { id }
+  // Step 3: Confirm with invalid signature
+  const confirmMutation = `
+    mutation ConfirmComment($id: ID, $tokenOrSignature: String!) {
+      confirmComment(id: $id, tokenOrSignature: $tokenOrSignature) { id status }
     }
   `
 
-  const input = {
-    publication_id: publicationId,
-    body: commentBody,
-    commenter_username: "Test User",
-    auth_type: "ETHEREUM",
-    commenter_address: TEST_ETHEREUM_ADDRESS_NODE_A,
-    signature: invalidSignature,
-  }
-
-  const { data, errors } = await graphqlClient.query(mutation, {
-    variables: { input },
+  const { data, errors } = await graphqlClient.query(confirmMutation, {
+    variables: { id: createdId, tokenOrSignature: invalidSignature },
   })
 
-  t.truthy(errors, "Should return GraphQL errors")
   t.is(data, null, "Data field should be null")
+  t.truthy(errors, "Should return GraphQL errors")
   t.is(
     errors[0].extensions.code,
     "INVALID_SIGNATURE",
@@ -516,10 +641,10 @@ test("createComment: ETHEREUM authentication but invalid address format should r
   )
 })
 
-// --- confirmCommentEmail Tests ---
+// --- confirmComment Tests ---
 
 test.serial(
-  "confirmCommentEmail: should confirm a comment with a valid token",
+  "confirmComment: should confirm EMAIL authenticated comment with a valid token",
   async (t) => {
     const { graphqlClient, publicationId } = t.context
 
@@ -550,15 +675,17 @@ test.serial(
 
     // 2. Call the verifyCommentEmail mutation with the retrieved token
     const verifyMutation = `
-    mutation ConfirmCommentEmail($token: String!) {
-      confirmCommentEmail(token: $token) {
+    mutation ConfirmComment($tokenOrSignature: String!) {
+      confirmComment(tokenOrSignature: $tokenOrSignature) {
         id
         status
       }
     }
   `
     const { data: verifyData, errors: verifyErrors } =
-      await graphqlClient.query(verifyMutation, { variables: { token } })
+      await graphqlClient.query(verifyMutation, {
+        variables: { tokenOrSignature: token },
+      })
 
     // 3. Assert the verification result
     t.falsy(
@@ -566,12 +693,12 @@ test.serial(
       "Verification with a valid token should not produce GraphQL errors",
     )
     t.is(
-      verifyData.confirmCommentEmail.id,
+      verifyData.confirmComment.id,
       commentId,
       "Should return the correct comment ID",
     )
     t.is(
-      verifyData.confirmCommentEmail.status,
+      verifyData.confirmComment.status,
       "CONFIRMED",
       "Comment status should be updated to CONFIRMED",
     )
@@ -583,28 +710,108 @@ test.serial(
 )
 
 test.serial(
-  "confirmCommentEmail: should return an error for an invalid token",
+  "confirmComment: should return an error for an invalid token",
   async (t) => {
     const { graphqlClient } = t.context
     const invalidToken = "this.is.an.invalid.jwt.token"
 
     const verifyMutation = `
-      mutation ConfirmCommentEmail($token: String!) {
-        confirmCommentEmail(token: $token) {
+      mutation ConfirmComment($tokenOrSignature: String!) {
+        confirmComment(tokenOrSignature: $tokenOrSignature) {
           id
         }
       }
     `
     const { data, errors } = await graphqlClient.query(verifyMutation, {
-      variables: { token: invalidToken },
+      variables: { tokenOrSignature: invalidToken },
     })
 
     t.is(data, null)
     t.truthy(errors, "Should return GraphQL errors for an invalid token")
     t.is(
       errors[0].extensions.code,
-      "INVALID_SIGNATURE",
-      "Error code should be INVALID_SIGNATURE",
+      "VALIDATION_FAILED",
+      "Error code should be VALIDATION_FAILED",
+    )
+  },
+)
+
+// Test Case: confirmComment - ETHEREUM path should confirm with valid signature
+test.serial(
+  "confirmComment: should confirm ETHEREUM authenticated comment with valid signature",
+  async (t) => {
+    const { graphqlClient, publicationId, selfNode, testPublication } =
+      t.context
+
+    const commentBody = "a comment to be signature-verified"
+    const commentBodyHash = `0x${await hash.sha256(commentBody)}`
+
+    // 1) Create comment (PENDING)
+    const createMutation = `
+      mutation CreateComment($input: CreateCommentInput!) {
+        createComment(input: $input) { id created_at status }
+      }
+    `
+    const { data: createData, errors: createErrors } =
+      await graphqlClient.query(createMutation, {
+        variables: {
+          input: {
+            publication_id: publicationId,
+            body: commentBody,
+            commenter_username: "sig-user",
+            auth_type: "ETHEREUM",
+            commenter_address: TEST_ETHEREUM_ADDRESS_NODE_A,
+          },
+        },
+      })
+    t.falsy(createErrors, "Comment creation should succeed")
+    t.is(
+      createData.createComment.status,
+      "PENDING",
+      "Should be PENDING at creation",
+    )
+
+    const createdId = createData.createComment.id
+    const timestampSec = Math.floor(
+      new Date(createData.createComment.created_at).getTime() / 1000,
+    )
+
+    // 2) Sign typed data with matching timestamp/body
+    const typedData = {
+      domain: COMMENT_SIGNATURE_DOMAIN,
+      types: COMMENT_SIGNATURE_TYPES,
+      primaryType: "CommentSignature",
+      message: {
+        nodeAddress: selfNode.address,
+        commenterAddress: TEST_ACCOUNT_NODE_A.address,
+        publicationId: testPublication.id,
+        commentBodyHash,
+        timestamp: timestampSec,
+      },
+    }
+    const signature = await generateSignature(
+      TEST_ACCOUNT_NODE_A,
+      typedData,
+      "typedData",
+    )
+
+    // 3) Confirm
+    const confirmMutation = `
+      mutation ConfirmComment($id: ID, $tokenOrSignature: String!) {
+        confirmComment(id: $id, tokenOrSignature: $tokenOrSignature) { id status }
+      }
+    `
+    const { data: confirmData, errors: confirmErrors } =
+      await graphqlClient.query(confirmMutation, {
+        variables: { id: createdId, tokenOrSignature: signature },
+      })
+
+    t.falsy(confirmErrors, "Confirmation should not error")
+    t.is(confirmData.confirmComment.id, createdId, "ID should match")
+    t.is(
+      confirmData.confirmComment.status,
+      "CONFIRMED",
+      "Status should be CONFIRMED after signature",
     )
   },
 )
@@ -613,30 +820,11 @@ test.serial(
 
 // Helper to create a comment for deletion tests
 async function createTestComment(t, authType, email, ethAccount) {
-  const { graphqlClient, publicationId, selfNode, testPublication } = t.context
+  const { graphqlClient, publicationId } = t.context
   const commentBody = `Test comment for deletion (${authType}).`
-  const commentBodyHash = `0x${await hash.sha256(commentBody)}`
 
-  let signature = null
-
-  if (authType === "ETHEREUM") {
-    const createCommentTypedData = {
-      domain: COMMENT_SIGNATURE_DOMAIN,
-      types: COMMENT_SIGNATURE_TYPES,
-      primaryType: "CommentSignature",
-      message: {
-        nodeAddress: selfNode.address,
-        commenterAddress: ethAccount.address,
-        publicationId: testPublication.id,
-        commentBodyHash: commentBodyHash,
-      },
-    }
-    signature = await generateSignature(
-      ethAccount,
-      createCommentTypedData,
-      "typedData",
-    )
-  }
+  // No signature is required at creation time for ETHEREUM path in two-step flow
+  const signature = null
 
   const input = {
     publication_id: publicationId,
@@ -1047,11 +1235,11 @@ test("confirmCommentDeletion: should return NOT_FOUND for token of non-existent 
 
 // ==================== comment_count Auto Update Tests ====================
 
-// Test Case: comment_count should auto-increase when creating Ethereum authenticated comment
+// Test Case: comment_count should auto-increase after confirming Ethereum authenticated comment
 test.serial(
-  "createComment: comment_count should auto-increase when creating Ethereum authenticated comment",
+  "confirmComment: comment_count should auto-increase after confirming Ethereum authenticated comment",
   async (t) => {
-    const { graphqlClient } = t.context
+    const { graphqlClient, selfNode } = t.context
     const { testPublication } = t.context
 
     // Verify initial comment_count is 0
@@ -1067,73 +1255,97 @@ test.serial(
     const commentBody = "Test comment for comment_count update"
     const commentBodyHash = `0x${await hash.sha256(commentBody)}`
 
+    // 1) Create ETHEREUM comment (should be PENDING)
+    const createMutation = `
+      mutation CreateComment($input: CreateCommentInput!) {
+        createComment(input: $input) { id status created_at }
+      }
+    `
+    const { data: createData, errors: createErrors } =
+      await graphqlClient.query(createMutation, {
+        variables: {
+          input: {
+            publication_id: testPublication.id,
+            body: commentBody,
+            auth_type: "ETHEREUM",
+            commenter_address: TEST_ETHEREUM_ADDRESS_NODE_A,
+            commenter_username: "testuser",
+          },
+        },
+      })
+    t.falsy(createErrors, "Should not return GraphQL errors on creation")
+    t.is(
+      createData.createComment.status,
+      "PENDING",
+      "Should be PENDING at creation",
+    )
+
+    // comment_count should still be 0
+    const publicationAfterCreate = await Publication.query().findById(
+      testPublication.id,
+    )
+    t.is(
+      publicationAfterCreate.comment_count,
+      0,
+      "comment_count should remain 0 before confirmation",
+    )
+
+    // 2) Confirm with EIP-712 signature that includes timestamp
+    const timestampSec = Math.floor(
+      new Date(createData.createComment.created_at).getTime() / 1000,
+    )
     const typedData = {
       domain: COMMENT_SIGNATURE_DOMAIN,
       types: COMMENT_SIGNATURE_TYPES,
       primaryType: "CommentSignature",
       message: {
-        nodeAddress: TEST_ETHEREUM_ADDRESS_NODE_A,
+        nodeAddress: selfNode.address,
         commenterAddress: TEST_ACCOUNT_NODE_A.address,
         publicationId: testPublication.id,
         commentBodyHash: commentBodyHash,
+        timestamp: timestampSec,
       },
     }
-
     const signature = await generateSignature(
       TEST_ACCOUNT_NODE_A,
       typedData,
       "typedData",
     )
 
-    const createMutation = `
-    mutation CreateComment($input: CreateCommentInput!) {
-      createComment(input: $input) {
-        id
-        body
-        status
-        auth_type
-        commenter_address
+    const confirmMutation = `
+      mutation ConfirmComment($id: ID, $tokenOrSignature: String!) {
+        confirmComment(id: $id, tokenOrSignature: $tokenOrSignature) { id status }
       }
-    }
-  `
-
-    const { data, errors } = await graphqlClient.query(createMutation, {
-      variables: {
-        input: {
-          publication_id: testPublication.id,
-          body: commentBody,
-          auth_type: "ETHEREUM",
-          commenter_address: TEST_ACCOUNT_NODE_A.address,
-          commenter_username: "testuser",
-          signature: signature,
+    `
+    const { data: confirmData, errors: confirmErrors } =
+      await graphqlClient.query(confirmMutation, {
+        variables: {
+          id: createData.createComment.id,
+          tokenOrSignature: signature,
         },
-      },
-    })
-
-    t.falsy(errors, "Should not return GraphQL errors")
-    t.truthy(data, "Should return data")
-    t.truthy(data.createComment, "Should return created comment")
+      })
+    t.falsy(confirmErrors, "Should not return GraphQL errors on confirmation")
     t.is(
-      data.createComment.status,
+      confirmData.confirmComment.status,
       "CONFIRMED",
-      "Comment status should be CONFIRMED",
+      "Should be CONFIRMED after confirmation",
     )
 
-    // Verify comment_count has been auto-increased
+    // 3) Verify comment_count has been auto-increased to 1
     const updatedPublication = await Publication.query().findById(
       testPublication.id,
     )
     t.is(
       updatedPublication.comment_count,
       1,
-      "comment_count should be increased to 1",
+      "comment_count should be increased to 1 after confirmation",
     )
   },
 )
 
 // Test Case: comment_count should auto-increase when confirming email authenticated comment
 test.serial(
-  "confirmCommentEmail: comment_count should auto-increase when confirming email authenticated comment",
+  "confirmComment: comment_count should auto-increase when confirming email authenticated comment",
   async (t) => {
     const { graphqlClient } = t.context
     const { testPublication } = t.context
@@ -1188,8 +1400,8 @@ test.serial(
 
     // Confirm comment
     const confirmMutation = `
-    mutation ConfirmCommentEmail($token: String!) {
-      confirmCommentEmail(token: $token) {
+    mutation ConfirmComment($tokenOrSignature: String!) {
+      confirmComment(tokenOrSignature: $tokenOrSignature) {
         id
         body
         status
@@ -1202,15 +1414,15 @@ test.serial(
     const { data: confirmData, errors } = await graphqlClient.query(
       confirmMutation,
       {
-        variables: { token },
+        variables: { tokenOrSignature: token },
       },
     )
 
     t.falsy(errors, "Should not return GraphQL errors")
     t.truthy(confirmData, "Should return data")
-    t.truthy(confirmData.confirmCommentEmail, "Should return confirmed comment")
+    t.truthy(confirmData.confirmComment, "Should return confirmed comment")
     t.is(
-      confirmData.confirmCommentEmail.status,
+      confirmData.confirmComment.status,
       "CONFIRMED",
       "Comment status should be CONFIRMED",
     )
@@ -1265,8 +1477,8 @@ test.serial(
       "confirm",
     )
     const confirmMutation = `
-    mutation ConfirmCommentEmail($token: String!) {
-      confirmCommentEmail(token: $token) {
+    mutation ConfirmComment($tokenOrSignature: String!) {
+      confirmComment(tokenOrSignature: $tokenOrSignature) {
         id
         status
       }
@@ -1274,7 +1486,7 @@ test.serial(
   `
 
     await graphqlClient.query(confirmMutation, {
-      variables: { token: confirmToken },
+      variables: { tokenOrSignature: confirmToken },
     })
 
     // Verify comment_count is 1
@@ -1337,40 +1549,16 @@ test.serial(
 test.serial(
   "destroyComment: comment_count should auto-decrease when deleting Ethereum authenticated comment",
   async (t) => {
-    const { graphqlClient } = t.context
+    const { graphqlClient, selfNode } = t.context
     const { testPublication } = t.context
 
-    // First create an Ethereum authenticated comment
+    // First create an Ethereum authenticated comment (PENDING)
     const commentBody = "Test ethereum comment for deletion"
     const commentBodyHash = `0x${await hash.sha256(commentBody)}`
 
-    const typedData = {
-      domain: COMMENT_SIGNATURE_DOMAIN,
-      types: COMMENT_SIGNATURE_TYPES,
-      primaryType: "CommentSignature",
-      message: {
-        nodeAddress: TEST_ETHEREUM_ADDRESS_NODE_A,
-        commenterAddress: TEST_ACCOUNT_NODE_A.address,
-        publicationId: testPublication.id,
-        commentBodyHash: commentBodyHash,
-      },
-    }
-
-    const signature = await generateSignature(
-      TEST_ACCOUNT_NODE_A,
-      typedData,
-      "typedData",
-    )
-
     const createMutation = `
     mutation CreateComment($input: CreateCommentInput!) {
-      createComment(input: $input) {
-        id
-        body
-        status
-        auth_type
-        commenter_address
-      }
+      createComment(input: $input) { id status created_at }
     }
   `
 
@@ -1380,9 +1568,8 @@ test.serial(
           publication_id: testPublication.id,
           body: commentBody,
           auth_type: "ETHEREUM",
-          commenter_address: TEST_ACCOUNT_NODE_A.address,
+          commenter_address: TEST_ETHEREUM_ADDRESS_NODE_A,
           commenter_username: "testuser",
-          signature: signature,
         },
       },
     })
@@ -1390,18 +1577,55 @@ test.serial(
     t.truthy(createData.createComment, "Should create comment successfully")
     t.is(
       createData.createComment.status,
-      "CONFIRMED",
-      "Comment status should be CONFIRMED",
+      "PENDING",
+      "Comment status should be PENDING",
     )
 
-    // Verify comment_count is 1
+    // Confirm the comment so comment_count becomes 1
+    const timestampSec = Math.floor(
+      new Date(createData.createComment.created_at).getTime() / 1000,
+    )
+    const typedData = {
+      domain: COMMENT_SIGNATURE_DOMAIN,
+      types: COMMENT_SIGNATURE_TYPES,
+      primaryType: "CommentSignature",
+      message: {
+        nodeAddress: selfNode.address,
+        commenterAddress: TEST_ACCOUNT_NODE_A.address,
+        publicationId: testPublication.id,
+        commentBodyHash: commentBodyHash,
+        timestamp: timestampSec,
+      },
+    }
+    const signature = await generateSignature(
+      TEST_ACCOUNT_NODE_A,
+      typedData,
+      "typedData",
+    )
+    const confirmMutation = `
+      mutation ConfirmComment($id: ID, $tokenOrSignature: String!) {
+        confirmComment(id: $id, tokenOrSignature: $tokenOrSignature) { id status }
+      }
+    `
+    const { errors: confirmErrors } = await graphqlClient.query(
+      confirmMutation,
+      {
+        variables: {
+          id: createData.createComment.id,
+          tokenOrSignature: signature,
+        },
+      },
+    )
+    t.falsy(confirmErrors, "Confirmation should not error")
+
+    // Verify comment_count is 1 after confirmation
     const createdPublication = await Publication.query().findById(
       testPublication.id,
     )
     t.is(
       createdPublication.comment_count,
       1,
-      "comment_count should be 1 after creation",
+      "comment_count should be 1 after confirmation",
     )
 
     // Generate deletion signature

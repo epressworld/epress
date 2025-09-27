@@ -2,10 +2,7 @@ import { useMutation } from "@apollo/client/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import { toaster } from "../components/ui/toaster"
-import {
-  CONFIRM_COMMENT_DELETION,
-  CONFIRM_COMMENT_EMAIL,
-} from "../graphql/mutations"
+import { CONFIRM_COMMENT, CONFIRM_COMMENT_DELETION } from "../graphql/mutations"
 import { useTranslation } from "./useTranslation"
 
 export function useVerifyPage() {
@@ -21,7 +18,7 @@ export function useVerifyPage() {
   const [action, setAction] = useState(null)
 
   // GraphQL mutations
-  const [confirmCommentEmail] = useMutation(CONFIRM_COMMENT_EMAIL)
+  const [confirmComment] = useMutation(CONFIRM_COMMENT)
   const [confirmCommentDeletion] = useMutation(CONFIRM_COMMENT_DELETION)
 
   // 解析 token 获取 action
@@ -56,9 +53,9 @@ export function useVerifyPage() {
       let response
 
       if (action === "confirm") {
-        // 确认评论
-        response = await confirmCommentEmail({
-          variables: { token },
+        // 统一端点：邮箱确认传递 tokenOrSignature（无需 id）
+        response = await confirmComment({
+          variables: { tokenOrSignature: token },
         })
       } else if (action === "destroy") {
         // 确认删除评论
@@ -75,9 +72,7 @@ export function useVerifyPage() {
 
       const commentData =
         response.data[
-          action === "confirm"
-            ? "confirmCommentEmail"
-            : "confirmCommentDeletion"
+          action === "confirm" ? "confirmComment" : "confirmCommentDeletion"
         ]
       setResult(commentData)
 

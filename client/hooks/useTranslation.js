@@ -22,6 +22,7 @@ export const useTranslation = () => {
       success: () => t("common.success"),
       warning: () => t("common.warning"),
       retry: () => t("common.retry"),
+      reSign: () => t("common.reSign"),
       noMore: () => t("common.noMore"),
       loadMore: () => t("common.loadMore"),
       noComments: () => t("common.noComments"),
