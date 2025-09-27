@@ -1,6 +1,6 @@
 "use client"
 
-import { useMutation, useQuery } from "@apollo/client/react"
+import { useApolloClient, useMutation, useQuery } from "@apollo/client/react"
 import {
   createContext,
   useCallback,
@@ -29,6 +29,7 @@ export function AuthProvider({ children }) {
   const [authStatus, setAuthStatus] = useState(AUTH_STATUS.LOADING)
   const [token, setToken] = useState(null)
   const [isClient, setIsClient] = useState(false)
+  const apolloClient = useApolloClient()
 
   // 从 PageContext 获取所有页面级数据
   const {
@@ -171,6 +172,13 @@ export function AuthProvider({ children }) {
       localStorage.setItem("authToken", newToken)
       setToken(newToken)
       setAuthStatus(AUTH_STATUS.AUTHENTICATED)
+      // 登录后清空缓存并主动触发所有活跃查询重新获取，避免 AbortError
+      try {
+        await apolloClient.clearStore()
+        await apolloClient.refetchQueries({ include: "active" })
+      } catch (e) {
+        console.error("Apollo refetch after login failed:", e)
+      }
     } catch (error) {
       console.error("SIWE登录失败:", error)
       localStorage.removeItem("authToken")
@@ -192,6 +200,11 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("authToken")
     setToken(null)
     setAuthStatus(AUTH_STATUS.CONNECTED)
+    // 登出后清空缓存并重新获取活跃查询，回到匿名视图
+    apolloClient
+      .clearStore()
+      .then(() => apolloClient.refetchQueries({ include: "active" }))
+      .catch((e) => console.error("Apollo refetch after logout failed:", e))
   }, [])
 
   // 彻底断开连接

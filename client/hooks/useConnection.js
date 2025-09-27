@@ -5,6 +5,7 @@ import { useAccount } from "wagmi"
 import { toaster } from "../components/ui/toaster"
 import { useAuth } from "../contexts/AuthContext"
 import { CREATE_CONNECTION, DESTROY_CONNECTION } from "../graphql/mutations"
+import { SEARCH_NODES } from "../graphql/queries"
 import {
   createConnectionTypedData,
   deleteConnectionTypedData,
@@ -105,6 +106,17 @@ export function useConnection() {
           typedData,
           signature: signature,
         },
+        refetchQueries: [
+          {
+            query: SEARCH_NODES,
+            variables: {
+              filterBy: { type: "followers" },
+              orderBy: "-created_at",
+              first: 20,
+            },
+          },
+        ],
+        awaitRefetchQueries: true,
       })
 
       toaster.create({
@@ -163,6 +175,17 @@ export function useConnection() {
           typedData,
           signature: signature,
         },
+        refetchQueries: [
+          {
+            query: SEARCH_NODES,
+            variables: {
+              filterBy: { type: "followers" },
+              orderBy: "-created_at",
+              first: 20,
+            },
+          },
+        ],
+        awaitRefetchQueries: true,
       })
 
       toaster.create({
