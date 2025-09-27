@@ -32,9 +32,7 @@ export function Page({ children, runtimeConfig, serverDataMap, serverErrors }) {
                     <Header />
                     <main className="content-area">
                       <Container maxW="6xl" py={6}>
-                        <Suspense fallback={<div>Loading...</div>}>
-                          {children}
-                        </Suspense>
+                        <Suspense fallback={null}>{children}</Suspense>
                       </Container>
                     </main>
                     <Footer />

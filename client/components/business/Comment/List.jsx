@@ -1,12 +1,11 @@
 "use client"
 
 import { useQuery } from "@apollo/client/react"
-import { Alert, Button, HStack, Text, VStack } from "@chakra-ui/react"
+import { Alert, Button, HStack, Spinner, Text, VStack } from "@chakra-ui/react"
 import { useEffect, useState } from "react"
 import { LuEllipsis } from "react-icons/lu"
 import { SEARCH_COMMENTS } from "../../../graphql/queries"
 import { useTranslation } from "../../../hooks/useTranslation"
-import { LoadingSkeleton } from "../../ui"
 import { toaster } from "../../ui/toaster"
 import { CommentItem } from "./Item"
 
@@ -98,7 +97,12 @@ const CommentList = ({
   }
 
   if (loading && !data) {
-    return <LoadingSkeleton count={2} />
+    return (
+      <VStack colorPalette="orange">
+        <Spinner color="colorPalette.600" />
+        <Text color="colorPalette.600">Loading...</Text>
+      </VStack>
+    )
   }
 
   if (error) {

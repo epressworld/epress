@@ -13,7 +13,7 @@ import { statementOfSourceTypedData } from "../utils/eip712"
 import { useTranslation } from "./useTranslation"
 import { useWallet } from "./useWallet"
 
-export function usePublicationDetail() {
+export function usePublicationDetail(options = {}) {
   const params = useParams()
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -39,7 +39,7 @@ export function usePublicationDetail() {
   // 获取Publication详情
   const {
     data: publicationData,
-    loading: publicationLoading,
+    loading: queryLoading,
     error: publicationError,
     refetch: refetchPublication,
   } = useQuery(FETCH, {
@@ -47,10 +47,16 @@ export function usePublicationDetail() {
       type: "PUBLICATION",
       id: publicationId,
     },
-    fetchPolicy: "cache-and-network",
+    fetchPolicy: options.initialPublication
+      ? "cache-first"
+      : "cache-and-network",
+    nextFetchPolicy: "cache-and-network",
   })
 
-  const publication = publicationData?.fetch
+  const publication =
+    publicationData?.fetch || options.initialPublication || null
+  const publicationLoading =
+    queryLoading && !publicationData && !options.initialPublication
 
   // 处理编辑
   const handleEdit = (publication) => {
@@ -72,7 +78,6 @@ export function usePublicationDetail() {
         id: id,
         body: content, // 直接传递 body 内容
       }
-      console.log(publication, "===================")
       if (publication.content.type === "FILE") {
         delete input.body
         input.description = content

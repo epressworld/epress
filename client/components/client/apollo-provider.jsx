@@ -1,11 +1,6 @@
 "use client"
 
-import {
-  ApolloClient,
-  ApolloLink,
-  HttpLink,
-  InMemoryCache,
-} from "@apollo/client"
+import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client"
 import {
   ApolloProvider as ApolloProviderBase,
   useApolloClient,
@@ -16,6 +11,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useState,
 } from "react"
 
@@ -144,7 +140,12 @@ export function CacheManagerProvider({ children }) {
 export function usePagePreload(serverDataMap) {
   const { preloadDataToCache } = useCacheManager()
 
-  useEffect(() => {
+  // 使用 layout effect 在首次绘制前将服务器数据写入 Apollo 缓存，减少刷新时骨架屏闪现
+  // 注意：仅在客户端执行，不影响 SSR
+  const useLayoutEffectSafe =
+    typeof window !== "undefined" ? useLayoutEffect : () => {}
+
+  useLayoutEffectSafe(() => {
     if (serverDataMap && Object.keys(serverDataMap).length > 0) {
       preloadDataToCache(serverDataMap)
     }
@@ -195,22 +196,8 @@ const populateCacheWithServerData = async (cache, serverDataMap) => {
 // 创建 Apollo Client 实例
 const createApolloClient = (serverDataMap = null) => {
   const httpLink = new HttpLink({ uri: "/api/graphql" })
-
-  const authLink = new ApolloLink((operation, forward) => {
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("authToken") : null
-
-    operation.setContext(({ headers = {} }) => ({
-      headers: {
-        ...headers,
-        authorization: token ? `Bearer ${token}` : "",
-      },
-    }))
-
-    return forward(operation)
-  })
-
-  const link = authLink.concat(httpLink)
+  // 依赖 Next 中间件将 HttpOnly cookie 自动注入 Authorization，无需在客户端设置头
+  const link = httpLink
 
   const cache = new InMemoryCache({
     typePolicies: {
@@ -232,6 +219,9 @@ const createApolloClient = (serverDataMap = null) => {
             },
           },
         },
+      },
+      Content: {
+        keyFields: ["content_hash"],
       },
     },
   })
@@ -267,5 +257,9 @@ export function ApolloProvider({ children, serverDataMap = null }) {
     }
   }, [serverDataMap])
 
-  return <ApolloProviderBase client={client}>{children}</ApolloProviderBase>
+  return (
+    <ApolloProviderBase client={client}>
+      <CacheManagerProvider>{children}</CacheManagerProvider>
+    </ApolloProviderBase>
+  )
 }

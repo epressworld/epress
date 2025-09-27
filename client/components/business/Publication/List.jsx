@@ -18,6 +18,8 @@ import { toaster } from "../../ui/toaster"
 import { PublicationItem } from "./Item"
 
 const PublicationList = ({
+  initialPublications = [],
+  initialPageInfo = null,
   onEdit,
   onSetRefetch,
   onPublicationCreated,
@@ -26,7 +28,7 @@ const PublicationList = ({
   const { authStatus, isNodeOwner } = useAuth()
   const { signEIP712Data } = useWallet()
   const { publication: pub, common } = useTranslation()
-  const [hasMore, setHasMore] = useState(true)
+  const [hasMore, setHasMore] = useState(Boolean(initialPageInfo?.hasNextPage))
   const [hasAttemptedLoadMore, setHasAttemptedLoadMore] = useState(false)
 
   // 对话框状态
@@ -41,7 +43,7 @@ const PublicationList = ({
   const [destroyPublication] = useMutation(DESTROY_PUBLICATION)
 
   // 获取Publications列表 - 使用 Apollo Client
-  const { data, loading, error, fetchMore, refetch } = useQuery(
+  const { data, loading, error, fetchMore, refetch, networkStatus } = useQuery(
     SEARCH_PUBLICATIONS,
     {
       variables: {
@@ -50,7 +52,9 @@ const PublicationList = ({
         first: 10,
       },
       notifyOnNetworkStatusChange: true,
-      fetchPolicy: "cache-and-network", // 确保数据一致性
+      // 始终进行网络校验，确保登录状态变化后列表及时刷新
+      fetchPolicy: "cache-and-network",
+      nextFetchPolicy: "cache-and-network",
     },
   )
 
@@ -60,6 +64,13 @@ const PublicationList = ({
       setHasMore(data.search.pageInfo.hasNextPage)
     }
   }, [data])
+
+  // 基于 initialPageInfo 初始化 hasMore
+  useEffect(() => {
+    if (!data && initialPageInfo) {
+      setHasMore(Boolean(initialPageInfo.hasNextPage))
+    }
+  }, [data, initialPageInfo])
 
   // 设置 refetch 方法给父组件
   useEffect(() => {
@@ -75,13 +86,14 @@ const PublicationList = ({
       event.stopPropagation()
     }
 
-    if (!hasMore || loading) return
+    if (!hasMore || networkStatus === 3) return
 
     try {
       setHasAttemptedLoadMore(true)
       await fetchMore({
         variables: {
-          after: data?.search?.pageInfo?.endCursor,
+          after:
+            data?.search?.pageInfo?.endCursor || initialPageInfo?.endCursor,
         },
         updateQuery: (prevResult, { fetchMoreResult }) => {
           if (!fetchMoreResult?.search?.edges) {
@@ -237,7 +249,11 @@ const PublicationList = ({
     setSignatureDialogOpen(true)
   }
 
-  if (loading && !data) {
+  if (
+    loading &&
+    !data &&
+    (!initialPublications || initialPublications.length === 0)
+  ) {
     return <LoadingSkeleton count={3} />
   }
 
@@ -253,7 +269,8 @@ const PublicationList = ({
     )
   }
 
-  const publications = data?.search?.edges?.map((edge) => edge.node) || []
+  const publications =
+    data?.search?.edges?.map((edge) => edge.node) || initialPublications || []
 
   return (
     <>
@@ -277,7 +294,7 @@ const PublicationList = ({
           <HStack justify="center" py={4}>
             <Button
               onClick={loadMore}
-              loading={loading}
+              loading={networkStatus === 3}
               variant="ghost"
               size="sm"
               colorPalette="orange"

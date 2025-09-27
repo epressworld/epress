@@ -419,6 +419,7 @@ export const PublicationItem = ({
                 title={formatTime(publication.created_at, currentLanguage)}
                 color="gray.500"
                 fontSize="sm"
+                suppressHydrationWarning
               >
                 {formatRelativeTime(publication.created_at, currentLanguage)}
               </Link>

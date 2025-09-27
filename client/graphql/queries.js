@@ -172,6 +172,54 @@ export const SEARCH_NODES = gql`
   }
 `
 
+// 合并 connections 页面所需的两个查询，避免 queryKey 冲突并一次性预加载缓存
+export const CONNECTIONS_PAGE_DATA = gql`
+  query ConnectionsPageData($orderBy: String, $followersFirst: Int, $followingFirst: Int) {
+    followers: search(
+      type: NODE
+      filterBy: { type: "followers" }
+      orderBy: $orderBy
+      first: $followersFirst
+    ) {
+      total
+      edges {
+        cursor
+        node {
+          ... on Node {
+            ${segments.node}
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        startCursor
+        endCursor
+      }
+    }
+    following: search(
+      type: NODE
+      filterBy: { type: "following" }
+      orderBy: $orderBy
+      first: $followingFirst
+    ) {
+      total
+      edges {
+        cursor
+        node {
+          ... on Node {
+            ${segments.node}
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        startCursor
+        endCursor
+      }
+    }
+  }
+`
+
 // 单独的查询 - 现在分别在服务器端和客户端使用
 export const IS_FOLLOWER = gql`
   query IsFollower($address: String!) {

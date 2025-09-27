@@ -118,7 +118,6 @@ export function useConnection() {
         ],
         awaitRefetchQueries: true,
       })
-
       toaster.create({
         description: connection.followSuccess(url),
         type: "success",

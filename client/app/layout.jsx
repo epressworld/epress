@@ -1,3 +1,4 @@
+import { cookies } from "next/headers"
 import { Page } from "../components/layout"
 import { PwaRegistry } from "../components/ui/PwaRegistry"
 import { executeServerQueries, getRequestApolloClient } from "../graphql"
@@ -49,6 +50,10 @@ export const viewport = {
 }
 
 export default async function RootLayout({ children }) {
+  const cookieStore = await cookies()
+  const token = cookieStore.get("authToken")?.value
+  const authorization = token ? `Bearer ${token}` : ""
+
   // 服务器端配置
   const runtimeConfig = {
     defaultTheme: process.env.EPRESS_CLIENT_DEFAULT_THEME,
@@ -66,7 +71,7 @@ export default async function RootLayout({ children }) {
   ]
 
   // 为本次请求获取可复用的 ApolloClient，并传入批量查询
-  const requestClient = getRequestApolloClient()
+  const requestClient = getRequestApolloClient({ authorization })
   const { data: serverDataMap, errors: serverErrors } =
     await executeServerQueries(globalQueryConfigs, requestClient)
 

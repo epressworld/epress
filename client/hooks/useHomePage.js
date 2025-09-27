@@ -102,9 +102,6 @@ export function useHomePage() {
         // 使用fetch直接发送multipart请求
         const response = await fetch("/api/graphql", {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-          },
           body: formDataToSend,
         })
 
