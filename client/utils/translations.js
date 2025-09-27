@@ -129,6 +129,9 @@ export const translations = {
       signatureTime: "Signature Time",
       signatureTimestamp: "Signature Timestamp",
       signatureMessage: "Signature Message",
+      proofOfSource: "Proof of Source",
+      statementOfSource: "Statement of Source",
+      signature: "Signature",
       close: "Close",
       pageTitle: {
         home: "Contents",
@@ -513,6 +516,9 @@ export const translations = {
       signatureTime: "签名时间",
       signatureTimestamp: "签名时间戳",
       signatureMessage: "签名消息",
+      proofOfSource: "来源证明",
+      statementOfSource: "来源声明",
+      signature: "签名",
       close: "关闭",
       pageTitle: {
         home: "内容",

@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  Box,
   Button,
   CloseButton,
   Dialog,
@@ -8,6 +9,7 @@ import {
   Group,
   IconButton,
   Input,
+  Textarea,
   VStack,
 } from "@chakra-ui/react"
 import { useCopyToClipboard } from "@uidotdev/usehooks"
@@ -25,12 +27,14 @@ export const createSignatureData = (publication) => {
     timestamp = date.toISOString()
   }
 
-  return {
+  const result = {
     address: publication?.author?.address || "",
     content_hash: publication?.content?.content_hash || "",
     signature: publication?.signature || "",
     timestamp: timestamp,
   }
+
+  return result
 }
 
 const CopyButton = ({ field, value, copiedFields, handleCopy }) => (
@@ -38,7 +42,23 @@ const CopyButton = ({ field, value, copiedFields, handleCopy }) => (
     variant="outline"
     bg="bg.subtle"
     onClick={() => handleCopy(field, value)}
-    aria-label="复制"
+    aria-label="Copy"
+  >
+    {copiedFields[field] ? <FiCheck /> : <FiCopy />}
+  </IconButton>
+)
+
+const TextareaCopyButton = ({ field, value, copiedFields, handleCopy }) => (
+  <IconButton
+    variant="outline"
+    bg="bg.subtle"
+    size="sm"
+    position="absolute"
+    top="2"
+    right="2"
+    zIndex="1"
+    onClick={() => handleCopy(field, value)}
+    aria-label="Copy"
   >
     {copiedFields[field] ? <FiCheck /> : <FiCopy />}
   </IconButton>
@@ -63,6 +83,14 @@ export const SignatureDialog = ({ isOpen, onClose, signatureData }) => {
 
   if (!signatureData) return null
 
+  // 直接从signatureData创建Statement of Source的JSON字符串
+  const statementOfSource = {
+    contentHash: signatureData.content_hash,
+    publisherAddress: signatureData.address,
+    timestamp: Math.floor(new Date(signatureData.timestamp).getTime() / 1000),
+  }
+  const statementOfSourceJson = JSON.stringify(statementOfSource, null, 2)
+
   return (
     <Dialog.Root
       open={isOpen}
@@ -75,7 +103,7 @@ export const SignatureDialog = ({ isOpen, onClose, signatureData }) => {
       <Dialog.Positioner>
         <Dialog.Content>
           <Dialog.Header>
-            <Dialog.Title>{sig.signatureInfo()}</Dialog.Title>
+            <Dialog.Title>{sig.proofOfSource()}</Dialog.Title>
             <Dialog.CloseTrigger asChild>
               <CloseButton size="sm" />
             </Dialog.CloseTrigger>
@@ -84,64 +112,36 @@ export const SignatureDialog = ({ isOpen, onClose, signatureData }) => {
           <Dialog.Body>
             <VStack gap={4} align="stretch">
               <Field.Root>
-                <Field.Label>{sig.signerAddress()}</Field.Label>
-                <Group attached w="full">
-                  <Input
-                    value={signatureData?.address || ""}
+                <Field.Label>{sig.statementOfSource()}</Field.Label>
+                <Box position="relative" w="full">
+                  <Textarea
+                    value={statementOfSourceJson}
                     readOnly
                     variant="outline"
-                    flex="1"
+                    w="full"
+                    minH="180px"
+                    fontFamily="mono"
+                    fontSize="sm"
+                    pr="12"
                   />
-                  <CopyButton
-                    field="address"
-                    value={signatureData?.address || ""}
+                  <TextareaCopyButton
+                    field="statement"
+                    value={statementOfSourceJson}
                     copiedFields={copiedFields}
                     handleCopy={handleCopy}
                   />
-                </Group>
+                </Box>
               </Field.Root>
               <Field.Root>
-                <Field.Label>{sig.signatureTimestamp()}</Field.Label>
-                <Group attached w="full">
-                  <Input
-                    value={signatureData?.timestamp || ""}
-                    readOnly
-                    variant="outline"
-                    flex="1"
-                  />
-                  <CopyButton
-                    field="timestamp"
-                    value={signatureData?.timestamp || ""}
-                    copiedFields={copiedFields}
-                    handleCopy={handleCopy}
-                  />
-                </Group>
-              </Field.Root>
-              <Field.Root>
-                <Field.Label>{sig.signatureHash()}</Field.Label>
-                <Group attached w="full">
-                  <Input
-                    value={signatureData?.content_hash || ""}
-                    readOnly
-                    variant="outline"
-                    flex="1"
-                  />
-                  <CopyButton
-                    field="hash"
-                    value={signatureData?.content_hash || ""}
-                    copiedFields={copiedFields}
-                    handleCopy={handleCopy}
-                  />
-                </Group>
-              </Field.Root>
-              <Field.Root>
-                <Field.Label>{sig.signatureData()}</Field.Label>
+                <Field.Label>{sig.signature()}</Field.Label>
                 <Group attached w="full">
                   <Input
                     value={signatureData?.signature || ""}
                     readOnly
                     variant="outline"
                     flex="1"
+                    fontFamily="mono"
+                    fontSize="sm"
                   />
                   <CopyButton
                     field="signature"
