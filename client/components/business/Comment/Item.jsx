@@ -17,6 +17,7 @@ import {
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { FiTrash2 } from "react-icons/fi"
+import { TbSignature } from "react-icons/tb"
 import { AUTH_STATUS, useAuth } from "../../../contexts/AuthContext"
 import { useLanguage } from "../../../contexts/LanguageContext"
 import { usePage } from "../../../contexts/PageContext"
@@ -28,7 +29,12 @@ import { deleteCommentTypedData } from "../../../utils/eip712"
 import { ConfirmDialog, InfoDialog } from "../../ui"
 import { toaster } from "../../ui/toaster"
 
-export const CommentItem = ({ comment, onCommentDeleted }) => {
+export const CommentItem = ({
+  comment,
+  onCommentDeleted,
+  isLocalPending = false,
+  onRetrySignature,
+}) => {
   const { authStatus, isNodeOwner } = useAuth()
   const { profile } = usePage()
   const { signEIP712Data } = useWallet()
@@ -256,24 +262,42 @@ export const CommentItem = ({ comment, onCommentDeleted }) => {
         className="group"
       >
         <VStack align="stretch">
-          {/* 用户信息和删除按钮 */}
+          {/* 用户信息和操作按钮 */}
           <HStack justify="space-between" align="center">
             <HStack gap={3}>{renderUserInfo()}</HStack>
 
-            {/* 删除按钮 - 悬停时显示 */}
+            {/* 悬停显示：本地待确认显示重试，其他显示删除 */}
             <Box
               opacity={0}
-              _groupHover={{ opacity: 1 }}
+              pointerEvents="none"
+              _groupHover={{ opacity: 1, pointerEvents: "auto" }}
               transition="opacity 0.2s ease-in-out"
             >
-              <IconButton
-                size="sm"
-                variant="ghost"
-                colorPalette="red"
-                onClick={handleDeleteClick}
-              >
-                <FiTrash2 />
-              </IconButton>
+              {isLocalPending && onRetrySignature ? (
+                <IconButton
+                  size="sm"
+                  variant="ghost"
+                  colorPalette="orange"
+                  aria-label={common.reSign()}
+                  title={common.reSign()}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    onRetrySignature()
+                  }}
+                >
+                  <TbSignature />
+                </IconButton>
+              ) : (
+                <IconButton
+                  size="sm"
+                  variant="ghost"
+                  colorPalette="red"
+                  onClick={handleDeleteClick}
+                >
+                  <FiTrash2 />
+                </IconButton>
+              )}
             </Box>
           </HStack>
 
@@ -286,8 +310,8 @@ export const CommentItem = ({ comment, onCommentDeleted }) => {
               {formatTime(comment.created_at, currentLanguage)}
             </Text>
 
-            {/* 评论状态（仅登录用户可见） */}
-            {authStatus === AUTH_STATUS.AUTHENTICATED && (
+            {/* 评论状态（所有用户可见） */}
+            <HStack gap={2} align="center">
               <Badge
                 size="sm"
                 colorPalette={
@@ -299,7 +323,7 @@ export const CommentItem = ({ comment, onCommentDeleted }) => {
                   ? status.confirmed()
                   : status.pending()}
               </Badge>
-            )}
+            </HStack>
           </HStack>
         </VStack>
       </Box>

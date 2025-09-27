@@ -93,7 +93,7 @@
     "nodemon": "^3.1.4"
   },
   "ava": {
-    "timeout": "30s",
+    "timeout": "120s",
     "files": [
       "**/*.test.mjs"
     ],

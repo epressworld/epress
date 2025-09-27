@@ -1,5 +1,6 @@
 "use client"
 import { Alert, Separator, Text, VStack } from "@chakra-ui/react"
+import { useState } from "react"
 import {
   CommentForm,
   CommentList,
@@ -21,6 +22,9 @@ import { stripMarkdown, truncateText } from "../../../utils/textUtils"
 export default function PublicationDetailPage() {
   const { common } = useTranslation()
   const { settings } = usePage()
+  const [localPendingComment, setLocalPendingComment] = useState(null)
+  const [retrySignatureFn, setRetrySignatureFn] = useState(null)
+  const [commentRefetch, setCommentRefetch] = useState(null)
   const {
     publicationId,
     isEditMode,
@@ -31,7 +35,6 @@ export default function PublicationDetailPage() {
     signatureDialogOpen,
     signatureInfo,
     isDeleting,
-    refreshKey,
     authStatus,
     isNodeOwner,
     handleEdit,
@@ -131,9 +134,17 @@ export default function PublicationDetailPage() {
             <UnifiedCard.Body>
               {/* 评论列表 - 放在表单上方 */}
               <CommentList
-                key={refreshKey}
                 publicationId={publicationId}
-                onCommentDeleted={handleCommentCreated}
+                onCommentDeleted={() => {
+                  // 刷新评论列表并更新 publication 的评论数
+                  if (typeof commentRefetch === "function") {
+                    commentRefetch()
+                  }
+                  handleCommentCreated()
+                }}
+                localPendingComment={localPendingComment}
+                onRetrySignature={retrySignatureFn}
+                onSetRefetch={setCommentRefetch}
               />
 
               {/* 分割线 */}
@@ -142,7 +153,17 @@ export default function PublicationDetailPage() {
               {/* 评论表单 */}
               <CommentForm
                 publicationId={publicationId}
-                onCommentCreated={handleCommentCreated}
+                onCommentCreated={() => {
+                  // 刷新评论列表并更新 publication 的评论数
+                  if (typeof commentRefetch === "function") {
+                    commentRefetch()
+                  }
+                  handleCommentCreated()
+                }}
+                onPendingCommentChange={(pending, retryFn) => {
+                  setLocalPendingComment(pending)
+                  setRetrySignatureFn(() => retryFn)
+                }}
               />
             </UnifiedCard.Body>
           </UnifiedCard.Root>
