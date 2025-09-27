@@ -97,22 +97,11 @@ router.post("/replications", async (request, reply) => {
 
   try {
     // 5. 构造 typedData 并使用 publisherNode.sync.publication 方法同步内容
-    const syncTypedData = {
-      domain: { name: "epress world", version: "1", chainId: 1 },
-      types: {
-        ContentSignature: [
-          { name: "contentHash", type: "bytes32" },
-          { name: "publisherAddress", type: "address" },
-          { name: "timestamp", type: "uint64" },
-        ],
-      },
-      primaryType: "ContentSignature",
-      message: {
-        contentHash: contentHash,
-        publisherAddress: publisherNode.address,
-        timestamp: typedData.message.timestamp, // 使用传入的时间戳（来自 publication.created_at）
-      },
-    }
+    const syncTypedData = Publication.createStatementOfSource(
+      contentHash,
+      publisherNode.address,
+      typedData.message.timestamp,
+    )
 
     const syncResult = await publisherNode.sync.publication(
       syncTypedData,

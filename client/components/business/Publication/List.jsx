@@ -12,7 +12,7 @@ import {
 import { SEARCH_PUBLICATIONS } from "../../../graphql/queries"
 import { useTranslation } from "../../../hooks/useTranslation"
 import { useWallet } from "../../../hooks/useWallet"
-import { contentSignatureTypedData } from "../../../utils/eip712"
+import { statementOfSourceTypedData } from "../../../utils/eip712"
 import { ConfirmDialog, InfoDialog, LoadingSkeleton } from "../../ui"
 import { toaster } from "../../ui/toaster"
 import { PublicationItem } from "./Item"
@@ -120,7 +120,7 @@ const PublicationList = ({
 
     try {
       // 使用实际的内容哈希，而不是重新计算
-      const typedData = contentSignatureTypedData(
+      const typedData = statementOfSourceTypedData(
         publication.content.content_hash,
         publication.author.address,
         Math.floor(new Date(publication.created_at).getTime() / 1000), // 使用 publication 的创建时间

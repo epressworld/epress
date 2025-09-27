@@ -9,7 +9,7 @@ import {
   UPDATE_PUBLICATION,
 } from "../graphql/mutations"
 import { FETCH } from "../graphql/queries"
-import { contentSignatureTypedData } from "../utils/eip712"
+import { statementOfSourceTypedData } from "../utils/eip712"
 import { useTranslation } from "./useTranslation"
 import { useWallet } from "./useWallet"
 
@@ -134,7 +134,7 @@ export function usePublicationDetail() {
 
     try {
       // 创建EIP-712签名数据
-      const typedData = contentSignatureTypedData(
+      const typedData = statementOfSourceTypedData(
         publication.content.content_hash,
         publication.author.address,
         Math.floor(new Date(publication.created_at).getTime() / 1000), // 使用 publication 的创建时间
