@@ -22,7 +22,7 @@ import remarkGfm from "remark-gfm"
 import { useLanguage } from "../../../contexts/LanguageContext"
 import { usePublicationForm } from "../../../hooks/usePublicationForm"
 import { useTranslation } from "../../../hooks/useTranslation"
-import { formatTime } from "../../../utils/dateFormat"
+import { formatRelativeTime, formatTime } from "../../../utils/dateFormat"
 import {
   createSignatureData,
   SignatureDialog,
@@ -414,8 +414,13 @@ export const PublicationItem = ({
           >
             <HStack gap={4}>
               {/* 发布时间 */}
-              <Link href={getDetailUrl()} color="gray.500" fontSize="sm">
-                {formatTime(publication.created_at, currentLanguage)}
+              <Link
+                href={getDetailUrl()}
+                title={formatTime(publication.created_at, currentLanguage)}
+                color="gray.500"
+                fontSize="sm"
+              >
+                {formatRelativeTime(publication.created_at, currentLanguage)}
               </Link>
             </HStack>
 
