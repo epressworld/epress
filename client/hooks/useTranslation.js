@@ -125,6 +125,9 @@ export const useTranslation = () => {
       signatureData: () => t("common.signatureData"),
       signatureTime: () => t("common.signatureTime"),
       signatureMessage: () => t("common.signatureMessage"),
+      proofOfSource: () => t("common.proofOfSource"),
+      statementOfSource: () => t("common.statementOfSource"),
+      signature: () => t("common.signature"),
       close: () => t("common.close"),
       pageTitle: {
         home: () => t("common.pageTitle.home"),
@@ -368,6 +371,9 @@ export const useTranslation = () => {
       signatureTime: () => t("common.signatureTime"),
       signatureTimestamp: () => t("common.signatureTimestamp"),
       signatureMessage: () => t("common.signatureMessage"),
+      proofOfSource: () => t("common.proofOfSource"),
+      statementOfSource: () => t("common.statementOfSource"),
+      signature: () => t("common.signature"),
     },
     dialog: {
       info: () => t("dialog.info"),

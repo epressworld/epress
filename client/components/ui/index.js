@@ -16,7 +16,10 @@ export { LoadingSkeleton } from "./LoadingSkeleton"
 export { NodeUrlInput } from "./NodeUrlInput"
 export { RichTextEditor } from "./RichTextEditor"
 export { SettingsDialog } from "./SettingsDialog"
-export { createSignatureData, SignatureDialog } from "./SignatureDialog"
+export {
+  createSignatureData,
+  SignatureDialog,
+} from "./SignatureDialog"
 export { SignedMark } from "./SignedMark"
 export { StatusBadge } from "./StatusBadge"
 export { ThemeSelector } from "./ThemeSelector"
