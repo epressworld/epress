@@ -129,7 +129,7 @@ export function FollowersList({ initialData, loading, error, onRefetch }) {
         </Box>
       )}
 
-      {!hasMore && followers.length > 0 && (
+      {!hasMore && followers.length > 0 && page > 1 && (
         <Box textAlign="center" py={4}>
           <Text color="gray.400" _dark={{ color: "gray.500" }} fontSize="sm">
             {common.noMore()}

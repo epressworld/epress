@@ -12,6 +12,7 @@ import { CommentItem } from "./Item"
 
 const CommentList = ({ publicationId, onCommentDeleted }) => {
   const [hasMore, setHasMore] = useState(true)
+  const [hasAttemptedLoadMore, setHasAttemptedLoadMore] = useState(false)
   const { common } = useTranslation()
 
   // 获取评论列表 - 使用 Apollo Client
@@ -55,6 +56,7 @@ const CommentList = ({ publicationId, onCommentDeleted }) => {
     if (!hasMore || loading) return
 
     try {
+      setHasAttemptedLoadMore(true)
       await fetchMore({
         variables: {
           after: data?.search?.pageInfo?.endCursor,
@@ -108,7 +110,7 @@ const CommentList = ({ publicationId, onCommentDeleted }) => {
       ))}
 
       {hasMore && (
-        <HStack justify="center" py={4}>
+        <HStack justify="center" py={1}>
           <Button
             onClick={loadMore}
             loading={loading}
@@ -124,7 +126,7 @@ const CommentList = ({ publicationId, onCommentDeleted }) => {
         </HStack>
       )}
 
-      {!hasMore && comments.length > 0 && (
+      {!hasMore && comments.length > 0 && hasAttemptedLoadMore && (
         <Text textAlign="center" color="gray.500" py={4}>
           {common.noMore()}
         </Text>
