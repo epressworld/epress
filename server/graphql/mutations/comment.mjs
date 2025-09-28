@@ -197,9 +197,12 @@ const commentMutations = {
         // Send email (handle potential errors)
         try {
           const verificationLink = `${selfNode.url}/verify?token=${token}`
-          request.log.debug("Verification link generated", {
-            verificationLink,
-          })
+          request.log.debug(
+            {
+              verificationLink,
+            },
+            "Verification link generated",
+          )
           await sendEmail(
             commenter_email,
             "epress 评论确认",
@@ -468,7 +471,7 @@ const commentMutations = {
           request.log.debug({ deletionLink }, "Deletion link generated")
           await sendEmail(
             comment.commenter_email,
-            "epress 评论删除确认",
+            "epress comment deletion confirmation",
             await renderEmail("commentDeletionEmail", {
               deletionLink,
             }),

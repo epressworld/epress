@@ -25,13 +25,13 @@ import { useTranslation } from "../../../hooks/useTranslation"
 import { formatRelativeTime, formatTime } from "../../../utils/dateFormat"
 import {
   createSignatureData,
+  RichTextEditor,
   SignatureDialog,
   SignedMark,
+  Tooltip,
+  toaster,
   UnifiedCard,
 } from "../../ui"
-import { RichTextEditor } from "../../ui/RichTextEditor"
-import { toaster } from "../../ui/toaster"
-import { Tooltip } from "../../ui/tooltip"
 
 export const PublicationItem = ({
   publication,

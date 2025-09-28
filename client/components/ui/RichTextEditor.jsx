@@ -1,7 +1,6 @@
-"use client"
-
 import { Box } from "@chakra-ui/react"
-import { BubbleMenu, EditorContent } from "@tiptap/react"
+import { EditorContent } from "@tiptap/react"
+import { BubbleMenu } from "@tiptap/react/menus"
 import { EditorToolbar } from "./EditorToolbar"
 
 export function RichTextEditor({
@@ -28,7 +27,7 @@ export function RichTextEditor({
       />
 
       {editor && (
-        <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>
+        <BubbleMenu editor={editor}>
           <EditorToolbar editor={editor} />
         </BubbleMenu>
       )}

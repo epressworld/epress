@@ -1,11 +1,7 @@
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight"
 import ImageExtension from "@tiptap/extension-image"
-import Link from "@tiptap/extension-link"
 import Placeholder from "@tiptap/extension-placeholder"
-import Table from "@tiptap/extension-table"
-import TableCell from "@tiptap/extension-table-cell"
-import TableHeader from "@tiptap/extension-table-header"
-import TableRow from "@tiptap/extension-table-row"
+import { TableKit } from "@tiptap/extension-table"
 import { useEditor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import { common, createLowlight } from "lowlight"
@@ -43,14 +39,8 @@ export function usePublicationForm({
         // 禁用 StarterKit 中的 codeBlock，使用 CodeBlockLowlight 替代
         codeBlock: false,
       }),
-      Link,
       ImageExtension,
-      Table.configure({
-        resizable: true,
-      }),
-      TableRow,
-      TableHeader,
-      TableCell,
+      TableKit,
       CodeBlockLowlight.configure({
         lowlight,
       }),

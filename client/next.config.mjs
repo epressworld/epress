@@ -41,15 +41,12 @@ export default {
       },
     ]
   },
-  // async redirects() {
-  //   return [
-  //     {
-  //       source: "/",
-  //       destination: "/publications",
-  //       permanent: false, // 使用 302 重定向而不是 301
-  //     },
-  //   ]
-  // },
+  webpack: (config) => {
+    // 客户端构建时，忽略 react-native 模块
+    config.resolve.alias["@react-native-async-storage/async-storage"] = false
+
+    return config
+  },
   async rewrites() {
     const apiUrl = process.env.EPRESS_API_URL || "http://localhost:8544"
     return [

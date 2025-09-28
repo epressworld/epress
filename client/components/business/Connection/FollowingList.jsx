@@ -1,15 +1,17 @@
 "use client"
-import { useMutation, useQuery } from "@apollo/client/react"
+import { useMutation, useSuspenseQuery } from "@apollo/client/react"
 import {
   Avatar,
   Box,
   Button,
+  Heading,
   HStack,
   Icon,
+  Spinner,
   Text,
   VStack,
 } from "@chakra-ui/react"
-import { useEffect, useState } from "react"
+import { useState, useTransition } from "react"
 import { LuEllipsis, LuUsers } from "react-icons/lu"
 import { useAuth } from "../../../contexts/AuthContext"
 import { DESTROY_CONNECTION } from "../../../graphql/mutations"
@@ -17,28 +19,43 @@ import { SEARCH_NODES } from "../../../graphql/queries"
 import { useTranslation } from "../../../hooks/useTranslation"
 import { useWallet } from "../../../hooks/useWallet"
 import { deleteConnectionTypedData } from "../../../utils/eip712"
-import { ConfirmDialog, LoadingSkeleton } from "../../ui"
+import { ConfirmDialog, UnifiedCard } from "../../ui"
 import { toaster } from "../../ui/toaster"
 
-const FollowingList = ({ initialData, loading, error }) => {
-  const [hasMore, setHasMore] = useState(
-    initialData?.search?.pageInfo?.hasNextPage ?? true,
-  )
+const Container = ({ children, lang, total }) => (
+  <UnifiedCard.Root>
+    <UnifiedCard.Header pb={2}>
+      <HStack justify="space-between" align="center">
+        <Heading size="lg" color="gray.700">
+          {lang.following()}
+        </Heading>
+        <Text
+          fontSize="lg"
+          fontWeight="bold"
+          fontStyle="italic"
+          color="gray.400"
+          _dark={{ color: "gray.600" }}
+        >
+          {total}
+        </Text>
+      </HStack>
+    </UnifiedCard.Header>
+    <UnifiedCard.Body pt={0}>{children}</UnifiedCard.Body>
+  </UnifiedCard.Root>
+)
+
+const FollowingList = () => {
   const [hasAttemptedLoadMore, setHasAttemptedLoadMore] = useState(false)
+  const [isPending, startTransition] = useTransition()
   const [selectedNode, setSelectedNode] = useState(null)
   const [isOpen, setIsOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
   const { isNodeOwner } = useAuth()
   const { address, signEIP712Data } = useWallet()
   const { connection, common } = useTranslation()
 
   // 使用传入的数据或查询数据
-  const {
-    data,
-    loading: queryLoading,
-    error: queryError,
-    fetchMore,
-    networkStatus,
-  } = useQuery(SEARCH_NODES, {
+  const { data, error, fetchMore } = useSuspenseQuery(SEARCH_NODES, {
     variables: {
       filterBy: { type: "following" },
       orderBy: "-created_at",
@@ -48,25 +65,13 @@ const FollowingList = ({ initialData, loading, error }) => {
     // 始终进行网络校验，确保关注关系变更后能及时刷新
     fetchPolicy: "cache-and-network",
     nextFetchPolicy: "cache-and-network",
-    // 在服务器端跳过，依赖 initialData，避免 SSR 时不必要的 loading=true
-    skip: typeof window === "undefined",
   })
 
   // 使用传入的数据或查询的数据
   // 优先使用实时查询数据；如果尚未返回，则使用 initialData
-  const currentData = data ?? initialData
-  const currentLoading = loading || queryLoading
-  const currentError = error || queryError
-
   const [destroyConnection, { loading: isDestroying }] =
     useMutation(DESTROY_CONNECTION)
-
-  // 更新 hasMore 状态
-  useEffect(() => {
-    if (currentData?.search?.pageInfo) {
-      setHasMore(currentData.search.pageInfo.hasNextPage)
-    }
-  }, [currentData])
+  const hasMore = data?.search?.pageInfo?.hasNextPage
 
   // 加载更多
   const loadMore = async (event) => {
@@ -75,34 +80,27 @@ const FollowingList = ({ initialData, loading, error }) => {
       event.stopPropagation()
     }
 
-    if (!hasMore || networkStatus === 3) return
+    if (!hasMore || isPending) return
 
-    try {
-      setHasAttemptedLoadMore(true)
-      await fetchMore({
+    setHasAttemptedLoadMore(true)
+    startTransition(() => {
+      setLoading(true)
+      fetchMore({
         variables: {
-          after:
-            data?.search?.pageInfo?.endCursor ||
-            initialData?.search?.pageInfo?.endCursor,
-        },
-        updateQuery: (prev, { fetchMoreResult }) => {
-          if (!fetchMoreResult) return prev
-
-          return {
-            search: {
-              ...fetchMoreResult.search,
-              edges: [...prev.search.edges, ...fetchMoreResult.search.edges],
-            },
-          }
+          after: data?.search?.pageInfo?.endCursor,
         },
       })
-    } catch (error) {
-      console.error("加载更多失败:", error)
-      toaster.create({
-        description: common.loadMoreFailed(),
-        type: "error",
-      })
-    }
+        .catch((error) => {
+          console.error("加载更多失败:", error)
+          toaster.create({
+            description: common.loadMoreFailed(),
+            type: "error",
+          })
+        })
+        .finally(() => {
+          setLoading(false)
+        })
+    })
   }
 
   // 处理取消关注
@@ -174,164 +172,180 @@ const FollowingList = ({ initialData, loading, error }) => {
       })
     }
   }
+  const total = data?.search?.total
 
-  if (currentLoading && !currentData) {
-    return <LoadingSkeleton count={3} />
-  }
-
-  if (currentError) {
+  if (loading && !data) {
     return (
-      <Box p={4}>
-        <Text color="red.500">
-          {common.loadFailed()}: {currentError.message}
-        </Text>
-      </Box>
+      <Container lang={connection} total={total}>
+        <VStack colorPalette="orange">
+          <Spinner color="colorPalette.600" />
+          <Text color="colorPalette.600">Loading...</Text>
+        </VStack>
+      </Container>
     )
   }
 
-  const following = currentData?.search?.edges?.map((edge) => edge.node) || []
+  if (error) {
+    return (
+      <Container lang={connection} total={total}>
+        <Box p={4}>
+          <Text color="red.500">
+            {common.loadFailed()}: {error.message}
+          </Text>
+        </Box>
+      </Container>
+    )
+  }
+
+  const following = data?.search?.edges?.map((edge) => edge.node) || []
 
   return (
-    <Box>
-      <VStack spacing={4} align="stretch">
-        {following.map((node, index) => (
-          <HStack
-            key={`${node.address}-${index}`}
-            spacing={4}
-            align="start"
-            p={3}
-            borderRadius="md"
-            _hover={{ bg: "gray.50", _dark: { bg: "gray.800" } }}
-            transition="all 0.2s"
-            justify="space-between"
-          >
-            <HStack spacing={4} align="start" flex={1} minW={0}>
-              <Avatar.Root size="md">
-                <Avatar.Fallback name={node.title} />
-                <Avatar.Image
-                  src={node.url ? `${node.url}/ewp/avatar` : undefined}
-                />
-              </Avatar.Root>
+    <Container lang={connection} total={total}>
+      <Box>
+        <VStack spacing={4} align="stretch">
+          {following.map((node) => (
+            <HStack
+              key={`following-${node.address}`}
+              spacing={4}
+              align="start"
+              p={3}
+              borderRadius="md"
+              _hover={{ bg: "gray.50", _dark: { bg: "gray.800" } }}
+              transition="all 0.2s"
+              justify="space-between"
+            >
+              <HStack spacing={4} align="start" flex={1} minW={0}>
+                <Avatar.Root size="md">
+                  <Avatar.Fallback name={node.title} />
+                  <Avatar.Image
+                    src={node.url ? `${node.url}/ewp/avatar` : undefined}
+                  />
+                </Avatar.Root>
 
-              <Box flex={1} minW={0}>
-                {node.url ? (
-                  <Text
-                    as="a"
-                    href={node.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    fontWeight="medium"
-                    fontSize="sm"
-                    noOfLines={1}
-                    color="orange.500"
-                    _hover={{
-                      color: "orange.600",
-                      textDecoration: "underline",
-                    }}
-                  >
-                    {node.title}
+                <Box flex={1} minW={0}>
+                  {node.url ? (
+                    <Text
+                      as="a"
+                      href={node.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      fontWeight="medium"
+                      fontSize="sm"
+                      noOfLines={1}
+                      color="orange.500"
+                      _hover={{
+                        color: "orange.600",
+                        textDecoration: "underline",
+                      }}
+                    >
+                      {node.title}
+                    </Text>
+                  ) : (
+                    <Text fontWeight="medium" fontSize="sm" noOfLines={1}>
+                      {node.title}
+                    </Text>
+                  )}
+                  {node.address && (
+                    <Text
+                      color="gray.400"
+                      fontSize="xs"
+                      fontFamily="mono"
+                      mt={1}
+                      noOfLines={1}
+                    >
+                      {node.address}
+                    </Text>
+                  )}
+                  <Text color="gray.500" fontSize="xs" noOfLines={2} mt={1}>
+                    {node.description}
                   </Text>
-                ) : (
-                  <Text fontWeight="medium" fontSize="sm" noOfLines={1}>
-                    {node.title}
-                  </Text>
-                )}
-                {node.address && (
-                  <Text
-                    color="gray.400"
-                    fontSize="xs"
-                    fontFamily="mono"
-                    mt={1}
-                    noOfLines={1}
-                  >
-                    {node.address}
-                  </Text>
-                )}
-                <Text color="gray.500" fontSize="xs" noOfLines={2} mt={1}>
-                  {node.description}
-                </Text>
-              </Box>
+                </Box>
+              </HStack>
+
+              {isNodeOwner && (
+                <Button
+                  size="xs"
+                  variant="outline"
+                  colorPalette="red"
+                  onClick={() => handleUnfollow(node)}
+                  loading={isDestroying}
+                >
+                  {connection.unfollow()}
+                </Button>
+              )}
             </HStack>
+          ))}
 
-            {isNodeOwner && (
+          {hasMore && (
+            <HStack justify="center" py={4}>
               <Button
-                size="xs"
-                variant="outline"
-                colorPalette="red"
-                onClick={() => handleUnfollow(node)}
-                loading={isDestroying}
+                onClick={loadMore}
+                loading={loading}
+                variant="ghost"
+                size="sm"
+                colorPalette="orange"
+                type="button"
+                tabIndex={-1}
+                onFocus={(e) => e.target.blur()}
               >
-                {connection.unfollow()}
+                <LuEllipsis />
               </Button>
-            )}
-          </HStack>
-        ))}
+            </HStack>
+          )}
 
-        {hasMore && (
-          <HStack justify="center" py={4}>
-            <Button
-              onClick={loadMore}
-              loading={networkStatus === 3}
-              variant="ghost"
-              size="sm"
-              colorPalette="orange"
-              type="button"
-              tabIndex={-1}
-              onFocus={(e) => e.target.blur()}
-            >
-              <LuEllipsis />
-            </Button>
-          </HStack>
-        )}
-
-        {!hasMore && following.length > 0 && hasAttemptedLoadMore && (
-          <Text
-            textAlign="center"
-            color="gray.400"
-            _dark={{ color: "gray.500" }}
-            fontSize="sm"
-            py={4}
-          >
-            {common.noMore()}
-          </Text>
-        )}
-
-        {following.length === 0 && !currentLoading && (
-          <Box textAlign="center" py={12}>
-            <Icon as={LuUsers} boxSize={16} color="gray.300" mb={4} />
+          {!hasMore && following.length > 0 && hasAttemptedLoadMore && (
             <Text
-              color="gray.500"
-              _dark={{ color: "gray.400" }}
-              fontSize="lg"
-              mb={2}
+              textAlign="center"
+              color="gray.400"
+              _dark={{ color: "gray.500" }}
+              fontSize="sm"
+              py={4}
             >
-              {connection.noFollowing()}
+              {common.noMore()}
             </Text>
-            <Text color="gray.400" _dark={{ color: "gray.500" }} fontSize="sm">
-              {connection.noFollowingDescription()}
-            </Text>
-          </Box>
-        )}
-      </VStack>
+          )}
 
-      {/* 取消关注确认对话框 */}
-      <ConfirmDialog
-        isOpen={isOpen}
-        onClose={() => {
-          setIsOpen(false)
-          setSelectedNode(null)
-        }}
-        onConfirm={handleConfirmUnfollow}
-        title={connection.confirmUnfollow()}
-        description={connection.confirmUnfollowMessage(
-          selectedNode?.title || "",
-        )}
-        confirmText={connection.unfollow()}
-        cancelText={common.cancel()}
-        isLoading={isDestroying}
-        colorPalette="red"
-      />
-    </Box>
+          {following.length === 0 && !loading && (
+            <Box textAlign="center" py={12}>
+              <Icon as={LuUsers} boxSize={16} color="gray.300" mb={4} />
+              <Text
+                color="gray.500"
+                _dark={{ color: "gray.400" }}
+                fontSize="lg"
+                mb={2}
+              >
+                {connection.noFollowing()}
+              </Text>
+              <Text
+                color="gray.400"
+                _dark={{ color: "gray.500" }}
+                fontSize="sm"
+              >
+                {connection.noFollowingDescription()}
+              </Text>
+            </Box>
+          )}
+        </VStack>
+
+        {/* 取消关注确认对话框 */}
+        <ConfirmDialog
+          isOpen={isOpen}
+          onClose={() => {
+            setIsOpen(false)
+            setSelectedNode(null)
+          }}
+          onConfirm={handleConfirmUnfollow}
+          title={connection.confirmUnfollow()}
+          description={connection.confirmUnfollowMessage(
+            selectedNode?.title || "",
+          )}
+          confirmText={connection.unfollow()}
+          cancelText={common.cancel()}
+          isLoading={isDestroying}
+          colorPalette="red"
+        />
+      </Box>
+    </Container>
   )
 }
 
