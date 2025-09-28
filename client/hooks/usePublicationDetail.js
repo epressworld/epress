@@ -4,6 +4,7 @@ import { useState } from "react"
 import { toaster } from "../components/ui/toaster"
 import { AUTH_STATUS, useAuth } from "../contexts/AuthContext"
 import {
+  CREATE_PUBLICATION,
   DESTROY_PUBLICATION,
   SIGN_PUBLICATION,
   UPDATE_PUBLICATION,
@@ -35,6 +36,7 @@ export function usePublicationDetail(options = {}) {
   const [signPublication] = useMutation(SIGN_PUBLICATION)
   const [destroyPublication] = useMutation(DESTROY_PUBLICATION)
   const [updatePublication] = useMutation(UPDATE_PUBLICATION)
+  const [createPublication] = useMutation(CREATE_PUBLICATION)
 
   // 获取Publication详情
   const {
@@ -232,6 +234,47 @@ export function usePublicationDetail(options = {}) {
     refetchPublication()
   }
 
+  // 处理引用发布（仅文本发布）
+  const handlePublish = async (formData) => {
+    if (authStatus !== AUTH_STATUS.AUTHENTICATED || !isNodeOwner) {
+      toaster.create({
+        description: common.onlyNodeOwnerCanPublish(),
+        type: "error",
+      })
+      return
+    }
+
+    try {
+      let mode = formData.mode
+      if (typeof mode === "object" && mode !== null) {
+        mode = mode.value || mode.toString() || "post"
+      }
+      mode = String(mode || "post")
+
+      const input = {
+        type: mode.toUpperCase(),
+        body: formData.content,
+      }
+
+      const { data } = await createPublication({
+        variables: { input },
+      })
+
+      const newId = data?.createPublication?.id
+      toaster.create({ description: common.publishSuccess(), type: "success" })
+
+      if (newId) {
+        router.push(`/publications/${newId}`)
+      }
+    } catch (error) {
+      console.error("发布失败:", error)
+      toaster.create({
+        description: error.message || common.pleaseRetry(),
+        type: "error",
+      })
+    }
+  }
+
   return {
     // 状态
     publicationId,
@@ -258,5 +301,6 @@ export function usePublicationDetail(options = {}) {
     handleCommentCreated,
     setDeleteDialogOpen,
     setSignatureDialogOpen,
+    handlePublish,
   }
 }
