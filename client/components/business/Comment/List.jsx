@@ -1,6 +1,6 @@
 "use client"
 
-import { useQuery } from "@apollo/client/react"
+import { useSuspenseQuery } from "@apollo/client/react"
 import { Alert, Button, HStack, Spinner, Text, VStack } from "@chakra-ui/react"
 import { useEffect, useState } from "react"
 import { LuEllipsis } from "react-icons/lu"
@@ -21,7 +21,7 @@ const CommentList = ({
   const { common } = useTranslation()
 
   // 获取评论列表 - 使用 Apollo Client
-  const { data, loading, error, fetchMore, refetch } = useQuery(
+  const { data, loading, error, fetchMore, refetch } = useSuspenseQuery(
     SEARCH_COMMENTS,
     {
       variables: {

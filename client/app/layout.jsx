@@ -1,7 +1,7 @@
-import { cookies } from "next/headers"
+import { ApolloProvider } from "../components/client/apollo-provider"
 import { Page } from "../components/layout"
 import { PwaRegistry } from "../components/ui/PwaRegistry"
-import { executeServerQueries, getRequestApolloClient } from "../graphql"
+import { PreloadQuery } from "../graphql/client"
 import { PAGE_DATA } from "../graphql/queries"
 
 import "../styles/globals.css"
@@ -50,10 +50,6 @@ export const viewport = {
 }
 
 export default async function RootLayout({ children }) {
-  const cookieStore = await cookies()
-  const token = cookieStore.get("authToken")?.value
-  const authorization = token ? `Bearer ${token}` : ""
-
   // 服务器端配置
   const runtimeConfig = {
     defaultTheme: process.env.EPRESS_CLIENT_DEFAULT_THEME,
@@ -62,30 +58,15 @@ export default async function RootLayout({ children }) {
     walletConnectProjectId: process.env.EPRESS_WALLETCONNECT_PROJECTID,
   }
 
-  // 在根布局获取全局基础数据
-  const globalQueryConfigs = [
-    {
-      queryKey: "PAGE_DATA",
-      query: PAGE_DATA,
-    },
-  ]
-
-  // 为本次请求获取可复用的 ApolloClient，并传入批量查询
-  const requestClient = getRequestApolloClient({ authorization })
-  const { data: serverDataMap, errors: serverErrors } =
-    await executeServerQueries(globalQueryConfigs, requestClient)
-
   return (
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <PwaRegistry />
-        <Page
-          runtimeConfig={runtimeConfig}
-          serverDataMap={serverDataMap}
-          serverErrors={serverErrors}
-        >
-          {children}
-        </Page>
+        <ApolloProvider url={process.env.EPRESS_NODE_URL}>
+          <PreloadQuery query={PAGE_DATA}>
+            <Page runtimeConfig={runtimeConfig}>{children}</Page>
+          </PreloadQuery>
+        </ApolloProvider>
       </body>
     </html>
   )

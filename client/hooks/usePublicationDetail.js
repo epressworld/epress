@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@apollo/client/react"
+import { useMutation, useSuspenseQuery } from "@apollo/client/react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { useState } from "react"
 import { toaster } from "../components/ui/toaster"
@@ -15,6 +15,7 @@ import { useTranslation } from "./useTranslation"
 import { useWallet } from "./useWallet"
 
 export function usePublicationDetail(options = {}) {
+  const { variables } = options
   const params = useParams()
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -31,6 +32,7 @@ export function usePublicationDetail(options = {}) {
   const [signatureInfo, setSignatureInfo] = useState("")
   const [isDeleting, setIsDeleting] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [loading, setLoading] = useState(false)
 
   // GraphQL mutations
   const [signPublication] = useMutation(SIGN_PUBLICATION)
@@ -41,24 +43,16 @@ export function usePublicationDetail(options = {}) {
   // 获取Publication详情
   const {
     data: publicationData,
-    loading: queryLoading,
     error: publicationError,
     refetch: refetchPublication,
-  } = useQuery(FETCH, {
-    variables: {
-      type: "PUBLICATION",
-      id: publicationId,
-    },
-    fetchPolicy: options.initialPublication
-      ? "cache-first"
-      : "cache-and-network",
+  } = useSuspenseQuery(FETCH, {
+    variables,
+    fetchPolicy: "cache-and-network",
     nextFetchPolicy: "cache-and-network",
   })
 
-  const publication =
-    publicationData?.fetch || options.initialPublication || null
-  const publicationLoading =
-    queryLoading && !publicationData && !options.initialPublication
+  const publication = publicationData?.fetch || null
+  const publicationLoading = loading && !publicationData
 
   // 处理编辑
   const handleEdit = (publication) => {
@@ -106,7 +100,8 @@ export function usePublicationDetail(options = {}) {
             type: "success",
           })
           // 刷新数据
-          refetchPublication()
+          setLoading(true)
+          refetchPublication().finally(() => setLoading(false))
           // 退出编辑模式
           router.push(`/publications/${publicationId}`)
         },
@@ -164,7 +159,8 @@ export function usePublicationDetail(options = {}) {
       })
 
       // 重新获取数据
-      refetchPublication()
+      setLoading(true)
+      refetchPublication().finally(() => setLoading(false))
     } catch (error) {
       console.error("签名失败:", error)
       toaster.create({
@@ -231,7 +227,8 @@ export function usePublicationDetail(options = {}) {
   const handleCommentCreated = () => {
     setRefreshKey((prev) => prev + 1)
     // 重新获取publication数据以更新评论总数
-    refetchPublication()
+    setLoading(true)
+    refetchPublication().finally(() => setLoading(false))
   }
 
   // 处理引用发布（仅文本发布）

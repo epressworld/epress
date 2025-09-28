@@ -1,6 +1,11 @@
 "use client"
 
-import { useApolloClient, useMutation, useQuery } from "@apollo/client/react"
+import {
+  useApolloClient,
+  useMutation,
+  useQuery,
+  useSuspenseQuery,
+} from "@apollo/client/react"
 import {
   createContext,
   useCallback,
@@ -65,7 +70,7 @@ export function AuthProvider({ children }) {
     loading: followerLoading,
     error: followerError,
     refetch: refetchFollower,
-  } = useQuery(IS_FOLLOWER, {
+  } = useSuspenseQuery(IS_FOLLOWER, {
     variables: {
       address: safeAddress || "0x0000000000000000000000000000000000000000",
     },

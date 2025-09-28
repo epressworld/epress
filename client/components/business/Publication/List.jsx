@@ -1,8 +1,8 @@
 "use client"
 
-import { useMutation, useQuery } from "@apollo/client/react"
+import { useMutation, useSuspenseQuery } from "@apollo/client/react"
 import { Alert, Button, HStack, Text, VStack } from "@chakra-ui/react"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useTransition } from "react"
 import { LuEllipsis } from "react-icons/lu"
 import { AUTH_STATUS, useAuth } from "../../../contexts/AuthContext"
 import {
@@ -13,29 +13,27 @@ import { SEARCH_PUBLICATIONS } from "../../../graphql/queries"
 import { useTranslation } from "../../../hooks/useTranslation"
 import { useWallet } from "../../../hooks/useWallet"
 import { statementOfSourceTypedData } from "../../../utils/eip712"
-import { ConfirmDialog, InfoDialog, LoadingSkeleton } from "../../ui"
+import { ConfirmDialog, LoadingSkeleton } from "../../ui"
 import { toaster } from "../../ui/toaster"
 import { PublicationItem } from "./Item"
 
 const PublicationList = ({
-  initialPublications = [],
-  initialPageInfo = null,
   onEdit,
   onSetRefetch,
   onPublicationCreated,
   onPublish,
+  variables,
 }) => {
   const { authStatus, isNodeOwner } = useAuth()
   const { signEIP712Data } = useWallet()
   const { publication: pub, common } = useTranslation()
-  const [hasMore, setHasMore] = useState(Boolean(initialPageInfo?.hasNextPage))
   const [hasAttemptedLoadMore, setHasAttemptedLoadMore] = useState(false)
+  const [isPending, startTransition] = useTransition()
+  const [isLoading, setIsLoading] = useState(false)
 
   // 对话框状态
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [signatureDialogOpen, setSignatureDialogOpen] = useState(false)
   const [selectedPublication, setSelectedPublication] = useState(null)
-  const [signatureInfo, setSignatureInfo] = useState("")
   const [isDeleting, setIsDeleting] = useState(false)
 
   // 签名和删除Publication的mutations
@@ -43,14 +41,10 @@ const PublicationList = ({
   const [destroyPublication] = useMutation(DESTROY_PUBLICATION)
 
   // 获取Publications列表 - 使用 Apollo Client
-  const { data, loading, error, fetchMore, refetch, networkStatus } = useQuery(
+  const { data, error, fetchMore, refetch } = useSuspenseQuery(
     SEARCH_PUBLICATIONS,
     {
-      variables: {
-        filterBy: null,
-        orderBy: "-created_at",
-        first: 10,
-      },
+      variables,
       notifyOnNetworkStatusChange: true,
       // 始终进行网络校验，确保登录状态变化后列表及时刷新
       fetchPolicy: "cache-and-network",
@@ -58,19 +52,7 @@ const PublicationList = ({
     },
   )
 
-  // 更新 hasMore 状态
-  useEffect(() => {
-    if (data?.search?.pageInfo) {
-      setHasMore(data.search.pageInfo.hasNextPage)
-    }
-  }, [data])
-
-  // 基于 initialPageInfo 初始化 hasMore
-  useEffect(() => {
-    if (!data && initialPageInfo) {
-      setHasMore(Boolean(initialPageInfo.hasNextPage))
-    }
-  }, [data, initialPageInfo])
+  const hasMore = data?.search?.pageInfo?.hasNextPage
 
   // 设置 refetch 方法给父组件
   useEffect(() => {
@@ -86,40 +68,27 @@ const PublicationList = ({
       event.stopPropagation()
     }
 
-    if (!hasMore || networkStatus === 3) return
+    if (!hasMore || isLoading || isPending) return
 
-    try {
+    setIsLoading(true)
+    startTransition(() => {
       setHasAttemptedLoadMore(true)
-      await fetchMore({
+      fetchMore({
         variables: {
-          after:
-            data?.search?.pageInfo?.endCursor || initialPageInfo?.endCursor,
-        },
-        updateQuery: (prevResult, { fetchMoreResult }) => {
-          if (!fetchMoreResult?.search?.edges) {
-            return prevResult
-          }
-
-          return {
-            ...prevResult,
-            search: {
-              ...prevResult.search,
-              edges: [
-                ...prevResult.search.edges,
-                ...fetchMoreResult.search.edges,
-              ],
-              pageInfo: fetchMoreResult.search.pageInfo,
-            },
-          }
+          after: data?.search?.pageInfo?.endCursor,
         },
       })
-    } catch (error) {
-      console.error("加载更多失败:", error)
-      toaster.create({
-        description: common.pleaseRetry(),
-        type: "error",
-      })
-    }
+        .catch((error) => {
+          console.error("加载更多失败:", error)
+          toaster.create({
+            description: common.pleaseRetry(),
+            type: "error",
+          })
+        })
+        .finally(() => {
+          setIsLoading(false)
+        })
+    })
   }
 
   // 签名Publication
@@ -154,16 +123,7 @@ const PublicationList = ({
           id: publication.id,
           signature: signature,
         },
-        refetchQueries: [
-          {
-            query: SEARCH_PUBLICATIONS,
-            variables: {
-              filterBy: null,
-              orderBy: "-created_at",
-              first: 10,
-            },
-          },
-        ],
+        refetchQueries: [{ query: SEARCH_PUBLICATIONS, variables }],
         awaitRefetchQueries: true,
       })
 
@@ -240,20 +200,7 @@ const PublicationList = ({
     }
   }
 
-  // 显示签名信息
-  const handleShowSignature = (publication) => {
-    const info = `内容哈希: ${publication.content.content_hash}
-签名: ${publication.signature}`
-    setSignatureInfo(info)
-    setSelectedPublication(publication)
-    setSignatureDialogOpen(true)
-  }
-
-  if (
-    loading &&
-    !data &&
-    (!initialPublications || initialPublications.length === 0)
-  ) {
+  if (isLoading && !data) {
     return <LoadingSkeleton count={3} />
   }
 
@@ -269,21 +216,19 @@ const PublicationList = ({
     )
   }
 
-  const publications =
-    data?.search?.edges?.map((edge) => edge.node) || initialPublications || []
+  const publications = data?.search?.edges?.map((edge) => edge.node) || []
 
   return (
     <>
       <VStack spacing={6} align="stretch">
-        {publications.map((publication, index) => (
+        {publications.map((publication) => (
           <PublicationItem
-            key={`${publication.id}-${index}`}
+            key={publication.id}
             publication={publication}
             isNodeOwner={isNodeOwner}
             isAuthenticated={authStatus === AUTH_STATUS.AUTHENTICATED}
             onSign={handleSignPublication}
             onDelete={handleDeleteClick}
-            onShowSignature={handleShowSignature}
             onEdit={onEdit}
             onPublicationCreated={onPublicationCreated}
             onPublish={onPublish}
@@ -294,7 +239,7 @@ const PublicationList = ({
           <HStack justify="center" py={4}>
             <Button
               onClick={loadMore}
-              loading={networkStatus === 3}
+              loading={isLoading}
               variant="ghost"
               size="sm"
               colorPalette="orange"
@@ -318,7 +263,7 @@ const PublicationList = ({
           </Text>
         )}
 
-        {publications.length === 0 && !loading && (
+        {publications.length === 0 && !isLoading && (
           <Text
             textAlign="center"
             color="gray.500"
@@ -341,16 +286,6 @@ const PublicationList = ({
         cancelText={common.cancel()}
         isLoading={isDeleting}
         confirmColorPalette="red"
-      />
-
-      {/* 签名信息对话框 */}
-      <InfoDialog
-        isOpen={signatureDialogOpen}
-        onClose={() => setSignatureDialogOpen(false)}
-        title={common.signatureInfo()}
-        content={signatureInfo}
-        closeText={common.close()}
-        isPreformatted={true}
       />
     </>
   )

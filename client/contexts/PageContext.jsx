@@ -1,6 +1,6 @@
 "use client"
 
-import { useQuery } from "@apollo/client/react"
+import { useQuery, useSuspenseQuery } from "@apollo/client/react"
 import {
   createContext,
   useCallback,
@@ -21,12 +21,7 @@ export const usePage = () => {
   return context
 }
 
-export const PageProvider = ({
-  children,
-  runtimeConfig = {},
-  serverDataMap = {},
-  serverErrors = {},
-}) => {
+export const PageProvider = ({ children, runtimeConfig }) => {
   const [isClient, setIsClient] = useState(false)
 
   // 确保只在客户端执行
@@ -34,20 +29,9 @@ export const PageProvider = ({
     setIsClient(true)
   }, [])
 
-  // 从服务器端数据映射中提取节点数据
-  const serverNodeData = serverDataMap.PAGE_DATA?.data
-  const serverNodeError =
-    serverErrors.PAGE_DATA ||
-    (serverDataMap.PAGE_DATA?.success === false
-      ? serverDataMap.PAGE_DATA?.error
-      : null)
-
   // 客户端 Apollo 查询 - 复用相同的查询
-  const { data, loading, error, refetch } = useQuery(PAGE_DATA, {
-    errorPolicy: "all",
-    skip: !isClient,
-    // 如果有服务器端数据，使用 cache-first，否则使用 cache-and-network
-    fetchPolicy: serverNodeData ? "cache-first" : "cache-and-network",
+  const { data, loading, error, refetch } = useSuspenseQuery(PAGE_DATA, {
+    fetchPolicy: "cache-and-network",
     notifyOnNetworkStatusChange: false,
     onError: (error) => {
       console.error("PageContext GraphQL Error:", error)
@@ -68,62 +52,23 @@ export const PageProvider = ({
     }
   }, [refetch, isClient])
 
-  // 优先使用客户端数据，回退到服务器端数据
-  const finalData = useMemo(() => {
-    if (data) {
-      return data
-    } else if (serverNodeData) {
-      return serverNodeData
-    } else {
-      return {
-        settings: {},
-        profile: {},
-        nodeStatus: {},
-      }
-    }
-  }, [data, serverNodeData])
-
   // 使用 useMemo 稳定 value 对象
   const value = useMemo(
     () => ({
-      // 来自旧 PageContext 的数据
-      runtimeConfig,
-      serverDataMap,
-      serverErrors,
-
       // 来自旧 NodeContext 的数据
-      settings: finalData.settings || {},
-      profile: finalData.profile || {},
-      nodeStatus: finalData.nodeStatus || {},
+      settings: data?.settings || {},
+      profile: data?.profile || {},
+      nodeStatus: data?.nodeStatus || {},
+      runtimeConfig,
 
       // 状态信息
       loading: isClient ? loading : false,
-      error: error || serverNodeError,
-
-      // 数据来源信息（用于调试）
-      dataSource: {
-        hasClientData: !!data,
-        hasServerData: !!serverNodeData,
-        usingServerData: !data && !!serverNodeData,
-        serverDataAge: serverDataMap.PAGE_DATA?.fetchedAt,
-      },
+      error,
 
       // 重新获取数据函数
       refetchPageData,
     }),
-    [
-      runtimeConfig,
-      serverDataMap,
-      serverErrors,
-      finalData,
-      isClient,
-      loading,
-      error,
-      serverNodeError,
-      data,
-      serverNodeData,
-      refetchPageData,
-    ],
+    [isClient, loading, error, data, refetchPageData],
   )
 
   return <PageContext.Provider value={value}>{children}</PageContext.Provider>

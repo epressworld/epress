@@ -9,7 +9,6 @@ import {
 } from "../../../components/business"
 import {
   ConfirmDialog,
-  InfoDialog,
   LoadingSkeleton,
   UnifiedCard,
 } from "../../../components/ui"
@@ -19,7 +18,7 @@ import { usePublicationDetail } from "../../../hooks/usePublicationDetail"
 import { useTranslation } from "../../../hooks/useTranslation"
 import { stripMarkdown, truncateText } from "../../../utils/textUtils"
 
-export default function PublicationDetailPage({ initialPublication = null }) {
+export default function PublicationDetailPage({ variables }) {
   const { common } = useTranslation()
   const { settings } = usePage()
   const [localPendingComment, setLocalPendingComment] = useState(null)
@@ -32,8 +31,6 @@ export default function PublicationDetailPage({ initialPublication = null }) {
     publicationLoading,
     publicationError,
     deleteDialogOpen,
-    signatureDialogOpen,
-    signatureInfo,
     isDeleting,
     authStatus,
     isNodeOwner,
@@ -46,9 +43,8 @@ export default function PublicationDetailPage({ initialPublication = null }) {
     handleShowSignature,
     handleCommentCreated,
     setDeleteDialogOpen,
-    setSignatureDialogOpen,
     handlePublish,
-  } = usePublicationDetail({ initialPublication })
+  } = usePublicationDetail({ variables })
 
   // 生成页面标题
   const getPageTitle = () => {
@@ -183,16 +179,6 @@ export default function PublicationDetailPage({ initialPublication = null }) {
         cancelText={common.cancel()}
         confirmColorPalette="red"
         isLoading={isDeleting}
-      />
-
-      {/* 签名信息对话框 */}
-      <InfoDialog
-        isOpen={signatureDialogOpen}
-        onClose={() => setSignatureDialogOpen(false)}
-        title={common.signatureInfo()}
-        content={signatureInfo}
-        closeText={common.close()}
-        isPreformatted={true}
       />
     </>
   )

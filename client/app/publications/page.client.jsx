@@ -4,11 +4,7 @@ import { useHomePage } from "../../hooks/useHomePage"
 import { usePageTitle } from "../../hooks/usePageTitle"
 import { useTranslation } from "../../hooks/useTranslation"
 
-export default function HomePage({
-  initialPublications = [],
-  initialPageInfo = null,
-  initialTotal = 0,
-}) {
+export default function HomePage({ variables }) {
   const { common } = useTranslation()
   const {
     isLoading,
@@ -44,9 +40,7 @@ export default function HomePage({
 
       {/* 发布列表 */}
       <PublicationList
-        initialPublications={initialPublications}
-        initialPageInfo={initialPageInfo}
-        initialTotal={initialTotal}
+        variables={variables}
         nodeAddress={profile?.address}
         onEdit={handleEdit}
         onSetRefetch={handleSetRefetch}

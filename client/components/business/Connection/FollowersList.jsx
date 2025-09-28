@@ -1,69 +1,93 @@
 "use client"
-import { useQuery } from "@apollo/client/react"
+import { useSuspenseQuery } from "@apollo/client/react"
 import {
   Avatar,
   Box,
   Button,
+  Heading,
   HStack,
   Icon,
+  Spinner,
   Text,
   VStack,
 } from "@chakra-ui/react"
-import { useEffect, useState } from "react"
+import { useState, useTransition } from "react"
 import { LuEllipsis, LuUsers } from "react-icons/lu"
 import { SEARCH_NODES } from "../../../graphql/queries"
 import { useTranslation } from "../../../hooks/useTranslation"
-import { LoadingSkeleton } from "../../ui"
+import { toaster, UnifiedCard } from "../../ui"
 
-export function FollowersList({ initialData, loading, error, onRefetch }) {
-  const [page, setPage] = useState(1)
-  const [hasMore, setHasMore] = useState(
-    initialData?.search?.pageInfo?.hasNextPage ?? true,
-  )
+const Container = ({ children, lang, total }) => (
+  <UnifiedCard.Root>
+    <UnifiedCard.Header pb={2}>
+      <HStack justify="space-between" align="center">
+        <Heading size="lg" color="gray.700">
+          {lang.followers()}
+        </Heading>
+        <Text
+          fontSize="lg"
+          fontWeight="bold"
+          fontStyle="italic"
+          color="gray.400"
+          _dark={{ color: "gray.600" }}
+        >
+          {total}
+        </Text>
+      </HStack>
+    </UnifiedCard.Header>
+    <UnifiedCard.Body pt={0}>{children}</UnifiedCard.Body>
+  </UnifiedCard.Root>
+)
+export function FollowersList({ onRefetch }) {
   const { connection, common } = useTranslation()
+  const [loading, setLoading] = useState(false)
+  const [isPending, startTransition] = useTransition()
+  const [hasAttemptedLoadMore, setHasAttemptedLoadMore] = useState(false)
 
   // 使用传入的数据或查询数据
-  const {
-    data,
-    loading: queryLoading,
-    error: queryError,
-    refetch,
-    networkStatus,
-  } = useQuery(SEARCH_NODES, {
+  const { data, fetchMore, error, refetch } = useSuspenseQuery(SEARCH_NODES, {
     variables: {
       filterBy: { type: "followers" },
       orderBy: "-created_at",
       first: 20,
-      after: page > 1 ? ((page - 1) * 20).toString() : undefined,
     },
     notifyOnNetworkStatusChange: true,
     // 始终进行网络校验，确保关注关系变更后能及时刷新
     fetchPolicy: "cache-and-network",
     nextFetchPolicy: "cache-and-network",
-    // 在服务器端跳过，依赖 initialData，避免 SSR 时不必要的 loading=true
-    skip: typeof window === "undefined",
   })
+  const hasMore = data?.search?.pageInfo?.hasNextPage
 
-  // 使用传入的数据或查询的数据
-  // 优先使用实时查询数据；如果尚未返回，则使用 initialData
-  const currentData = data ?? initialData
-  const currentLoading = loading || queryLoading
-  const currentError = error || queryError
-
-  useEffect(() => {
-    if (currentData?.search) {
-      setHasMore(currentData.search.pageInfo?.hasNextPage || false)
+  const handleLoadMore = async (event) => {
+    if (event) {
+      event.preventDefault()
+      event.stopPropagation()
     }
-  }, [currentData])
 
-  const handleLoadMore = () => {
-    if (!hasMore || networkStatus === 2) return
-    setPage((prev) => prev + 1)
+    if (!hasMore || isPending) return
+
+    setHasAttemptedLoadMore(true)
+    startTransition(() => {
+      setLoading(true)
+      fetchMore({
+        variables: {
+          after: data?.search?.pageInfo?.endCursor,
+        },
+      })
+        .catch((error) => {
+          console.error("加载更多失败:", error)
+          toaster.create({
+            description: common.loadMoreFailed(),
+            type: "error",
+          })
+        })
+        .finally(() => {
+          setLoading(false)
+        })
+    })
   }
 
   const handleRefresh = () => {
-    setPage(1)
-    setHasMore(true)
     if (onRefetch) {
       onRefetch()
     } else {
@@ -71,88 +95,92 @@ export function FollowersList({ initialData, loading, error, onRefetch }) {
     }
   }
 
-  // 处理加载更多时的错误
-  if (currentLoading && page === 1 && !initialData) {
-    return <LoadingSkeleton count={3} />
-  }
-
-  // 处理错误状态
-  if (currentError) {
+  if (loading && !data) {
     return (
-      <Box textAlign="center" py={12}>
-        <Icon as={LuUsers} boxSize={12} color="red.500" mb={4} />
-        <Text color="red.500" fontSize="lg" mb={2}>
-          {common.loadFailed()}
-        </Text>
-        <Text color="gray.500" _dark={{ color: "gray.400" }} mb={4}>
-          {currentError.message || common.loadFailed()}
-        </Text>
-        <Button onClick={handleRefresh} colorPalette="orange" size="sm">
-          {common.retry()}
-        </Button>
-      </Box>
+      <Container lang={connection} total={data?.search?.total}>
+        <VStack colorPalette="orange">
+          <Spinner color="colorPalette.600" />
+          <Text color="colorPalette.600">Loading...</Text>
+        </VStack>
+      </Container>
     )
   }
 
-  const followers = currentData?.search?.edges || []
-  console.log(
-    currentLoading,
-    followers,
-    "============",
-    loading,
-    queryLoading,
-    typeof window === "undefined",
-  )
+  // 处理错误状态
+  if (error) {
+    return (
+      <Container lang={connection} total={data?.search?.total}>
+        <Box textAlign="center" py={12}>
+          <Icon as={LuUsers} boxSize={12} color="red.500" mb={4} />
+          <Text color="red.500" fontSize="lg" mb={2}>
+            {common.loadFailed()}
+          </Text>
+          <Text color="gray.500" _dark={{ color: "gray.400" }} mb={4}>
+            {error.message || common.loadFailed()}
+          </Text>
+          <Button onClick={handleRefresh} colorPalette="orange" size="sm">
+            {common.retry()}
+          </Button>
+        </Box>
+      </Container>
+    )
+  }
+
+  const followers = data?.search?.edges || []
 
   // 处理空状态
-  if (followers.length === 0 && !currentLoading) {
+  if (followers.length === 0 && !loading) {
     return (
-      <Box textAlign="center" py={12}>
-        <Icon as={LuUsers} boxSize={16} color="gray.300" mb={4} />
-        <Text
-          color="gray.500"
-          _dark={{ color: "gray.400" }}
-          fontSize="lg"
-          mb={2}
-        >
-          {connection.noFollowers()}
-        </Text>
-        <Text color="gray.400" _dark={{ color: "gray.500" }} fontSize="sm">
-          {connection.noFollowersDescription()}
-        </Text>
-      </Box>
+      <Container lang={connection} total={data?.search?.total}>
+        <Box textAlign="center" py={12}>
+          <Icon as={LuUsers} boxSize={16} color="gray.300" mb={4} />
+          <Text
+            color="gray.500"
+            _dark={{ color: "gray.400" }}
+            fontSize="lg"
+            mb={2}
+          >
+            {connection.noFollowers()}
+          </Text>
+          <Text color="gray.400" _dark={{ color: "gray.500" }} fontSize="sm">
+            {connection.noFollowersDescription()}
+          </Text>
+        </Box>
+      </Container>
     )
   }
 
   return (
-    <VStack spacing={2} align="stretch">
-      {followers.map(({ node, cursor }) => (
-        <FollowerItem key={cursor} follower={node} />
-      ))}
+    <Container lang={connection} total={data?.search?.total}>
+      <VStack spacing={2} align="stretch">
+        {followers.map(({ node }) => (
+          <FollowerItem key={`follower-${node.address}`} follower={node} />
+        ))}
 
-      {hasMore && (
-        <Box textAlign="center" py={6}>
-          <Button
-            onClick={handleLoadMore}
-            loading={networkStatus === 2}
-            colorPalette="orange"
-            variant="ghost"
-            size="sm"
-            disabled={networkStatus === 2}
-          >
-            <LuEllipsis />
-          </Button>
-        </Box>
-      )}
+        {hasMore && (
+          <Box textAlign="center" py={6}>
+            <Button
+              onClick={handleLoadMore}
+              loading={loading}
+              colorPalette="orange"
+              variant="ghost"
+              size="sm"
+              disabled={loading}
+            >
+              <LuEllipsis />
+            </Button>
+          </Box>
+        )}
 
-      {!hasMore && followers.length > 0 && page > 1 && (
-        <Box textAlign="center" py={4}>
-          <Text color="gray.400" _dark={{ color: "gray.500" }} fontSize="sm">
-            {common.noMore()}
-          </Text>
-        </Box>
-      )}
-    </VStack>
+        {!hasMore && hasAttemptedLoadMore && (
+          <Box textAlign="center" py={4}>
+            <Text color="gray.400" _dark={{ color: "gray.500" }} fontSize="sm">
+              {common.noMore()}
+            </Text>
+          </Box>
+        )}
+      </VStack>
+    </Container>
   )
 }
 
