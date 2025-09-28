@@ -23,4 +23,6 @@ export {
 export { SignedMark } from "./SignedMark"
 export { StatusBadge } from "./StatusBadge"
 export { ThemeSelector } from "./ThemeSelector"
+export { toaster } from "./toaster"
+export { Tooltip } from "./tooltip"
 export { UnifiedCard } from "./UnifiedCard"

@@ -11,22 +11,14 @@ import { WagmiProvider as WagmiProviderBase } from "wagmi"
 import { arbitrum, base, mainnet, optimism, polygon } from "wagmi/chains"
 
 // 全局单例实例
-let globalQueryClient = null
-
-// 获取 QueryClient 单例
-const getQueryClient = () => {
-  if (!globalQueryClient) {
-    globalQueryClient = new QueryClient({
-      defaultOptions: {
-        queries: {
-          staleTime: 1000 * 60 * 5, // 5分钟
-          gcTime: 1000 * 60 * 10, // 10分钟
-        },
-      },
-    })
-  }
-  return globalQueryClient
-}
+const globalQueryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5分钟
+      gcTime: 1000 * 60 * 10, // 10分钟
+    },
+  },
+})
 
 export const WagmiProvider = ({
   children,
@@ -48,8 +40,6 @@ export const WagmiProvider = ({
     })
   }, [walletConnectProjectId])
 
-  const queryClient = getQueryClient()
-
   // 如果 config 未准备好，则不渲染 wagmi 相关 providers
   if (!config) {
     return <>{children}</>
@@ -57,7 +47,7 @@ export const WagmiProvider = ({
 
   return (
     <WagmiProviderBase config={config} {...props}>
-      <QueryClientProvider client={queryClient}>
+      <QueryClientProvider client={globalQueryClient}>
         <RainbowKitProvider
           modalSize="compact"
           theme={lightTheme({ ...lightTheme.accentColors.orange })}
