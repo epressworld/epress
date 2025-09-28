@@ -195,7 +195,8 @@ export function usePublicationForm({
   }
 
   // 移除文件
-  const handleRemoveFile = () => {
+  const handleRemoveFile = (e) => {
+    e.preventDefault()
     setSelectedFile(null)
     setFilePreview(null)
     if (fileInputRef.current) {

@@ -13,6 +13,7 @@ export function FileUploadZone({
   maxSize = 100 * 1024 * 1024,
   accept = "*/*",
   fileInputRef,
+  ...props
 }) {
   const { common } = useTranslation()
 
@@ -37,6 +38,7 @@ export function FileUploadZone({
       display="flex"
       alignItems="center"
       justifyContent="center"
+      {...props}
     >
       <input
         ref={fileInputRef}

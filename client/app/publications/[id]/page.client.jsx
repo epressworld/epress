@@ -47,6 +47,7 @@ export default function PublicationDetailPage({ initialPublication = null }) {
     handleCommentCreated,
     setDeleteDialogOpen,
     setSignatureDialogOpen,
+    handlePublish,
   } = usePublicationDetail({ initialPublication })
 
   // 生成页面标题
@@ -119,6 +120,7 @@ export default function PublicationDetailPage({ initialPublication = null }) {
             onShowSignature={handleShowSignature}
             onEdit={handleEdit}
             showAuthorInfo={false}
+            onPublish={handlePublish}
           />
         )}
 

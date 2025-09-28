@@ -1,6 +1,6 @@
 "use client"
 
-import { Box, Button, HStack, Tabs, VStack } from "@chakra-ui/react"
+import { Box, Button, HStack, Input, Tabs, VStack } from "@chakra-ui/react"
 import { FiFile, FiFileText } from "react-icons/fi"
 import { LuSend } from "react-icons/lu"
 import { usePublicationForm } from "../../../hooks/usePublicationForm"
@@ -20,7 +20,7 @@ export const PublicationForm = ({
   onFileRemove,
   resetTrigger = 0,
 }) => {
-  const { publication } = useTranslation()
+  const { publication, common } = useTranslation()
 
   const {
     mode,
@@ -55,27 +55,34 @@ export const PublicationForm = ({
 
   return (
     <UnifiedCard.Root mb={2}>
+      {mode === "file" && (
+        <UnifiedCard.Header p={0}>
+          <FileModeForm
+            selectedFile={selectedFile}
+            filePreview={filePreview}
+            onFileSelect={handleFileSelect}
+            onRemoveFile={handleRemoveFile}
+            fileInputRef={fileInputRef}
+            maxFileSize={maxFileSize}
+            disabled={disabled}
+          />
+        </UnifiedCard.Header>
+      )}
       <UnifiedCard.Body>
         <VStack gap={4} align="stretch">
           {/* 内容区域 */}
-          <Box minH="120px">
-            {mode === "post" ? (
+          {mode === "post" ? (
+            <Box minH="120px">
               <PostModeForm editor={editor} />
-            ) : (
-              <FileModeForm
-                fileDescription={fileDescription}
-                setFileDescription={setFileDescription}
-                selectedFile={selectedFile}
-                filePreview={filePreview}
-                onFileSelect={handleFileSelect}
-                onRemoveFile={handleRemoveFile}
-                fileInputRef={fileInputRef}
-                maxFileSize={maxFileSize}
-                disabled={disabled}
-              />
-            )}
-          </Box>
-
+            </Box>
+          ) : (
+            <Input
+              placeholder={common.addFileDescription()}
+              value={fileDescription}
+              onChange={(e) => setFileDescription(e.target.value)}
+              disabled={disabled}
+            />
+          )}
           {/* Tabs和发布按钮在同一行，在内容下方 */}
           <HStack justify="space-between" align="center">
             <Tabs.Root

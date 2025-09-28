@@ -1,12 +1,9 @@
 "use client"
 
-import { Input, VStack } from "@chakra-ui/react"
-import { useTranslation } from "../../hooks/useTranslation"
+import { VStack } from "@chakra-ui/react"
 import { FileUploadZone } from "../ui"
 
 export function FileModeForm({
-  fileDescription,
-  setFileDescription,
   selectedFile,
   filePreview,
   onFileSelect,
@@ -15,8 +12,6 @@ export function FileModeForm({
   maxFileSize,
   disabled = false,
 }) {
-  const { common } = useTranslation()
-
   return (
     <VStack gap={4} align="stretch">
       <FileUploadZone
@@ -27,13 +22,13 @@ export function FileModeForm({
         fileInputRef={fileInputRef}
         maxSize={maxFileSize}
         disabled={disabled}
-      />
-
-      <Input
-        placeholder={common.addFileDescription()}
-        value={fileDescription}
-        onChange={(e) => setFileDescription(e.target.value)}
-        disabled={disabled}
+        border={0}
+        bg={"gray.100"}
+        borderRadius={"none"}
+        roundedTop={"md"}
+        _dark={{
+          bg: "gray.700",
+        }}
       />
     </VStack>
   )

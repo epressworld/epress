@@ -14,7 +14,7 @@ import {
 } from "@chakra-ui/react"
 import { useCopyToClipboard } from "@uidotdev/usehooks"
 import { useEffect, useState } from "react"
-import { FiEdit3, FiMessageCircle, FiTrash2 } from "react-icons/fi"
+import { FiEdit3, FiFileText, FiMessageCircle, FiTrash2 } from "react-icons/fi"
 import { LuQuote, LuSend } from "react-icons/lu"
 import ReactMarkdown from "react-markdown"
 import rehypeHighlight from "rehype-highlight"
@@ -65,6 +65,11 @@ export const PublicationItem = ({
     const authorUrl = publication.author?.url || ""
     const createdAt = formatTime(publication.created_at, currentLanguage)
     const contentHash = publication.content?.content_hash || ""
+    const createdAtUnix = Math.floor(
+      new Date(publication.created_at).getTime() / 1000,
+    )
+    const isExternal = publication.author?.is_self !== true
+    const baseUrl = isExternal ? authorUrl : ""
 
     let contentSection
 
@@ -75,14 +80,33 @@ export const PublicationItem = ({
         ? formatFileSize(publication.content.size)
         : ""
       const fileInfo = size ? ` (${size})` : ""
+      const mimetype = publication.content?.mimetype || ""
+      const isImage = mimetype.startsWith("image/")
 
-      contentSection = [
-        `> 📁 ${pub.fileMode()}: ${filename}${fileInfo}`,
-        `> `, // 空行
-        ...(publication.description || "")
-          .split("\n")
-          .map((line) => `> ${line}`),
-      ].join("\n")
+      if (isImage) {
+        // 图片文件：直接在引用中嵌入图片，并附带描述
+        const altText = (publication.description || filename).split("\n")[0]
+        const imgUrl = `${baseUrl}/ewp/contents/${contentHash}?timestamp=${createdAtUnix}`
+        const lines = [
+          `> ![${altText}](${imgUrl})`,
+          ...(publication.description || "")
+            .split("\n")
+            .filter((line) => line.trim().length > 0)
+            .map((line) => `> ${line}`),
+        ]
+        contentSection = lines.join("\n")
+      } else {
+        // 非图片文件：保持文本链接的行为
+        const fileUrl = `${baseUrl}/ewp/contents/${contentHash}?timestamp=${createdAtUnix}`
+        contentSection = [
+          `> 📁 ${pub.fileMode()}: ${filename}${fileInfo}`,
+          `> [${filename}](${fileUrl})`,
+          `> `, // 空行
+          ...(publication.description || "")
+            .split("\n")
+            .map((line) => `> ${line}`),
+        ].join("\n")
+      }
     } else {
       // 文本类型：直接显示内容
       contentSection = (publication.content?.body || "")
@@ -97,7 +121,7 @@ export const PublicationItem = ({
       `> `,
       contentSection,
       `> `,
-      `> [${createdAt}](${authorUrl}/redirect?content_hash=${contentHash})`,
+      `> [${createdAt}](${authorUrl}/publications/${contentHash})`,
     ].join("\n")
 
     return quoteText
@@ -207,8 +231,8 @@ export const PublicationItem = ({
   // 生成正确的详情链接
   const getDetailUrl = () => {
     if (isNodeOwner && isAuthenticated && !isOwnContent) {
-      // 如果是节点所有者登录且内容不是本节点发布的，使用redirect路由
-      return `${publication.author.url}/redirect?content_hash=${publication.content.content_hash}`
+      // 节点所有者查看外部内容，跳转到对方节点的 publications/[content_hash]
+      return `${publication.author.url}/publications/${publication.content.content_hash}`
     }
     // 否则使用本节点的URL（本节点内容或非节点所有者查看）
     return `/publications/${publication.id}`
@@ -240,94 +264,12 @@ export const PublicationItem = ({
     }
 
     if (content.type === "FILE") {
-      if (content.mimetype?.startsWith("image/")) {
-        return (
-          <VStack gap={4} align="stretch">
-            <Image
-              src={
-                publication.author.url
-                  ? `${publication.author.url}/ewp/contents/${content.content_hash}`
-                  : undefined
-              }
-              alt={content.filename || pub.unknownFile()}
-              borderRadius="md"
-              cursor="pointer"
-              onClick={handleImageClick}
-              maxH={isImageExpanded ? "none" : "400px"}
-              objectFit="contain"
-            />
-            {publication.description && (
-              <Text color="gray.600" fontSize="sm">
-                {publication.description}
-              </Text>
-            )}
-          </VStack>
-        )
-      }
-
-      if (content.mimetype?.startsWith("video/")) {
-        return (
-          <VStack gap={4} align="stretch">
-            <video controls style={{ maxWidth: "100%", borderRadius: "8px" }}>
-              <source
-                src={
-                  publication.author.url
-                    ? `${publication.author.url}/ewp/contents/${content.content_hash}`
-                    : undefined
-                }
-                type={content.mimetype}
-              />
-              {pub.browserNotSupportVideo()}
-            </video>
-            {publication.description && (
-              <Text color="gray.600" fontSize="sm">
-                {publication.description}
-              </Text>
-            )}
-          </VStack>
-        )
-      }
-
-      // 其他文件类型
-      return (
-        <VStack gap={4} align="stretch">
-          <Box
-            p={4}
-            border="1px"
-            borderColor="gray.200"
-            _dark={{ borderColor: "gray.600" }}
-            borderRadius="md"
-            textAlign="center"
-          >
-            <Text fontSize="lg" fontWeight="bold">
-              📎 {content.filename || pub.unknownFile()}
-            </Text>
-            <Text fontSize="sm" color="gray.500" _dark={{ color: "gray.400" }}>
-              {pub.fileType()}: {content.mimetype || pub.unknownType()}
-            </Text>
-            <Text fontSize="sm" color="gray.500" _dark={{ color: "gray.400" }}>
-              {pub.fileSize()}: {(content.size / 1024 / 1024).toFixed(2)} MB
-            </Text>
-            <Link
-              href={
-                publication.author.url
-                  ? `${publication.author.url}/ewp/contents/${content.content_hash}`
-                  : undefined
-              }
-              color="orange.500"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {pub.downloadFile()}
-            </Link>
-          </Box>
-          {publication.description && (
-            <Text color="gray.600" _dark={{ color: "gray.300" }} fontSize="sm">
-              {publication.description}
-            </Text>
-          )}
-        </VStack>
-      )
+      // 新布局：媒体移至卡片顶部，此处仅显示文件描述行
+      return publication.description ? (
+        <Text color="gray.800" _dark={{ color: "gray.200" }} fontSize="sm">
+          {publication.description}
+        </Text>
+      ) : null
     }
 
     if (content.type === "FILE") {
@@ -354,6 +296,90 @@ export const PublicationItem = ({
           }
         }}
       />
+
+      {/* 顶部全宽媒体展示区：仅在 FILE 类型时显示 */}
+      {publication.content?.type === "FILE" &&
+        (() => {
+          const content = publication.content
+          const sourceUrl = publication.author.url
+            ? `${publication.author.url}/ewp/contents/${content.content_hash}`
+            : undefined
+
+          if (content.mimetype?.startsWith("image/")) {
+            return (
+              <Box w="full">
+                <Image
+                  src={sourceUrl}
+                  alt={content.filename || pub.unknownFile()}
+                  display="block"
+                  w="100%"
+                  maxH={isImageExpanded ? "none" : "400px"}
+                  objectFit="cover"
+                  cursor="pointer"
+                  onClick={handleImageClick}
+                />
+              </Box>
+            )
+          }
+
+          if (content.mimetype?.startsWith("video/")) {
+            return (
+              <Box w="full">
+                <video controls style={{ width: "100%" }}>
+                  <source src={sourceUrl} type={content.mimetype} />
+                  {pub.browserNotSupportVideo()}
+                </video>
+              </Box>
+            )
+          }
+
+          // 非图片文件的全宽美观展示区
+          return (
+            <Box w="full" bg="gray.50" _dark={{ bg: "gray.800" }} p={6}>
+              <VStack gap={2} align="stretch">
+                <HStack justify="space-between" align="center">
+                  <HStack gap={3} align="center">
+                    <FiFileText color="currentColor" />
+                    <Text
+                      fontSize="sm"
+                      fontWeight="medium"
+                      color="gray.800"
+                      _dark={{ color: "gray.200" }}
+                    >
+                      {content.filename || pub.unknownFile()}
+                    </Text>
+                    {content.size != null && (
+                      <Text
+                        fontSize="xs"
+                        color="gray.500"
+                        _dark={{ color: "gray.400" }}
+                      >
+                        {(content.size / 1024 / 1024).toFixed(2)} MB
+                      </Text>
+                    )}
+                  </HStack>
+                  {sourceUrl && (
+                    <Link
+                      href={sourceUrl}
+                      color="orange.500"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {pub.downloadFile()}
+                    </Link>
+                  )}
+                </HStack>
+                <Text
+                  fontSize="xs"
+                  color="gray.500"
+                  _dark={{ color: "gray.400" }}
+                >
+                  {content.mimetype || pub.unknownType()}
+                </Text>
+              </VStack>
+            </Box>
+          )
+        })()}
       <UnifiedCard.Body>
         <VStack gap={4} align="stretch">
           {/* 作者信息 - 根据showAuthorInfo参数控制显示 */}
@@ -408,7 +434,6 @@ export const PublicationItem = ({
           <HStack
             justify="space-between"
             align="center"
-            pt={4}
             borderTop="1px"
             borderColor="gray.100"
           >
