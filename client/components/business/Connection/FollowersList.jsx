@@ -16,6 +16,7 @@ import { LuEllipsis, LuUsers } from "react-icons/lu"
 import { SEARCH_NODES } from "../../../graphql/queries"
 import { useTranslation } from "../../../hooks/useTranslation"
 import { toaster, UnifiedCard } from "../../ui"
+import { EmptyStateComponent } from "../../ui/EmptyState"
 
 const Container = ({ children, lang, total }) => (
   <UnifiedCard.Root>
@@ -131,22 +132,11 @@ export function FollowersList({ onRefetch }) {
   // 处理空状态
   if (followers.length === 0 && !loading) {
     return (
-      <Container lang={connection} total={data?.search?.total}>
-        <Box textAlign="center" py={12}>
-          <Icon as={LuUsers} boxSize={16} color="gray.300" mb={4} />
-          <Text
-            color="gray.500"
-            _dark={{ color: "gray.400" }}
-            fontSize="lg"
-            mb={2}
-          >
-            {connection.noFollowers()}
-          </Text>
-          <Text color="gray.400" _dark={{ color: "gray.500" }} fontSize="sm">
-            {connection.noFollowersDescription()}
-          </Text>
-        </Box>
-      </Container>
+      <EmptyStateComponent
+        title={connection.noFollowers()}
+        description={connection.noFollowersDescription()}
+        icon={<Icon as={LuUsers} boxSize={16} color="gray.300" mb={4} />}
+      />
     )
   }
 

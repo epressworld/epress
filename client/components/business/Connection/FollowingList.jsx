@@ -20,6 +20,7 @@ import { useTranslation } from "../../../hooks/useTranslation"
 import { useWallet } from "../../../hooks/useWallet"
 import { deleteConnectionTypedData } from "../../../utils/eip712"
 import { ConfirmDialog, UnifiedCard } from "../../ui"
+import { EmptyStateComponent } from "../../ui/EmptyState"
 import { toaster } from "../../ui/toaster"
 
 const Container = ({ children, lang, total }) => (
@@ -306,24 +307,11 @@ const FollowingList = () => {
           )}
 
           {following.length === 0 && !loading && (
-            <Box textAlign="center" py={12}>
-              <Icon as={LuUsers} boxSize={16} color="gray.300" mb={4} />
-              <Text
-                color="gray.500"
-                _dark={{ color: "gray.400" }}
-                fontSize="lg"
-                mb={2}
-              >
-                {connection.noFollowing()}
-              </Text>
-              <Text
-                color="gray.400"
-                _dark={{ color: "gray.500" }}
-                fontSize="sm"
-              >
-                {connection.noFollowingDescription()}
-              </Text>
-            </Box>
+            <EmptyStateComponent
+              title={connection.noFollowing()}
+              description={connection.noFollowingDescription()}
+              icon={<Icon as={LuUsers} boxSize={16} color="gray.300" mb={4} />}
+            />
           )}
         </VStack>
 
