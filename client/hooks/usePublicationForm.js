@@ -198,7 +198,7 @@ export function usePublicationForm({
     return {
       mode,
       content: mode === "post" ? content : fileDescription,
-      file: selectedFile,
+      file: mode === "file" ? selectedFile : null,
     }
   }
 

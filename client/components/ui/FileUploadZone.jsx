@@ -99,17 +99,26 @@ const UploadOrPreview = ({ maxSize, onFileRemove }) => {
 }
 
 export function FileUploadZone({
+  selectedFile,
   onFileSelect,
   onRemoveFile,
   maxSize = 100 * 1024 * 1024,
   maxFiles = 1,
 }) {
+  const files = selectedFile ? [selectedFile] : []
   return (
     <FileUpload.Root
+      acceptedFiles={files}
+      onFileChange={(e) => {
+        if (e.acceptedFiles.length > 0) {
+          onFileSelect({ files: e.acceptedFiles })
+        } else {
+          onRemoveFile({ preventDefault: () => {} })
+        }
+      }}
       alignItems="stretch"
       maxFiles={maxFiles}
       maxFileSize={maxSize}
-      onFileAccept={onFileSelect}
     >
       <FileUpload.HiddenInput />
       <FileUpload.Dropzone
