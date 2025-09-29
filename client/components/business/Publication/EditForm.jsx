@@ -3,6 +3,7 @@
 import {
   Box,
   Button,
+  FormatByte,
   HStack,
   Image,
   Input,
@@ -11,7 +12,7 @@ import {
   VStack,
 } from "@chakra-ui/react"
 import { useEffect } from "react"
-import { FiArrowLeft, FiSave } from "react-icons/fi"
+import { FiArrowLeft, FiFileText, FiSave } from "react-icons/fi"
 import { usePublicationForm } from "../../../hooks/usePublicationForm"
 import { useTranslation } from "../../../hooks/useTranslation"
 import { PostModeForm } from "../../forms"
@@ -76,7 +77,7 @@ export const PublicationEditForm = ({
 
       if (fileContent.mimetype?.startsWith("image/")) {
         return (
-          <VStack gap={2}>
+          <Box w="full">
             <Image
               src={
                 publication.author.url
@@ -84,17 +85,12 @@ export const PublicationEditForm = ({
                   : undefined
               }
               alt={fileContent.filename || "图片"}
-              maxH="200px"
-              objectFit="contain"
-              borderRadius="md"
+              display="block"
+              w="100%"
+              maxH={"400px"}
+              objectFit="cover"
             />
-            <Text fontSize="sm" color="gray.600">
-              当前文件: {fileContent.filename || "图片"}
-            </Text>
-            <Text fontSize="xs" color="gray.500">
-              大小: {(fileContent.size / 1024 / 1024).toFixed(2)} MB
-            </Text>
-          </VStack>
+          </Box>
         )
       }
 
@@ -112,41 +108,43 @@ export const PublicationEditForm = ({
               />
               您的浏览器不支持视频播放。
             </video>
-            <Text fontSize="sm" color="gray.600">
-              当前文件: {fileContent.filename || "视频"}
-            </Text>
-            <Text fontSize="xs" color="gray.500">
-              大小: {(fileContent.size / 1024 / 1024).toFixed(2)} MB
-            </Text>
           </VStack>
         )
       }
 
       // 其他文件类型
       return (
-        <VStack gap={2}>
-          <Text fontSize="lg" fontWeight="bold">
-            📎 {fileContent.filename || "文件"}
-          </Text>
-          <Text fontSize="sm" color="gray.500">
-            类型: {fileContent.mimetype || "未知"}
-          </Text>
-          <Text fontSize="sm" color="gray.500">
-            大小: {(fileContent.size / 1024 / 1024).toFixed(2)} MB
-          </Text>
-          <Link
-            href={
-              publication.author.url
-                ? `${publication.author.url}/ewp/contents/${fileContent.content_hash}`
-                : undefined
-            }
-            color="orange.500"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            下载文件
-          </Link>
-        </VStack>
+        <Box w="full" bg="gray.50" _dark={{ bg: "gray.800" }} p={6}>
+          <VStack gap={2} align="stretch">
+            <HStack justify="space-between" align="center">
+              <HStack gap={3} align="center">
+                <FiFileText color="currentColor" />
+                <Text
+                  fontSize="sm"
+                  fontWeight="medium"
+                  color="gray.800"
+                  _dark={{ color: "gray.200" }}
+                >
+                  {fileContent.filename || pub.unknownFile()}
+                </Text>
+                {fileContent.size != null && (
+                  <FormatByte value={fileContent.size} />
+                )}
+              </HStack>
+              <Link
+                href={`/ewp/contents/${fileContent.content_hash}`}
+                color="orange.500"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {pub.downloadFile()}
+              </Link>
+            </HStack>
+            <Text fontSize="xs" color="gray.500" _dark={{ color: "gray.400" }}>
+              {fileContent.mimetype || pub.unknownType()}
+            </Text>
+          </VStack>
+        </Box>
       )
     }
     return null
@@ -178,17 +176,16 @@ export const PublicationEditForm = ({
 
   return (
     <UnifiedCard.Root mb={6}>
+      {/* 现有文件显示（不可编辑） */}
+      {renderExistingFile()}
       <UnifiedCard.Body>
         <VStack gap={4} align="stretch">
           {/* 内容区域 */}
-          <Box minH="120px">
+          <Box minH={mode === "post" ? "120px" : "none"}>
             {mode === "post" ? (
               <PostModeForm editor={editor} />
             ) : (
               <VStack gap={4} align="stretch">
-                {/* 现有文件显示（不可编辑） */}
-                {renderExistingFile()}
-
                 {/* 文件描述编辑 */}
                 <VStack gap={2} align="stretch">
                   <Text fontSize="sm" color="gray.600">

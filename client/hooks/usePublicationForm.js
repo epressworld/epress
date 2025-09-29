@@ -5,7 +5,7 @@ import { TableKit } from "@tiptap/extension-table"
 import { useEditor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import { common, createLowlight } from "lowlight"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { Markdown } from "tiptap-markdown"
 import { useTranslation } from "./useTranslation"
 
@@ -26,8 +26,6 @@ export function usePublicationForm({
   const [content, setContent] = useState(initialContent)
   const [fileDescription, setFileDescription] = useState("")
   const [selectedFile, setSelectedFile] = useState(null)
-  const [filePreview, setFilePreview] = useState(null)
-  const fileInputRef = useRef()
 
   // TipTap编辑器配置
   const editor = useEditor({
@@ -140,21 +138,17 @@ export function usePublicationForm({
       setContent("")
       setFileDescription("")
       setSelectedFile(null)
-      setFilePreview(null)
 
       if (editor) {
         editor.commands.clearContent()
-      }
-
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ""
       }
     }
   }, [resetTrigger, editor, initialMode])
 
   // 处理文件选择
-  const handleFileSelect = (event) => {
-    const file = event.target.files[0]
+  const handleFileSelect = ({ files }) => {
+    const file = files[0]
+    console.log(file, files)
     if (file) {
       if (file.size > maxFileSize) {
         if (onFileSelect) {
@@ -165,18 +159,9 @@ export function usePublicationForm({
         }
         return
       }
+      console.log(file)
 
       setSelectedFile(file)
-
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader()
-        reader.onload = (e) => {
-          setFilePreview(e.target.result)
-        }
-        reader.readAsDataURL(file)
-      } else {
-        setFilePreview(null)
-      }
 
       if (onFileSelect) {
         onFileSelect(file)
@@ -188,10 +173,6 @@ export function usePublicationForm({
   const handleRemoveFile = (e) => {
     e.preventDefault()
     setSelectedFile(null)
-    setFilePreview(null)
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ""
-    }
     if (onFileRemove) {
       onFileRemove()
     }
@@ -229,9 +210,7 @@ export function usePublicationForm({
     fileDescription,
     setFileDescription,
     selectedFile,
-    filePreview,
     editor,
-    fileInputRef,
     handleFileSelect,
     handleRemoveFile,
     handleSubmit,
