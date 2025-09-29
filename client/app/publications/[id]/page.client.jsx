@@ -7,11 +7,7 @@ import {
   PublicationEditForm,
   PublicationItem,
 } from "../../../components/business"
-import {
-  ConfirmDialog,
-  LoadingSkeleton,
-  UnifiedCard,
-} from "../../../components/ui"
+import { ConfirmDialog, Skeletons, UnifiedCard } from "../../../components/ui"
 import { usePage } from "../../../contexts/PageContext"
 import { usePageTitle } from "../../../hooks/usePageTitle"
 import { usePublicationDetail } from "../../../hooks/usePublicationDetail"
@@ -68,12 +64,7 @@ export default function PublicationDetailPage({ variables }) {
   usePageTitle(getPageTitle())
 
   if (publicationLoading) {
-    return (
-      <VStack gap={4} align="stretch">
-        <LoadingSkeleton count={1} />
-        <LoadingSkeleton count={1} />
-      </VStack>
-    )
+    return <Skeletons.PublicationDetail />
   }
 
   if (publicationError) {

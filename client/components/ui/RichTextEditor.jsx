@@ -1,3 +1,4 @@
+"use client"
 import { Box } from "@chakra-ui/react"
 import { EditorContent } from "@tiptap/react"
 import { BubbleMenu } from "@tiptap/react/menus"
