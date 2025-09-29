@@ -16,7 +16,7 @@ const CommentList = ({
   onRetrySignature,
   onSetRefetch,
 }) => {
-  const [hasMore, setHasMore] = useState(true)
+  const [hasMore, setHasMore] = useState(false)
   const [hasAttemptedLoadMore, setHasAttemptedLoadMore] = useState(false)
   const { common } = useTranslation()
 
