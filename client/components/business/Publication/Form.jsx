@@ -1,6 +1,6 @@
 "use client"
 
-import { Box, Button, HStack, Input, Tabs, VStack } from "@chakra-ui/react"
+import { Box, Button, Group, HStack, Input, VStack } from "@chakra-ui/react"
 import { FiFile, FiFileText } from "react-icons/fi"
 import { LuSend } from "react-icons/lu"
 import { usePublicationForm } from "../../../hooks/usePublicationForm"
@@ -29,7 +29,6 @@ export const PublicationForm = ({
     fileDescription,
     setFileDescription,
     selectedFile,
-    filePreview,
     editor,
     fileInputRef,
     handleFileSelect,
@@ -59,7 +58,6 @@ export const PublicationForm = ({
         <UnifiedCard.Header p={0}>
           <FileModeForm
             selectedFile={selectedFile}
-            filePreview={filePreview}
             onFileSelect={handleFileSelect}
             onRemoveFile={handleRemoveFile}
             fileInputRef={fileInputRef}
@@ -85,22 +83,24 @@ export const PublicationForm = ({
           )}
           {/* Tabs和发布按钮在同一行，在内容下方 */}
           <HStack justify="space-between" align="center">
-            <Tabs.Root
-              value={mode}
-              onValueChange={(e) => setMode(e.value)}
-              variant="subtle"
-            >
-              <Tabs.List>
-                <Tabs.Trigger value="post">
-                  <FiFileText />
-                  {publication.postMode()}
-                </Tabs.Trigger>
-                <Tabs.Trigger value="file">
-                  <FiFile />
-                  {publication.fileMode()}
-                </Tabs.Trigger>
-              </Tabs.List>
-            </Tabs.Root>
+            <Group attached>
+              <Button
+                size="xs"
+                variant={mode === "post" ? "solid" : "subtle"}
+                onClick={(_e) => setMode("post")}
+              >
+                <FiFileText />
+                {publication.postMode()}
+              </Button>
+              <Button
+                size="xs"
+                variant={mode === "file" ? "solid" : "subtle"}
+                onClick={(_e) => setMode("file")}
+              >
+                <FiFile />
+                {publication.fileMode()}
+              </Button>
+            </Group>
 
             <Button
               colorPalette="orange"
