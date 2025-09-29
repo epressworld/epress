@@ -3,7 +3,6 @@
 import {
   useApolloClient,
   useMutation,
-  useQuery,
   useSuspenseQuery,
 } from "@apollo/client/react"
 import {

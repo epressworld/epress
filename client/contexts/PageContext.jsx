@@ -1,6 +1,6 @@
 "use client"
 
-import { useQuery, useSuspenseQuery } from "@apollo/client/react"
+import { useSuspenseQuery } from "@apollo/client/react"
 import {
   createContext,
   useCallback,

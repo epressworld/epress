@@ -13,7 +13,7 @@ import { SEARCH_PUBLICATIONS } from "../../../graphql/queries"
 import { useTranslation } from "../../../hooks/useTranslation"
 import { useWallet } from "../../../hooks/useWallet"
 import { statementOfSourceTypedData } from "../../../utils/eip712"
-import { ConfirmDialog, LoadingSkeleton } from "../../ui"
+import { ConfirmDialog, Skeletons } from "../../ui"
 import { toaster } from "../../ui/toaster"
 import { PublicationItem } from "./Item"
 
@@ -201,7 +201,7 @@ const PublicationList = ({
   }
 
   if (isLoading && !data) {
-    return <LoadingSkeleton count={3} />
+    return <Skeletons.Publications total={2} />
   }
 
   if (error) {

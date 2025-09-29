@@ -1,4 +1,6 @@
 import { notFound, redirect } from "next/navigation"
+import { Suspense } from "react"
+import { Skeletons } from "../../../components/ui"
 import { PreloadQuery, query } from "../../../graphql/client"
 import { FETCH, SEARCH_PUBLICATIONS } from "../../../graphql/queries"
 import ClientPage from "./page.client"
@@ -68,7 +70,9 @@ export default async function PublicationDetailServerPage({
 
   return (
     <PreloadQuery query={FETCH} variables={variables}>
-      <ClientPage variables={variables} />
+      <Suspense fallback={<Skeletons.PublicationDetail />}>
+        <ClientPage variables={variables} />
+      </Suspense>
     </PreloadQuery>
   )
 }

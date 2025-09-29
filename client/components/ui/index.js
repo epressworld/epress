@@ -10,9 +10,6 @@ export { FileUploadZone } from "./FileUploadZone"
 export { FormField } from "./FormField"
 export { InfoDialog } from "./InfoDialog"
 export { LanguageSelect } from "./LanguageSelect"
-// 其他UI组件
-export { LoadingSkeleton } from "./LoadingSkeleton"
-
 export { NodeUrlInput } from "./NodeUrlInput"
 export { RichTextEditor } from "./RichTextEditor"
 export { SettingsDialog } from "./SettingsDialog"
@@ -21,6 +18,8 @@ export {
   SignatureDialog,
 } from "./SignatureDialog"
 export { SignedMark } from "./SignedMark"
+// 其他UI组件
+export * as Skeletons from "./Skeleton"
 export { StatusBadge } from "./StatusBadge"
 export { ThemeSelector } from "./ThemeSelector"
 export { toaster } from "./toaster"
