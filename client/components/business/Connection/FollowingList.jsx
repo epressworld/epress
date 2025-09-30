@@ -310,7 +310,7 @@ const FollowingList = () => {
             <EmptyStateComponent
               title={connection.noFollowing()}
               description={connection.noFollowingDescription()}
-              icon={<Icon as={LuUsers} boxSize={16} color="gray.300" mb={4} />}
+              icon={<Icon as={LuUsers} />}
             />
           )}
         </VStack>
