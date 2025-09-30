@@ -1,9 +1,9 @@
 "use client"
 import { EmptyState, VStack } from "@chakra-ui/react"
 
-export const EmptyStateComponent = ({ title, description, icon }) => {
+export const EmptyStateComponent = ({ title, description, icon, ...props }) => {
   return (
-    <EmptyState.Root>
+    <EmptyState.Root {...props}>
       <EmptyState.Content>
         <EmptyState.Indicator>{icon}</EmptyState.Indicator>
         <VStack textAlign="center">

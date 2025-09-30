@@ -132,11 +132,13 @@ export function FollowersList({ onRefetch }) {
   // 处理空状态
   if (followers.length === 0 && !loading) {
     return (
-      <EmptyStateComponent
-        title={connection.noFollowers()}
-        description={connection.noFollowersDescription()}
-        icon={<Icon as={LuUsers} boxSize={16} color="gray.300" mb={4} />}
-      />
+      <Container lang={connection} total={0}>
+        <EmptyStateComponent
+          title={connection.noFollowers()}
+          description={connection.noFollowersDescription()}
+          icon={<Icon as={LuUsers} />}
+        />
+      </Container>
     )
   }
 
