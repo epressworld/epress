@@ -88,7 +88,9 @@ export const PublicationEditForm = ({
               display="block"
               w="100%"
               maxH={"400px"}
-              objectFit="cover"
+              objectFit="contain"
+              bg="gray.100"
+              _dark={{ bg: "gray.800" }}
             />
           </Box>
         )

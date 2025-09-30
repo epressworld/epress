@@ -314,9 +314,11 @@ export const PublicationItem = ({
                   display="block"
                   w="100%"
                   maxH={isImageExpanded ? "none" : "400px"}
-                  objectFit="cover"
+                  objectFit="contain"
                   cursor="pointer"
                   onClick={handleImageClick}
+                  bg="gray.100"
+                  _dark={{ bg: "gray.800" }}
                 />
               </Box>
             )

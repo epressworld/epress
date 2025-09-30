@@ -148,7 +148,6 @@ export function usePublicationForm({
   // 处理文件选择
   const handleFileSelect = ({ files }) => {
     const file = files[0]
-    console.log(file, files)
     if (file) {
       if (file.size > maxFileSize) {
         if (onFileSelect) {
@@ -159,7 +158,6 @@ export function usePublicationForm({
         }
         return
       }
-      console.log(file)
 
       setSelectedFile(file)
 

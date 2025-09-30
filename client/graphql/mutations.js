@@ -31,11 +31,20 @@ export const CREATE_PUBLICATION = gql`
       signature
       created_at
       description
+      comment_count
+      updated_at
       author {
         address
+        url
+        description
+        title
+        is_self
+        created_at
+        updated_at
       }
       content {
         content_hash
+        filename
         type
         body
         mimetype
