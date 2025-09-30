@@ -1,4 +1,4 @@
-import { useMutation } from "@apollo/client/react"
+import { useApolloClient, useMutation } from "@apollo/client/react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toaster } from "../components/ui/toaster"
@@ -9,6 +9,7 @@ import { SEARCH_PUBLICATIONS } from "../graphql/queries"
 import { useTranslation } from "./useTranslation"
 
 export function useHomePage() {
+  const client = useApolloClient()
   const router = useRouter()
   const { authStatus, isNodeOwner } = useAuth()
   const { profile } = usePage()
@@ -17,7 +18,6 @@ export function useHomePage() {
   // 状态管理
   const [isLoading, setIsLoading] = useState(false)
   const [formResetTrigger, setFormResetTrigger] = useState(0)
-  const [publicationListRefetch, setPublicationListRefetch] = useState(null)
 
   // GraphQL mutations
   const [createPublication] = useMutation(CREATE_PUBLICATION)
@@ -25,11 +25,6 @@ export function useHomePage() {
   // 处理编辑
   const handleEdit = (publication) => {
     router.push(`/publications/${publication.id}?edit=true`)
-  }
-
-  // 设置 PublicationList 的 refetch 方法
-  const handleSetRefetch = (refetchFn) => {
-    setPublicationListRefetch(() => refetchFn)
   }
 
   // 处理内容变化
@@ -115,9 +110,46 @@ export function useHomePage() {
           throw new Error("发布失败")
         }
 
-        // 文件上传成功后，手动刷新列表
-        if (publicationListRefetch) {
-          publicationListRefetch()
+        // 文件上传成功后，手动更新缓存
+        const newPublication = result.data.createPublication
+        if (newPublication) {
+          client.cache.updateQuery(
+            {
+              query: SEARCH_PUBLICATIONS,
+              variables: {
+                filterBy: null,
+                orderBy: "-created_at",
+                first: 10,
+              },
+            },
+            (data) => {
+              if (!data) return
+              return {
+                search: {
+                  ...data.search,
+                  edges: [
+                    {
+                      node: {
+                        __typename: "Publication",
+                        ...newPublication,
+                        author: {
+                          __typename: "Node",
+                          ...newPublication.author,
+                        },
+                        content: {
+                          __typename: "Content",
+                          ...newPublication.content,
+                        },
+                      },
+                      cursor: Buffer.from(newPublication.id).toString("base64"),
+                      __typename: "SearchItemEdge",
+                    },
+                    ...data.search.edges,
+                  ],
+                },
+              }
+            },
+          )
         }
       } else {
         // 普通文本发布，使用常规GraphQL请求
@@ -165,7 +197,6 @@ export function useHomePage() {
 
     // 方法
     handleEdit,
-    handleSetRefetch,
     handleContentChange,
     handleFileSelect,
     handleFileRemove,

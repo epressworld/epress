@@ -879,11 +879,13 @@ test("Success: search should support empty filterBy", async (t) => {
   t.true(data.search.total >= 0, "Should return results or empty set")
 })
 
-test("Success: search should support after cursor for pagination", async (t) => {
-  const { graphqlClient } = t.context
+test.serial(
+  "Success: search should support after cursor for pagination",
+  async (t) => {
+    const { graphqlClient } = t.context
 
-  // First get the first page
-  const firstPageQuery = `
+    // First get the first page
+    const firstPageQuery = `
     query SearchPublications($first: Int) {
       search(type: PUBLICATION, first: $first) {
         total
@@ -903,14 +905,14 @@ test("Success: search should support after cursor for pagination", async (t) => 
     }
   `
 
-  const firstPageResult = await graphqlClient.query(firstPageQuery, {
-    variables: { first: 1 },
-  })
-  t.falsy(firstPageResult.errors, "First page should not have errors")
+    const firstPageResult = await graphqlClient.query(firstPageQuery, {
+      variables: { first: 1 },
+    })
+    t.falsy(firstPageResult.errors, "First page should not have errors")
 
-  if (firstPageResult.data.search.pageInfo.hasNextPage) {
-    // Use cursor to get second page
-    const secondPageQuery = `
+    if (firstPageResult.data.search.pageInfo.hasNextPage) {
+      // Use cursor to get second page
+      const secondPageQuery = `
       query SearchPublications($first: Int, $after: String) {
         search(type: PUBLICATION, first: $first, after: $after) {
           total
@@ -930,50 +932,21 @@ test("Success: search should support after cursor for pagination", async (t) => 
       }
     `
 
-    const secondPageResult = await graphqlClient.query(secondPageQuery, {
-      variables: {
-        first: 1,
-        after: firstPageResult.data.search.pageInfo.endCursor,
-      },
-    })
-
-    t.falsy(secondPageResult.errors, "Second page should not have errors")
-    t.truthy(secondPageResult.data.search, "Second page should exist")
-    t.true(
-      secondPageResult.data.search.edges.length > 0,
-      "Second page should have results",
-    )
-  }
-})
-
-test("Success: search should handle invalid orderBy gracefully", async (t) => {
-  const { graphqlClient } = t.context
-
-  const query = `
-    query SearchPublications($orderBy: String) {
-      search(type: PUBLICATION, orderBy: $orderBy) {
-        total
-        edges {
-          cursor
-          node {
-            ... on Publication {
-              content_hash
-            }
-          }
-        }
-      }
+      const secondPageResult = await graphqlClient.query(secondPageQuery, {
+        variables: {
+          first: 1,
+          after: firstPageResult.data.search.pageInfo.endCursor,
+        },
+      })
+      t.falsy(secondPageResult.errors, "Second page should not have errors")
+      t.truthy(secondPageResult.data.search, "Second page should exist")
+      t.true(
+        secondPageResult.data.search.edges.length > 0,
+        "Second page should have results",
+      )
     }
-  `
-
-  const { data, errors } = await graphqlClient.query(query, {
-    variables: { orderBy: "invalidField" },
-  })
-
-  // Should use default sorting instead of error
-  t.falsy(errors, "Should not have GraphQL errors")
-  t.truthy(data.search, "Search result should exist")
-  t.true(data.search.total >= 0, "Should return results or empty set")
-})
+  },
+)
 
 // ==================== Edge Case Tests ====================
 

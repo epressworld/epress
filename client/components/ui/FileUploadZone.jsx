@@ -28,13 +28,15 @@ const UploadOrPreview = ({ maxSize, onFileRemove }) => {
           border={0}
         >
           {file.type.startsWith("image") ? (
-            <Box w="full">
+            <Box w="full" bg="">
               <FileUpload.ItemPreviewImage
                 display={"block"}
                 w="100%"
-                maxH={"400px"}
-                objectFit={"cover"}
+                maxH={"300px"}
+                objectFit={"contain"}
                 roundedTop={"md"}
+                bg="gray.100"
+                _dark={{ bg: "gray.800" }}
               />
             </Box>
           ) : (

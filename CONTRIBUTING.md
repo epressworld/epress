@@ -64,7 +64,14 @@ npm run dev
 
 ### Step 3: Create Your Development Branch
 
-Create a new branch from `main` to house your code. Please follow this naming convention:
+All development branches must be created from the `main` branch. Before creating a new branch, make sure your local `main` branch is up-to-date with the remote repository to avoid potential conflicts.
+
+```bash
+git checkout main
+git pull origin main
+```
+
+Create a new branch to house your code. Please follow this naming convention:
 
 - **New Feature**: `feature/ISSUE-NUMBER-short-description` (e.g., `feature/123-user-profile-page`)
 - **Bug Fix**: `bugfix/ISSUE-NUMBER-short-description` (e.g., `bugfix/456-fix-login-button`)
@@ -76,6 +83,12 @@ git checkout -b feature/123-my-new-feature
 ### Step 4: Start Coding!
 
 Now you can start making your code changes and developments.
+
+If you modify any frontend code (i.e., anything in the `client` directory), please ensure the project builds successfully by running:
+
+```bash
+npm run build
+```
 
 ### Step 5: Write and Run Tests
 

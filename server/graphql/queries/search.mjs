@@ -73,7 +73,10 @@ export const searchQuery = {
         return search(root, { ...args, query }, ctx, info)
       },
       resolverOptions: {
-        sortable: ["created_at", "updated_at"],
+        cursor: {
+          type: "keyset",
+          column: "id",
+        },
         searchable: ["body"],
         filterable: [
           "type",

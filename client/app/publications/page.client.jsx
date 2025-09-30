@@ -13,7 +13,6 @@ export default function HomePage({ variables }) {
     authStatus,
     profile,
     handleEdit,
-    handleSetRefetch,
     handleContentChange,
     handleFileSelect,
     handleFileRemove,
@@ -43,13 +42,6 @@ export default function HomePage({ variables }) {
         variables={variables}
         nodeAddress={profile?.address}
         onEdit={handleEdit}
-        onSetRefetch={handleSetRefetch}
-        onPublicationCreated={() => {
-          // 刷新发布列表
-          if (handleSetRefetch) {
-            handleSetRefetch()
-          }
-        }}
         onPublish={handleSubmit} // 复用现有的发布逻辑
       />
     </>
