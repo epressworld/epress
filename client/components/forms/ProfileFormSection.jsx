@@ -199,7 +199,7 @@ export function ProfileFormSection({ onSuccess }) {
 
         <Button
           type="submit"
-          isLoading={isLoading}
+          loading={isLoading}
           loadingText={settings.saving()}
           colorPalette="orange"
         >

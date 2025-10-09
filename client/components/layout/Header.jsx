@@ -36,7 +36,7 @@ import { FollowButton } from "../business"
 import { ConnectWalletButton, SettingsDialog } from "../ui"
 
 export const Header = () => {
-  const { authStatus, isNodeOwner, login, logout } = useAuth()
+  const { authStatus, isNodeOwner, login, loginState, logout } = useAuth()
   const {
     profile = {},
     settings = {},
@@ -108,7 +108,13 @@ export const Header = () => {
       switch (authStatus) {
         case AUTH_STATUS.CONNECTED:
           buttons.push(
-            <Button key="login" size="xs" onClick={login} colorPalette="orange">
+            <Button
+              key="login"
+              size="xs"
+              onClick={login}
+              loading={loginState?.loading}
+              colorPalette="orange"
+            >
               <LuLogIn /> {auth.login()}
             </Button>,
           )

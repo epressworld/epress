@@ -101,6 +101,12 @@ const PublicationList = ({
       return
     }
 
+    const toasterId = `signing-${publication.id}`
+    toaster.loading({
+      id: toasterId,
+      description: "Signing...",
+    })
+
     try {
       // 使用实际的内容哈希，而不是重新计算
       const typedData = statementOfSourceTypedData(
@@ -111,7 +117,7 @@ const PublicationList = ({
       const signature = await signEIP712Data(typedData)
 
       if (!signature) {
-        toaster.create({
+        toaster.update(toasterId, {
           description: common.signFailed(),
           type: "error",
         })
@@ -128,14 +134,14 @@ const PublicationList = ({
       })
 
       if (result?.signPublication) {
-        toaster.create({
+        toaster.update(toasterId, {
           description: common.signSuccess(),
           type: "success",
         })
       }
     } catch (error) {
       console.error("签名失败:", error)
-      toaster.create({
+      toaster.update(toasterId, {
         description: `${common.signFailed()}, ${common.pleaseRetry()}`,
         type: "error",
       })

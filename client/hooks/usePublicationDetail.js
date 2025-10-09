@@ -133,7 +133,11 @@ export function usePublicationDetail(options = {}) {
       })
       return
     }
-
+    const toasterId = `signing-${publication.id}`
+    toaster.loading({
+      id: toasterId,
+      description: "Signing...",
+    })
     try {
       // 创建EIP-712签名数据
       const typedData = statementOfSourceTypedData(
@@ -141,7 +145,6 @@ export function usePublicationDetail(options = {}) {
         publication.author.address,
         Math.floor(new Date(publication.created_at).getTime() / 1000), // 使用 publication 的创建时间
       )
-
       // 使用钱包签名
       const signature = await signEIP712Data(typedData)
 
@@ -153,7 +156,7 @@ export function usePublicationDetail(options = {}) {
         },
       })
 
-      toaster.create({
+      toaster.update(toasterId, {
         description: common.signSuccess(),
         type: "success",
       })
@@ -163,7 +166,7 @@ export function usePublicationDetail(options = {}) {
       refetchPublication().finally(() => setLoading(false))
     } catch (error) {
       console.error("签名失败:", error)
-      toaster.create({
+      toaster.update(toasterId, {
         description: error.message || common.pleaseRetry(),
         type: "error",
       })
