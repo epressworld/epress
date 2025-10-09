@@ -30,6 +30,7 @@ const AuthContext = createContext()
 
 export function AuthProvider({ children }) {
   const [authStatus, setAuthStatus] = useState(AUTH_STATUS.LOADING)
+  const [loginState, setLoginState] = useState(null)
   const [token, setToken] = useState(null)
   const [isClient, setIsClient] = useState(false)
   const apolloClient = useApolloClient()
@@ -158,6 +159,7 @@ export function AuthProvider({ children }) {
     }
 
     try {
+      setLoginState({ loading: true })
       const response = await fetch("/api/graphql", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -167,7 +169,9 @@ export function AuthProvider({ children }) {
         }),
       })
       const result = await response.json()
-      if (result.errors) throw new Error(result.errors[0].message)
+      if (result.errors) {
+        throw new Error(result.errors[0].message)
+      }
       const message = result.data?.getSiweMessage
       if (!message) throw new Error("获取SIWE消息失败")
 
@@ -192,6 +196,7 @@ export function AuthProvider({ children }) {
       } catch (e) {
         console.error("Failed to set auth cookie:", e)
       }
+      setLoginState({ loading: false, error: null })
       setToken(newToken)
       setAuthStatus(AUTH_STATUS.AUTHENTICATED)
       // 登录后清空缓存并主动触发所有活跃查询重新获取，避免 AbortError
@@ -209,6 +214,7 @@ export function AuthProvider({ children }) {
       } catch (e) {
         console.error("Failed to clear auth cookie:", e)
       }
+      setLoginState({ loading: false, error: error.message })
       setToken(null)
       setAuthStatus(AUTH_STATUS.CONNECTED)
       throw error
@@ -275,6 +281,7 @@ export function AuthProvider({ children }) {
 
       // 操作函数
       login,
+      loginState,
       logout,
       disconnectAndLogout,
       refetchFollowerStatus,
@@ -289,6 +296,7 @@ export function AuthProvider({ children }) {
       followerLoading,
       followerError,
       login,
+      loginState,
       logout,
       disconnectAndLogout,
       refetchFollowerStatus,
