@@ -51,8 +51,6 @@ export function SettingsFormSection({ onSuccess }) {
           </HStack>
         </VStack>
 
-        <Separator />
-
         {/* 关注设置 */}
         <VStack align="stretch" gap={2}>
           <HStack justify="space-between">
@@ -76,8 +74,6 @@ export function SettingsFormSection({ onSuccess }) {
             </Switch.Root>
           </HStack>
         </VStack>
-
-        <Separator />
 
         {/* 评论设置 */}
         <VStack align="stretch" gap={2}>
