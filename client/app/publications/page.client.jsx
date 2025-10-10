@@ -4,7 +4,7 @@ import { useHomePage } from "../../hooks/useHomePage"
 import { usePageTitle } from "../../hooks/usePageTitle"
 import { useTranslation } from "../../hooks/useTranslation"
 
-export default function HomePage({ variables }) {
+export default function HomePage({ variables, keyword }) {
   const { common } = useTranslation()
   const {
     isLoading,
@@ -43,6 +43,7 @@ export default function HomePage({ variables }) {
         nodeAddress={profile?.address}
         onEdit={handleEdit}
         onPublish={handleSubmit} // 复用现有的发布逻辑
+        keyword={keyword}
       />
     </>
   )
