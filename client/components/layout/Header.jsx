@@ -3,8 +3,8 @@ import {
   Avatar,
   Box,
   Button,
-  Center,
   Container,
+  Float,
   Heading,
   HStack,
   Link,
@@ -18,7 +18,7 @@ import {
 } from "@chakra-ui/react"
 import { useWindowScroll } from "@uidotdev/usehooks"
 import { motion } from "motion/react"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import {
   LuEllipsis,
@@ -26,6 +26,7 @@ import {
   LuLogIn,
   LuLogOut,
   LuRss,
+  LuSearch,
   LuSettings,
   LuUsers,
 } from "react-icons/lu"
@@ -33,7 +34,7 @@ import { AUTH_STATUS, useAuth } from "../../contexts/AuthContext"
 import { usePage } from "../../contexts/PageContext"
 import { useTranslation } from "../../hooks/useTranslation"
 import { FollowButton } from "../business"
-import { ConnectWalletButton, SettingsDialog } from "../ui"
+import { ConnectWalletButton, SearchDialog, SettingsDialog } from "../ui"
 
 export const Header = () => {
   const { authStatus, isNodeOwner, login, loginState, logout } = useAuth()
@@ -45,6 +46,13 @@ export const Header = () => {
     errorDetails,
   } = usePage()
   const { auth, navigation, common } = useTranslation()
+  const searchParams = useSearchParams()
+  const currentKeyword = searchParams.get("q") || ""
+
+  // 搜索对话框状态
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const openSearch = () => setIsSearchOpen(true)
+  const closeSearch = () => setIsSearchOpen(false)
 
   // 检测屏幕尺寸，决定是否使用Menu
   const useMenu = useBreakpointValue({
@@ -176,6 +184,13 @@ export const Header = () => {
 
   return (
     <>
+      {/* 搜索对话框 */}
+      <SearchDialog
+        isOpen={isSearchOpen}
+        onClose={closeSearch}
+        initialKeyword={currentKeyword}
+      />
+
       {/* Header 主要内容区域 */}
       <Box
         position="sticky"
@@ -302,7 +317,7 @@ export const Header = () => {
           overflow: "hidden",
         }}
       >
-        <Center
+        <Box
           bgColor={"rgba(237, 242, 247, 0.6)"}
           borderBottom="1px solid"
           borderColor="gray.200"
@@ -312,33 +327,45 @@ export const Header = () => {
           }}
           className="header-tabs"
         >
-          <Tabs.Root value={currentTab}>
-            <Tabs.List>
-              <Tabs.Trigger
-                value="content"
-                className="header-tab-button"
-                onClick={() => {
-                  // Content tab clicked
-                  router.push("/publications")
-                }}
+          <Container maxW="6xl">
+            <Tabs.Root value={currentTab}>
+              <Tabs.List>
+                <Tabs.Trigger
+                  value="content"
+                  className="header-tab-button"
+                  onClick={() => {
+                    // Content tab clicked
+                    router.push("/publications")
+                  }}
+                >
+                  <LuFileText />
+                  {navigation.content()}
+                </Tabs.Trigger>
+                <Tabs.Trigger
+                  value="connections"
+                  className="header-tab-button"
+                  onClick={() => {
+                    // Connections tab clicked
+                    router.push("/connections")
+                  }}
+                >
+                  <LuUsers />
+                  {navigation.connections()}
+                </Tabs.Trigger>
+              </Tabs.List>
+            </Tabs.Root>
+            <Float placement={"middle-end"} offsetX={{ md: 12, base: 8 }}>
+              <Button
+                key="search"
+                size="xs"
+                onClick={openSearch}
+                variant="ghost"
               >
-                <LuFileText />
-                {navigation.content()}
-              </Tabs.Trigger>
-              <Tabs.Trigger
-                value="connections"
-                className="header-tab-button"
-                onClick={() => {
-                  // Connections tab clicked
-                  router.push("/connections")
-                }}
-              >
-                <LuUsers />
-                {navigation.connections()}
-              </Tabs.Trigger>
-            </Tabs.List>
-          </Tabs.Root>
-        </Center>
+                <LuSearch />
+              </Button>
+            </Float>
+          </Container>
+        </Box>
       </motion.div>
 
       {/* 设置对话框 */}

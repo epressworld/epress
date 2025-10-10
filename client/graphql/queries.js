@@ -89,13 +89,14 @@ const segments = {
 
 // 搜索查询
 export const SEARCH_PUBLICATIONS = gql`
-  query SearchPublications($filterBy: JSON, $orderBy: String, $first: Int, $after: String) {
+  query SearchPublications($filterBy: JSON, $orderBy: String, $first: Int, $after: String, $keyword: String) {
     search(
       type: PUBLICATION
       filterBy: $filterBy
       orderBy: $orderBy
       first: $first
       after: $after
+      keyword: $keyword
     ) {
       total
       edges {

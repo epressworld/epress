@@ -77,7 +77,7 @@ export const searchQuery = {
           type: "keyset",
           column: "id",
         },
-        searchable: ["body"],
+        searchable: ["body", "publications.description"],
         filterable: [
           "type",
           ({ filterBy, query }) => {

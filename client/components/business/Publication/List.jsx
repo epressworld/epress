@@ -2,6 +2,7 @@
 
 import { useMutation, useSuspenseQuery } from "@apollo/client/react"
 import { Alert, Button, HStack, Text, VStack } from "@chakra-ui/react"
+import { useRouter } from "next/navigation"
 import { useEffect, useState, useTransition } from "react"
 import { LuEllipsis } from "react-icons/lu"
 import { AUTH_STATUS, useAuth } from "../../../contexts/AuthContext"
@@ -13,7 +14,7 @@ import { SEARCH_PUBLICATIONS } from "../../../graphql/queries"
 import { useTranslation } from "../../../hooks/useTranslation"
 import { useWallet } from "../../../hooks/useWallet"
 import { statementOfSourceTypedData } from "../../../utils/eip712"
-import { ConfirmDialog, Skeletons } from "../../ui"
+import { ConfirmDialog, SearchResultAlert, Skeletons } from "../../ui"
 import { toaster } from "../../ui/toaster"
 import { PublicationItem } from "./Item"
 
@@ -23,7 +24,9 @@ const PublicationList = ({
   onPublicationCreated,
   onPublish,
   variables,
+  keyword,
 }) => {
+  const router = useRouter()
   const { authStatus, isNodeOwner } = useAuth()
   const { signEIP712Data } = useWallet()
   const { publication: pub, common } = useTranslation()
@@ -224,9 +227,22 @@ const PublicationList = ({
 
   const publications = data?.search?.edges?.map((edge) => edge.node) || []
 
+  // 清除搜索
+  const handleClearSearch = () => {
+    router.push("/publications")
+  }
+
   return (
     <>
       <VStack spacing={6} align="stretch">
+        {/* 搜索结果提示 */}
+        {keyword && (
+          <SearchResultAlert
+            keyword={keyword}
+            count={data?.search?.total}
+            onClear={handleClearSearch}
+          />
+        )}
         {publications.map((publication) => (
           <PublicationItem
             key={publication.id}
@@ -238,6 +254,7 @@ const PublicationList = ({
             onEdit={onEdit}
             onPublicationCreated={onPublicationCreated}
             onPublish={onPublish}
+            keyword={keyword}
           />
         ))}
 

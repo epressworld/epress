@@ -11,6 +11,8 @@ export { InfoDialog } from "./InfoDialog"
 export { LanguageSelect } from "./LanguageSelect"
 export { NodeUrlInput } from "./NodeUrlInput"
 export { RichTextEditor } from "./RichTextEditor"
+export { SearchDialog } from "./SearchDialog"
+export { SearchResultAlert } from "./SearchResultAlert"
 export { SettingsDialog } from "./SettingsDialog"
 export {
   createSignatureData,

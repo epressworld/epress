@@ -5,6 +5,7 @@ import {
   Box,
   Button,
   Dialog,
+  Highlight,
   HStack,
   IconButton,
   Image,
@@ -42,6 +43,7 @@ export const PublicationItem = ({
   onEdit,
   showAuthorInfo = true,
   onPublish, // 新增：复用发布逻辑
+  keyword, // 搜索关键词
 }) => {
   const [isImageExpanded, setIsImageExpanded] = useState(false)
   const [isSignatureDialogOpen, setIsSignatureDialogOpen] = useState(false)
@@ -253,29 +255,35 @@ export const PublicationItem = ({
     if (content.type === "POST") {
       return (
         <Box className="markdown-content markdown-body">
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeHighlight]}
-          >
-            {content.body}
-          </ReactMarkdown>
+          {keyword ? (
+            <Highlight query={keyword}>{content.body}</Highlight>
+          ) : (
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeHighlight]}
+            >
+              {content.body}
+            </ReactMarkdown>
+          )}
         </Box>
       )
-    }
-
-    if (content.type === "FILE") {
+    } else if (content.type === "FILE") {
       // 新布局：媒体移至卡片顶部，此处仅显示文件描述行
       return publication.description ? (
-        <Text color="gray.800" _dark={{ color: "gray.200" }} fontSize="sm">
-          {publication.description}
+        <Text
+          color="gray.800"
+          className="markdown-content markdown-body"
+          _dark={{ color: "gray.200" }}
+          fontSize="sm"
+        >
+          {keyword ? (
+            <Highlight query={keyword}>{publication.description}</Highlight>
+          ) : (
+            publication.description
+          )}
         </Text>
       ) : null
     }
-
-    if (content.type === "FILE") {
-      return <Text>{publication.description}</Text>
-    }
-    return <Text>{content.body}</Text>
   }
 
   return (
