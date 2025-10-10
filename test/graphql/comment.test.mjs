@@ -70,7 +70,7 @@ test("createComment: Should be able to create comment through EMAIL authenticati
         body
         status
         auth_type
-        commenter_username
+        author_name
         created_at
       }
     }
@@ -79,9 +79,9 @@ test("createComment: Should be able to create comment through EMAIL authenticati
   const input = {
     publication_id: publicationId,
     body: "This is a test comment through email.",
-    commenter_username: "Email User",
+    author_name: "Email User",
     auth_type: "EMAIL",
-    commenter_email: "email@example.com",
+    author_id: "email@example.com",
   }
 
   const { data, errors } = await graphqlClient.query(mutation, {
@@ -102,11 +102,11 @@ test("createComment: Should be able to create comment through EMAIL authenticati
     "Authentication type should match",
   )
   t.is(
-    data.createComment.commenter_username,
-    input.commenter_username,
-    "Commenter username should match",
+    data.createComment.author_name,
+    input.author_name,
+    "Author name should match",
   )
-  // commenter_email field is hidden to protect user privacy
+  // email field is hidden to protect user privacy
   t.truthy(data.createComment.id, "Comment should have ID")
   t.truthy(
     data.createComment.created_at,
@@ -135,8 +135,8 @@ test.serial(
         body
         status
         auth_type
-        commenter_username
-        commenter_address
+        author_name
+        author_id
         created_at
       }
     }
@@ -145,9 +145,9 @@ test.serial(
     const input = {
       publication_id: publicationId,
       body: commentBody,
-      commenter_username: "Ethereum User",
+      author_name: "Ethereum User",
       auth_type: "ETHEREUM",
-      commenter_address: TEST_ETHEREUM_ADDRESS_NODE_A,
+      author_id: TEST_ETHEREUM_ADDRESS_NODE_A,
     }
 
     const { data, errors } = await graphqlClient.query(mutation, {
@@ -168,13 +168,13 @@ test.serial(
       "Authentication type should match",
     )
     t.is(
-      data.createComment.commenter_username,
-      input.commenter_username,
+      data.createComment.author_name,
+      input.author_name,
       "Commenter username should match",
     )
     t.is(
-      data.createComment.commenter_address,
-      input.commenter_address,
+      data.createComment.author_id,
+      input.author_id,
       "Commenter Ethereum address should match",
     )
     t.truthy(data.createComment.id, "Comment should have ID")
@@ -188,15 +188,15 @@ test.serial(
     t.truthy(commentInDb, "Comment should be saved to database")
     t.is(commentInDb.status, "PENDING", "Status in database should be PENDING")
     t.is(
-      commentInDb.signature,
+      commentInDb.credential,
       null,
       "Signature should not be saved at creation",
     )
   },
 )
 
-// Test Case: confirmComment - ETHEREUM path should require id when using signature
-test("confirmComment: missing id for ETHEREUM signature should return VALIDATION_FAILED", async (t) => {
+// Test Case: confirmComment - ETHEREUM path should require id when using credential
+test("confirmComment: missing id for ETHEREUM credential should return VALIDATION_FAILED", async (t) => {
   const { graphqlClient, publicationId, selfNode, testPublication } = t.context
   const commentBody = "missing id case"
   const commentBodyHash = `0x${await hash.sha256(commentBody)}`
@@ -212,9 +212,9 @@ test("confirmComment: missing id for ETHEREUM signature should return VALIDATION
       input: {
         publication_id: publicationId,
         body: commentBody,
-        commenter_username: "id-missing",
+        author_name: "id-missing",
         auth_type: "ETHEREUM",
-        commenter_address: TEST_ETHEREUM_ADDRESS_NODE_A,
+        author_id: TEST_ETHEREUM_ADDRESS_NODE_A,
       },
     },
   })
@@ -234,7 +234,7 @@ test("confirmComment: missing id for ETHEREUM signature should return VALIDATION
       timestamp: timestampSec,
     },
   }
-  const signature = await generateSignature(
+  const credential = await generateSignature(
     TEST_ACCOUNT_NODE_A,
     typedData,
     "typedData",
@@ -246,7 +246,7 @@ test("confirmComment: missing id for ETHEREUM signature should return VALIDATION
     }
   `
   const { data, errors } = await graphqlClient.query(confirmMutation, {
-    variables: { tokenOrSignature: signature },
+    variables: { tokenOrSignature: credential },
   })
   t.is(data, null, "Data should be null")
   t.truthy(errors, "Should return GraphQL errors")
@@ -277,9 +277,9 @@ test.serial(
         input: {
           publication_id: publicationId,
           body: commentBody,
-          commenter_username: "expired-user",
+          author_name: "expired-user",
           auth_type: "ETHEREUM",
-          commenter_address: TEST_ETHEREUM_ADDRESS_NODE_A,
+          author_id: TEST_ETHEREUM_ADDRESS_NODE_A,
         },
       },
     })
@@ -302,7 +302,7 @@ test.serial(
         timestamp: timestampSec,
       },
     }
-    const signature = await generateSignature(
+    const credential = await generateSignature(
       TEST_ACCOUNT_NODE_A,
       typedData,
       "typedData",
@@ -314,7 +314,7 @@ test.serial(
     }
   `
     const { data, errors } = await graphqlClient.query(confirmMutation, {
-      variables: { id: createdId, tokenOrSignature: signature },
+      variables: { id: createdId, tokenOrSignature: credential },
     })
     t.is(data, null, "Data should be null")
     t.truthy(errors, "Should return GraphQL errors")
@@ -326,23 +326,23 @@ test.serial(
   },
 )
 
-// New test case: ETHEREUM authentication but signature missing
-test("createComment: ETHEREUM authentication without signature should create PENDING comment (two-step)", async (t) => {
+// New test case: ETHEREUM authentication but credential missing
+test("createComment: ETHEREUM authentication without credential should create PENDING comment (two-step)", async (t) => {
   const { graphqlClient, publicationId } = t.context
 
   const mutation = `
     mutation CreateComment($input: CreateCommentInput!) {
-      createComment(input: $input) { id status auth_type commenter_address }
+      createComment(input: $input) { id status auth_type author_id }
     }
   `
 
   const input = {
     publication_id: publicationId,
     body: "Valid content.",
-    commenter_username: "Test User",
+    author_name: "Test User",
     auth_type: "ETHEREUM",
-    commenter_address: TEST_ETHEREUM_ADDRESS_NODE_A,
-    // signature intentionally omitted in two-step flow
+    author_id: TEST_ETHEREUM_ADDRESS_NODE_A,
+    // credential intentionally omitted in two-step flow
   }
 
   const { data, errors } = await graphqlClient.query(mutation, {
@@ -354,14 +354,14 @@ test("createComment: ETHEREUM authentication without signature should create PEN
   t.is(data.createComment.status, "PENDING", "Status should be PENDING")
   t.is(data.createComment.auth_type, "ETHEREUM", "Auth type should be ETHEREUM")
   t.is(
-    data.createComment.commenter_address,
+    data.createComment.author_id,
     TEST_ETHEREUM_ADDRESS_NODE_A,
     "Commenter address should match",
   )
 })
 
-// New test case: ETHEREUM confirmation with invalid signature should return error
-test("confirmComment: ETHEREUM confirmation with invalid signature should return INVALID_SIGNATURE", async (t) => {
+// New test case: ETHEREUM confirmation with invalid credential should return error
+test("confirmComment: ETHEREUM confirmation with invalid credential should return INVALID_SIGNATURE", async (t) => {
   const { graphqlClient, publicationId, selfNode, testPublication } = t.context
 
   const commentBody = "Valid content."
@@ -379,9 +379,9 @@ test("confirmComment: ETHEREUM confirmation with invalid signature should return
       input: {
         publication_id: publicationId,
         body: commentBody,
-        commenter_username: "Test User",
+        author_name: "Test User",
         auth_type: "ETHEREUM",
-        commenter_address: TEST_ETHEREUM_ADDRESS_NODE_A,
+        author_id: TEST_ETHEREUM_ADDRESS_NODE_A,
       },
     },
   })
@@ -443,9 +443,9 @@ test("createComment: Invalid publication_id should return error", async (t) => {
   const input = {
     publication_id: 99999, // Non-existent ID
     body: "Comment on a non-existent publication.",
-    commenter_username: "Test User",
+    author_name: "Test User",
     auth_type: "EMAIL",
-    commenter_email: "test@example.com",
+    author_id: "test@example.com",
   }
 
   const { data, errors } = await graphqlClient.query(mutation, {
@@ -470,9 +470,9 @@ test("createComment: Missing body should return error", async (t) => {
   const input = {
     publication_id: publicationId,
     body: "", // Missing body
-    commenter_username: "Test User",
+    author_name: "Test User",
     auth_type: "EMAIL",
-    commenter_email: "test@example.com",
+    author_id: "test@example.com",
   }
 
   const { data, errors } = await graphqlClient.query(mutation, {
@@ -488,8 +488,8 @@ test("createComment: Missing body should return error", async (t) => {
   )
 })
 
-// Test case 5: commenter_username too long
-test("createComment: commenter_username too long should return error", async (t) => {
+// Test case 5: author_name too long
+test("createComment: author_name too long should return error", async (t) => {
   const { graphqlClient, publicationId } = t.context
 
   const mutation = `
@@ -501,9 +501,9 @@ test("createComment: commenter_username too long should return error", async (t)
   const input = {
     publication_id: publicationId,
     body: "Valid content.",
-    commenter_username: "a".repeat(51), // Too long
+    author_name: "a".repeat(51), // Too long
     auth_type: "EMAIL",
-    commenter_email: "test@example.com",
+    author_id: "test@example.com",
   }
 
   const { data, errors } = await graphqlClient.query(mutation, {
@@ -519,7 +519,7 @@ test("createComment: commenter_username too long should return error", async (t)
   )
 })
 
-// Test case 6: Email authentication but commenter_email missing/invalid
+// Test case 6: Email authentication but email missing/invalid
 test("createComment: EMAIL authentication but email missing should return error", async (t) => {
   const { graphqlClient, publicationId } = t.context
 
@@ -532,9 +532,9 @@ test("createComment: EMAIL authentication but email missing should return error"
   const input = {
     publication_id: publicationId,
     body: "Valid content.",
-    commenter_username: "Test User",
+    author_name: "Test User",
     auth_type: "EMAIL",
-    commenter_email: "", // Email missing
+    author_id: "", // Email missing
   }
 
   const { data, errors } = await graphqlClient.query(mutation, {
@@ -562,9 +562,9 @@ test("createComment: EMAIL authentication but invalid email format should return
   const input = {
     publication_id: publicationId,
     body: "Valid content.",
-    commenter_username: "Test User",
+    author_name: "Test User",
     auth_type: "EMAIL",
-    commenter_email: "invalid-email", // Invalid email format
+    author_id: "invalid-email", // Invalid email format
   }
 
   const { data, errors } = await graphqlClient.query(mutation, {
@@ -580,7 +580,7 @@ test("createComment: EMAIL authentication but invalid email format should return
   )
 })
 
-// Test case 7: Ethereum authentication but commenter_address missing/invalid
+// Test case 7: Ethereum authentication but author_id missing/invalid
 test("createComment: ETHEREUM authentication but address missing should return error", async (t) => {
   const { graphqlClient, publicationId } = t.context
 
@@ -593,9 +593,9 @@ test("createComment: ETHEREUM authentication but address missing should return e
   const input = {
     publication_id: publicationId,
     body: "Valid content.",
-    commenter_username: "Test User",
+    author_name: "Test User",
     auth_type: "ETHEREUM",
-    commenter_address: "", // Address missing
+    author_id: "", // Address missing
   }
 
   const { data, errors } = await graphqlClient.query(mutation, {
@@ -623,9 +623,9 @@ test("createComment: ETHEREUM authentication but invalid address format should r
   const input = {
     publication_id: publicationId,
     body: "Valid content.",
-    commenter_username: "Test User",
+    author_name: "Test User",
     auth_type: "ETHEREUM",
-    commenter_address: "0x123", // Invalid address format
+    author_id: "0x123", // Invalid address format
   }
 
   const { data, errors } = await graphqlClient.query(mutation, {
@@ -659,9 +659,9 @@ test.serial(
     const createInput = {
       publication_id: publicationId,
       body: "a comment to be verified",
-      commenter_username: "verifier",
+      author_name: "verifier",
       auth_type: "EMAIL",
-      commenter_email: "verify@example.com",
+      author_id: "verify@example.com",
     }
     const { data: createData, errors: createErrors } =
       await graphqlClient.query(createMutation, {
@@ -706,6 +706,7 @@ test.serial(
     // 4. Verify the status in the database
     const commentInDb = await Comment.query().findById(commentId)
     t.is(commentInDb.status, "CONFIRMED", "Database status should be CONFIRMED")
+    t.is(commentInDb.credential, token, "Database credential should be token")
   },
 )
 
@@ -736,14 +737,14 @@ test.serial(
   },
 )
 
-// Test Case: confirmComment - ETHEREUM path should confirm with valid signature
+// Test Case: confirmComment - ETHEREUM path should confirm with valid credential
 test.serial(
-  "confirmComment: should confirm ETHEREUM authenticated comment with valid signature",
+  "confirmComment: should confirm ETHEREUM authenticated comment with valid credential",
   async (t) => {
     const { graphqlClient, publicationId, selfNode, testPublication } =
       t.context
 
-    const commentBody = "a comment to be signature-verified"
+    const commentBody = "a comment to be credential-verified"
     const commentBodyHash = `0x${await hash.sha256(commentBody)}`
 
     // 1) Create comment (PENDING)
@@ -758,9 +759,9 @@ test.serial(
           input: {
             publication_id: publicationId,
             body: commentBody,
-            commenter_username: "sig-user",
+            author_name: "sig-user",
             auth_type: "ETHEREUM",
-            commenter_address: TEST_ETHEREUM_ADDRESS_NODE_A,
+            author_id: TEST_ETHEREUM_ADDRESS_NODE_A,
           },
         },
       })
@@ -789,7 +790,7 @@ test.serial(
         timestamp: timestampSec,
       },
     }
-    const signature = await generateSignature(
+    const credential = await generateSignature(
       TEST_ACCOUNT_NODE_A,
       typedData,
       "typedData",
@@ -803,7 +804,7 @@ test.serial(
     `
     const { data: confirmData, errors: confirmErrors } =
       await graphqlClient.query(confirmMutation, {
-        variables: { id: createdId, tokenOrSignature: signature },
+        variables: { id: createdId, tokenOrSignature: credential },
       })
 
     t.falsy(confirmErrors, "Confirmation should not error")
@@ -811,7 +812,7 @@ test.serial(
     t.is(
       confirmData.confirmComment.status,
       "CONFIRMED",
-      "Status should be CONFIRMED after signature",
+      "Status should be CONFIRMED after credential",
     )
   },
 )
@@ -823,17 +824,13 @@ async function createTestComment(t, authType, email, ethAccount) {
   const { graphqlClient, publicationId } = t.context
   const commentBody = `Test comment for deletion (${authType}).`
 
-  // No signature is required at creation time for ETHEREUM path in two-step flow
-  const signature = null
-
+  // No credential is required at creation time for ETHEREUM path in two-step flow
   const input = {
     publication_id: publicationId,
     body: commentBody,
-    commenter_username: `Deleter (${authType})`,
+    author_name: `Deleter (${authType})`,
     auth_type: authType,
-    commenter_email: email,
-    commenter_address: ethAccount.address,
-    signature: signature,
+    author_id: email || ethAccount.address,
   }
 
   const createMutation = `
@@ -842,7 +839,7 @@ async function createTestComment(t, authType, email, ethAccount) {
         id
         status
         auth_type
-        commenter_address
+        author_id
       }
     }
   `
@@ -994,7 +991,7 @@ test.serial(
       TEST_ACCOUNT_NODE_A,
     )
 
-    // Generate signature for deletion
+    // Generate credential for deletion
     const typedData = {
       domain: DELETE_COMMENT_DOMAIN,
       types: DELETE_COMMENT_TYPES,
@@ -1085,8 +1082,8 @@ test("destroyComment: should return VALIDATION_FAILED if email missing for EMAIL
   )
 })
 
-// Test Case: destroyComment - VALIDATION_FAILED (missing signature for ETHEREUM auth)
-test("destroyComment: should return VALIDATION_FAILED if signature missing for ETHEREUM auth", async (t) => {
+// Test Case: destroyComment - VALIDATION_FAILED (missing credential for ETHEREUM auth)
+test("destroyComment: should return VALIDATION_FAILED if credential missing for ETHEREUM auth", async (t) => {
   const { graphqlClient } = t.context
   const createdComment = await createTestComment(
     t,
@@ -1100,7 +1097,7 @@ test("destroyComment: should return VALIDATION_FAILED if signature missing for E
       destroyComment(id: $id) { id }
     }
   `
-  const input = { id: createdComment.id } // Missing signature
+  const input = { id: createdComment.id } // Missing credential
   const { data, errors } = await graphqlClient.query(mutation, {
     variables: input,
   })
@@ -1139,8 +1136,8 @@ test("destroyComment: should return FORBIDDEN for email mismatch (EMAIL auth)", 
   t.is(errors[0].extensions.code, "FORBIDDEN", "Error code should be FORBIDDEN")
 })
 
-// Test Case: destroyComment - FORBIDDEN (signature mismatch for ETHEREUM auth)
-test("destroyComment: should return FORBIDDEN for signature mismatch (ETHEREUM auth)", async (t) => {
+// Test Case: destroyComment - FORBIDDEN (credential mismatch for ETHEREUM auth)
+test("destroyComment: should return FORBIDDEN for credential mismatch (ETHEREUM auth)", async (t) => {
   const { graphqlClient } = t.context
   const createdComment = await createTestComment(
     t,
@@ -1149,7 +1146,7 @@ test("destroyComment: should return FORBIDDEN for signature mismatch (ETHEREUM a
     TEST_ACCOUNT_NODE_A,
   )
 
-  // Generate an invalid signature (e.g., signed by a different account)
+  // Generate an invalid credential (e.g., signed by a different account)
   const typedData = {
     domain: DELETE_COMMENT_DOMAIN,
     types: DELETE_COMMENT_TYPES,
@@ -1268,8 +1265,8 @@ test.serial(
             publication_id: testPublication.id,
             body: commentBody,
             auth_type: "ETHEREUM",
-            commenter_address: TEST_ETHEREUM_ADDRESS_NODE_A,
-            commenter_username: "testuser",
+            author_id: TEST_ETHEREUM_ADDRESS_NODE_A,
+            author_name: "testuser",
           },
         },
       })
@@ -1290,7 +1287,7 @@ test.serial(
       "comment_count should remain 0 before confirmation",
     )
 
-    // 2) Confirm with EIP-712 signature that includes timestamp
+    // 2) Confirm with EIP-712 credential that includes timestamp
     const timestampSec = Math.floor(
       new Date(createData.createComment.created_at).getTime() / 1000,
     )
@@ -1306,7 +1303,7 @@ test.serial(
         timestamp: timestampSec,
       },
     }
-    const signature = await generateSignature(
+    const credential = await generateSignature(
       TEST_ACCOUNT_NODE_A,
       typedData,
       "typedData",
@@ -1321,7 +1318,7 @@ test.serial(
       await graphqlClient.query(confirmMutation, {
         variables: {
           id: createData.createComment.id,
-          tokenOrSignature: signature,
+          tokenOrSignature: credential,
         },
       })
     t.falsy(confirmErrors, "Should not return GraphQL errors on confirmation")
@@ -1358,7 +1355,7 @@ test.serial(
         body
         status
         auth_type
-        commenter_email
+        author_id
       }
     }
   `
@@ -1369,8 +1366,8 @@ test.serial(
           publication_id: testPublication.id,
           body: "Test email comment for comment_count update",
           auth_type: "EMAIL",
-          commenter_email: "test@example.com",
-          commenter_username: "testuser",
+          author_id: "test@example.com",
+          author_name: "testuser",
         },
       },
     })
@@ -1406,7 +1403,7 @@ test.serial(
         body
         status
         auth_type
-        commenter_email
+        author_id 
       }
     }
   `
@@ -1454,7 +1451,7 @@ test.serial(
         body
         status
         auth_type
-        commenter_email
+        author_id
       }
     }
   `
@@ -1465,8 +1462,8 @@ test.serial(
           publication_id: testPublication.id,
           body: "Test email comment for deletion",
           auth_type: "EMAIL",
-          commenter_email: "delete@example.com",
-          commenter_username: "deleteuser",
+          author_id: "delete@example.com",
+          author_name: "deleteuser",
         },
       },
     })
@@ -1514,7 +1511,7 @@ test.serial(
         id
         body
         auth_type
-        commenter_email
+        author_id
         publication {
           id
         }
@@ -1568,8 +1565,8 @@ test.serial(
           publication_id: testPublication.id,
           body: commentBody,
           auth_type: "ETHEREUM",
-          commenter_address: TEST_ETHEREUM_ADDRESS_NODE_A,
-          commenter_username: "testuser",
+          author_id: TEST_ETHEREUM_ADDRESS_NODE_A,
+          author_name: "testuser",
         },
       },
     })
@@ -1597,7 +1594,7 @@ test.serial(
         timestamp: timestampSec,
       },
     }
-    const signature = await generateSignature(
+    const credential = await generateSignature(
       TEST_ACCOUNT_NODE_A,
       typedData,
       "typedData",
@@ -1612,7 +1609,7 @@ test.serial(
       {
         variables: {
           id: createData.createComment.id,
-          tokenOrSignature: signature,
+          tokenOrSignature: credential,
         },
       },
     )
@@ -1628,7 +1625,7 @@ test.serial(
       "comment_count should be 1 after confirmation",
     )
 
-    // Generate deletion signature
+    // Generate deletion credential
     const deleteTypedData = {
       domain: DELETE_COMMENT_DOMAIN,
       types: DELETE_COMMENT_TYPES,
@@ -1653,7 +1650,7 @@ test.serial(
         id
         body
         auth_type
-        commenter_address
+        author_id
       }
     }
   `
@@ -1699,9 +1696,9 @@ test.serial("createComment: allowComment disabled should fail", async (t) => {
   const input = {
     publication_id: t.context.publicationId,
     body: "Test comment body",
-    commenter_username: "testuser",
+    author_name: "testuser",
     auth_type: "EMAIL",
-    commenter_email: "test@example.com",
+    author_id: "test@example.com",
   }
 
   // Step 3: Execute mutation
@@ -1710,7 +1707,7 @@ test.serial("createComment: allowComment disabled should fail", async (t) => {
       createComment(input: $input) {
         id
         body
-        commenter_username
+        author_name
         status
       }
     }
@@ -1742,9 +1739,9 @@ test.serial("createComment: allowComment enabled should succeed", async (t) => {
   const input = {
     publication_id: t.context.publicationId,
     body: "Test comment body",
-    commenter_username: "testuser",
+    author_name: "testuser",
     auth_type: "EMAIL",
-    commenter_email: "test@example.com",
+    author_id: "test@example.com",
   }
 
   // Step 3: Execute mutation
@@ -1753,7 +1750,7 @@ test.serial("createComment: allowComment enabled should succeed", async (t) => {
       createComment(input: $input) {
         id
         body
-        commenter_username
+        author_name
         status
       }
     }
@@ -1770,7 +1767,7 @@ test.serial("createComment: allowComment enabled should succeed", async (t) => {
     "Comment body should match",
   )
   t.is(
-    data.createComment.commenter_username,
+    data.createComment.author_name,
     "testuser",
     "Commenter username should match",
   )
@@ -1794,9 +1791,9 @@ test.serial(
     const input = {
       publication_id: t.context.publicationId,
       body: "Test comment body",
-      commenter_username: "testuser",
+      author_name: "testuser",
       auth_type: "EMAIL",
-      commenter_email: "test@example.com",
+      author_id: "test@example.com",
     }
 
     // Step 3: Execute mutation
@@ -1805,7 +1802,7 @@ test.serial(
       createComment(input: $input) {
         id
         body
-        commenter_username
+        author_name
         status
       }
     }
@@ -1822,7 +1819,7 @@ test.serial(
       "Comment body should match",
     )
     t.is(
-      data.createComment.commenter_username,
+      data.createComment.author_name,
       "testuser",
       "Commenter username should match",
     )

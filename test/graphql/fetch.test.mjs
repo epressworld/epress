@@ -158,10 +158,9 @@ test("Success: fetch COMMENT should return comment information", async (t) => {
     body: "This is a test comment",
     status: "CONFIRMED",
     auth_type: "EMAIL",
-    commenter_username: "testuser",
-    commenter_email: "test@example.com",
-    commenter_address: null,
-    signature: null,
+    author_name: "testuser",
+    author_id: "test@example.com",
+    credential: null,
   })
 
   const query = `
@@ -171,9 +170,9 @@ test("Success: fetch COMMENT should return comment information", async (t) => {
           body
           status
           auth_type
-          commenter_username
-          commenter_address
-          signature
+          author_name
+          author_id
+          credential
           created_at
           updated_at
           publication {
@@ -199,11 +198,7 @@ test("Success: fetch COMMENT should return comment information", async (t) => {
   t.is(data.fetch.body, "This is a test comment", "Comment body should match")
   t.is(data.fetch.status, "CONFIRMED", "Comment status should match")
   t.is(data.fetch.auth_type, "EMAIL", "Comment auth type should match")
-  t.is(
-    data.fetch.commenter_username,
-    "testuser",
-    "Commenter username should match",
-  )
+  t.is(data.fetch.author_name, "testuser", "Commenter username should match")
   // commenter_email field is hidden to protect user privacy
   t.truthy(data.fetch.publication, "Publication association should be loaded")
   t.is(
@@ -448,8 +443,8 @@ test("Success: fetch COMMENT with integration token should return any comment", 
   const comment = await Comment.query().insert({
     publication_id: publication.id,
     body: `Test comment for fetch permission test ${Date.now()}`,
-    commenter_username: "test_user",
-    commenter_email: "test@example.com",
+    author_name: "test_user",
+    author_id: "test@example.com",
     auth_type: "EMAIL",
     status: "PENDING",
   })
@@ -464,7 +459,7 @@ test("Success: fetch COMMENT with integration token should return any comment", 
           id
           body
           status
-          commenter_username
+          author_name
         }
       }
     }
@@ -505,8 +500,8 @@ test("Success: fetch COMMENT without token should return only confirmed comments
   const pendingComment = await Comment.query().insert({
     publication_id: publication.id,
     body: `Pending comment for fetch without token test ${Date.now()}`,
-    commenter_username: "test_user",
-    commenter_email: "test@example.com",
+    author_name: "test_user",
+    author_id: "test@example.com",
     auth_type: "EMAIL",
     status: "PENDING",
   })
@@ -515,8 +510,8 @@ test("Success: fetch COMMENT without token should return only confirmed comments
   const confirmedComment = await Comment.query().insert({
     publication_id: publication.id,
     body: `Confirmed comment for fetch without token test ${Date.now()}`,
-    commenter_username: "test_user2",
-    commenter_email: "test2@example.com",
+    author_name: "test_user2",
+    author_id: "test2@example.com",
     auth_type: "EMAIL",
     status: "CONFIRMED",
   })
@@ -528,7 +523,7 @@ test("Success: fetch COMMENT without token should return only confirmed comments
           id
           body
           status
-          commenter_username
+          author_name
         }
       }
     }

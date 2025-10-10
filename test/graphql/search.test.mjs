@@ -104,10 +104,9 @@ test.serial.before(async (t) => {
     body: "This is a test comment",
     status: "CONFIRMED",
     auth_type: "EMAIL",
-    commenter_username: "testuser",
-    commenter_email: "test@example.com",
-    commenter_address: null,
-    signature: null,
+    author_name: "testuser",
+    author_id: "test@example.com",
+    credential: null,
   })
 
   t.context.comment2 = await Comment.query().insert({
@@ -115,10 +114,9 @@ test.serial.before(async (t) => {
     body: "Another test comment",
     status: "CONFIRMED",
     auth_type: "ETHEREUM",
-    commenter_username: "cryptouser",
-    commenter_email: null,
-    commenter_address: "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6",
-    signature: null,
+    author_name: "cryptouser",
+    author_id: "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6",
+    credential: null,
   })
 })
 
@@ -640,8 +638,8 @@ test("Success: search COMMENT should return comments for specified publication",
               body
               status
               auth_type
-              commenter_username
-              commenter_address
+              author_name
+              author_id
               created_at
               updated_at
               publication {
@@ -664,16 +662,16 @@ test("Success: search COMMENT should return comments for specified publication",
 
   const comments = data.search.edges.map((edge) => edge.node)
   t.true(
-    comments.some((c) => c.commenter_username === "testuser"),
+    comments.some((c) => c.author_name === "testuser"),
     "Should include email comment",
   )
   t.true(
-    comments.some((c) => c.commenter_username === "cryptouser"),
+    comments.some((c) => c.author_name === "cryptouser"),
     "Should include ethereum comment",
   )
 })
 
-test("Success: search COMMENT should support filtering by commenter_username", async (t) => {
+test("Success: search COMMENT should support filtering by author_name", async (t) => {
   const { graphqlClient } = t.context
 
   const query = `
@@ -685,7 +683,7 @@ test("Success: search COMMENT should support filtering by commenter_username", a
           node {
             ... on Comment {
               body
-              commenter_username
+              author_name
               auth_type
             }
           }
@@ -698,7 +696,7 @@ test("Success: search COMMENT should support filtering by commenter_username", a
     variables: {
       filterBy: {
         publication_id: t.context.publicationSigned.id,
-        commenter_username: "testuser",
+        author_name: "testuser",
       },
     },
   })
@@ -707,7 +705,7 @@ test("Success: search COMMENT should support filtering by commenter_username", a
   t.truthy(data.search, "Search result should exist")
   t.is(data.search.total, 1, "Should return exactly 1 comment")
   t.is(
-    data.search.edges[0].node.commenter_username,
+    data.search.edges[0].node.author_name,
     "testuser",
     "Should return correct comment",
   )
@@ -793,7 +791,7 @@ test("Success: search COMMENT should support pagination", async (t) => {
           node {
             ... on Comment {
               body
-              commenter_username
+              author_name
             }
           }
         }
@@ -1088,8 +1086,8 @@ test("Success: search COMMENT with integration token should return all comments"
   const _otherNodeComment = await Comment.query().insert({
     publication_id: otherNodePublication.id,
     body: `Other node comment for search test ${Date.now()}`,
-    commenter_username: "other_user",
-    commenter_email: "other@example.com",
+    author_name: "other_user",
+    author_id: "other@example.com",
     auth_type: "EMAIL",
     status: "PENDING", // 未确认状态，只有 integration token 才能看到
   })
@@ -1106,7 +1104,7 @@ test("Success: search COMMENT with integration token should return all comments"
             ... on Comment {
               body
               status
-              commenter_username
+              author_name
             }
           }
         }
@@ -1193,7 +1191,7 @@ test("Success: search COMMENT without token should return only confirmed comment
             ... on Comment {
               body
               status
-              commenter_username
+              author_name
             }
           }
         }

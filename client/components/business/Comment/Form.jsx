@@ -5,7 +5,6 @@ import {
   Button,
   HStack,
   Input,
-  NativeSelect,
   Text,
   Textarea,
   VStack,
@@ -50,20 +49,15 @@ export const CommentForm = ({
             wrap={{ base: "wrap", md: "nowrap" }}
             justify={{ base: "stretch", md: "flex-start" }}
           >
-            {/* 认证方式选择器 - 始终显示，让用户可以选择 */}
-            <Box minW="120px" flex="0 0 auto">
-              <NativeSelect.Root size="md">
-                <NativeSelect.Field
-                  value={authType}
-                  onChange={(e) =>
-                    handleAuthTypeChange({ value: e.target.value })
-                  }
-                >
-                  <option value="EMAIL">{common.emailAuth()}</option>
-                  <option value="ETHEREUM">{common.ethereumAuth()}</option>
-                </NativeSelect.Field>
-                <NativeSelect.Indicator />
-              </NativeSelect.Root>
+            {/* 认证方式自动选择 - 不再显示选择器 */}
+            <Box minW="120px" flex="0 0 auto" display="none">
+              <input
+                type="hidden"
+                value={authType}
+                onChange={(e) =>
+                  handleAuthTypeChange({ value: e.target.value })
+                }
+              />
             </Box>
 
             {/* 昵称输入 */}

@@ -123,13 +123,13 @@ export function useCommentForm(
       const input = {
         publication_id: publicationId,
         body: data.body,
-        commenter_username: data.username,
+        author_name: data.username,
         auth_type: data.authType,
       }
 
       // 根据认证类型添加相应字段
       if (data.authType === "EMAIL") {
-        input.commenter_email = data.email
+        input.author_id = data.email
       } else if (data.authType === "ETHEREUM") {
         // 两步流程：先创建为待确认评论，然后再触发钱包签名进行确认
         if (!address) {
@@ -143,7 +143,7 @@ export function useCommentForm(
           throw new Error("节点地址未获取到，请刷新页面重试")
         }
 
-        input.commenter_address = address
+        input.author_id = address
       }
 
       const createResp = await createComment({
@@ -165,8 +165,8 @@ export function useCommentForm(
           id: created?.id,
           body: created?.body || data.body,
           publicationId: parseInt(publicationId, 10),
-          commenterAddress: address,
-          commenterUsername: created?.commenter_username || data.username,
+          authorId: address,
+          authorName: created?.author_name || data.username,
           status: created?.status || "PENDING",
           createdAt: created?.created_at,
           authType: "ETHEREUM",
@@ -222,7 +222,7 @@ export function useCommentForm(
       })
       return
     }
-    if (!ctx.commenterAddress) {
+    if (!ctx.authorId) {
       toaster.create({
         description: common.pleaseConnectWallet(),
         type: "warning",
@@ -239,7 +239,7 @@ export function useCommentForm(
       const timestampSec = Math.floor(new Date(ctx.createdAt).getTime() / 1000)
       const typedData = commentSignatureTypedData(
         profile.address,
-        ctx.commenterAddress,
+        ctx.authorId,
         ctx.publicationId,
         commentBodyHash,
         timestampSec,

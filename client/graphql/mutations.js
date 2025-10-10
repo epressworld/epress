@@ -139,13 +139,15 @@ export const CREATE_COMMENT = gql`
       body
       status
       auth_type
-      commenter_username
-      commenter_address
+      author_name
+      author_id
       created_at
+      publication {
+        id
+      }
     }
   }
 `
-
 export const DESTROY_COMMENT = gql`
   mutation DestroyComment($id: ID!, $signature: String, $email: String) {
     destroyComment(id: $id, signature: $signature, email: $email) {
@@ -153,7 +155,7 @@ export const DESTROY_COMMENT = gql`
       body
       status
       auth_type
-      commenter_username
+      author_name
       created_at
     }
   }
@@ -166,7 +168,7 @@ export const CONFIRM_COMMENT = gql`
       body
       status
       auth_type
-      commenter_username
+      author_name
       created_at
       publication {
         id
@@ -182,7 +184,7 @@ export const CONFIRM_COMMENT_DELETION = gql`
       body
       status
       auth_type
-      commenter_username
+      author_name
       created_at
       publication {
         id

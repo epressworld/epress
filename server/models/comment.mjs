@@ -39,25 +39,19 @@ export class Comment extends Model {
         notNullable: true,
       },
     },
-    commenter_username: {
+    author_name: {
       type: "string",
       constraints: {
         notNullable: true,
       },
     },
-    commenter_email: {
+    author_id: {
       type: "string",
       constraints: {
-        nullable: true,
+        notNullable: true,
       },
     },
-    commenter_address: {
-      type: "string",
-      constraints: {
-        nullable: true,
-      },
-    },
-    signature: {
+    credential: {
       type: "string",
       constraints: {
         nullable: true,
@@ -80,8 +74,9 @@ export class Comment extends Model {
         foreignKey: "publication_id",
       }),
       commenter: Comment.belongsTo(Node, {
-        foreignKey: "commenter_address",
+        foreignKey: "author_id",
         uniqueKey: "address",
+        filter: (query) => query.where("auth_type", "ETHEREUM"),
       }),
     }
   }
@@ -89,8 +84,10 @@ export class Comment extends Model {
   // 隐藏敏感字段以保护用户隐私
   $formatJson(json) {
     const formatted = super.$formatJson(json)
-    // 移除敏感字段
-    delete formatted.commenter_email
+    // 对于邮箱认证的评论，隐藏author_id字段以保护用户隐私
+    if (formatted.auth_type === "EMAIL") {
+      delete formatted.author_id
+    }
     return formatted
   }
 }

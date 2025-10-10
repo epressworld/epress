@@ -14,6 +14,12 @@ if (!Model.knex()) {
     client: "sqlite3",
     connection: process.env.EPRESS_DATABASE_CONNECTION,
     useNullAsDefault: true,
+    migrations: {
+      directory: "./deploy/migrations",
+      tableName: "knex_migrations",
+      extension: "mjs",
+      loadExtensions: ["mjs", "js"],
+    },
   })
 }
 

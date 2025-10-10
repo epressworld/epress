@@ -127,7 +127,7 @@ export const searchQuery = {
       resolverOptions: {
         sortable: ["created_at", "updated_at"],
         searchable: ["body"],
-        filterable: ["publication_id", "commenter_username", "status"],
+        filterable: ["publication_id", "author_name", "status"],
       },
     },
   }),

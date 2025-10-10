@@ -58,8 +58,8 @@ const segments = {
     body
     status
     auth_type
-    commenter_username
-    commenter_address
+    author_name
+      author_id
     commenter {
       url
       title
