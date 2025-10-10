@@ -3,6 +3,7 @@ import { existsSync } from "node:fs"
 import { mkdir, readdir, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
+import { execa } from "execa"
 import { Command, knexMigration, Model } from "swiftify"
 import * as modelsMap from "../server/models/index.mjs"
 
@@ -161,9 +162,9 @@ export class MigrateCommand extends Command {
     action: {
       optional: true,
       multiple: false,
-      choices: ["create", "drop", "recreate", "seed"],
+      choices: ["create", "drop", "recreate", "seed", "upgrade"],
       description:
-        "Migration action: create tables, drop tables, recreate (drop + create), or seed data",
+        "Migration action: create tables, drop tables, recreate (drop + create), or seed data and upgrade database",
       default: "create",
     },
     subaction: {
@@ -213,12 +214,18 @@ export class MigrateCommand extends Command {
             throw new Error(`Unknown seed subaction: ${subaction}`)
         }
         break
+      case "upgrade":
+        await execa({
+          stdout: "inherit",
+          stderr: "inherit",
+        })`npx knex migrate:latest`
+        break
       default:
         throw new Error(`Unknown migration action: ${action}`)
     }
 
     console.log(`🎉 Migration command '${action}' completed successfully!`)
-    Model.knex().destroy()
+    Model.knex()?.destroy()
   }
 }
 

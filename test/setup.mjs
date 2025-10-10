@@ -26,6 +26,7 @@ test.before(async (t) => {
   const { Comment } = await import("../server/models/index.mjs")
 
   // 2. Migrate database, create clean schema
+  // 恢复使用模型迁移
   await knexMigration(Object.values(models), { drop: true }) // Drop and recreate tables
   await knexMigration(Object.values(models))
 
@@ -87,9 +88,11 @@ test.before(async (t) => {
       payload.sub = email
     } else {
       // 如果没有提供 email，从数据库中获取评论的 email
-      const comment = await Comment.query().findById(commentId)
-      if (comment?.commenter_email) {
-        payload.sub = comment.commenter_email
+      const comment = await Comment.query()
+        .findOne({ id: commentId, auth_type: "EMAIL" })
+        .throwIfNotFound()
+      if (comment?.author_id) {
+        payload.sub = comment.author_id
       }
     }
     return app.jwt.sign(payload, { expiresIn })
@@ -139,7 +142,7 @@ test.after.always(async (t) => {
   }
 })
 
-// --- Helper functions (for generating signatures in tests) ---
+// --- Helper functions (for generating credentials in tests) ---
 // account: viem Account object (e.g., TEST_ACCOUNT_NODE_A, TEST_ACCOUNT_NODE_B)
 export async function generateSignature(account, message, type = "message") {
   if (type === "message") {
@@ -158,7 +161,7 @@ export async function generateSignature(account, message, type = "message") {
       message: message.message,
     })
   }
-  throw new Error("Unsupported signature type")
+  throw new Error("Unsupported credential type")
 }
 
 // --- File upload test cases ---

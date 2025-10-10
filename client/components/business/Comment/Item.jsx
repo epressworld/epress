@@ -102,7 +102,7 @@ export const CommentItem = ({
         const typedData = deleteCommentTypedData(
           nodeAddress, // 节点地址
           parseInt(comment.id, 10), // 评论ID
-          comment.commenter_address, // 评论者地址
+          comment.author_id, // 评论者地址
         )
 
         // 使用钱包签名
@@ -192,9 +192,9 @@ export const CommentItem = ({
       return (
         <HStack gap={2}>
           <Avatar.Root size="sm">
-            <Avatar.Fallback name={comment.commenter_username} />
+            <Avatar.Fallback name={comment.author_name} />
           </Avatar.Root>
-          <Text fontWeight="medium">{comment.commenter_username}</Text>
+          <Text fontWeight="medium">{comment.author_name}</Text>
         </HStack>
       )
     } else if (comment.auth_type === "ETHEREUM") {
@@ -211,10 +211,10 @@ export const CommentItem = ({
                     ? `${comment.commenter.url}/ewp/avatar`
                     : undefined
                 }
-                alt={comment.commenter.title || comment.commenter_username}
+                alt={comment.commenter.title || comment.author_name}
               />
               <Avatar.Fallback
-                name={comment.commenter_username || comment.commenter.title}
+                name={comment.author_name || comment.commenter.title}
               />
             </Avatar.Root>
             <VStack gap={0} align="start">
@@ -226,10 +226,10 @@ export const CommentItem = ({
                 fontWeight="medium"
                 _hover={{ color: "orange.600" }}
               >
-                {comment.commenter_username || comment.commenter.title}
+                {comment.author_name || comment.commenter.title}
               </Link>
               <Text fontSize="xs" color="gray.500" fontFamily="mono">
-                {comment.commenter_address}
+                {comment.author_id}
               </Text>
             </VStack>
           </HStack>
@@ -238,12 +238,12 @@ export const CommentItem = ({
         return (
           <HStack gap={2}>
             <Avatar.Root size="sm">
-              <Avatar.Fallback name={comment.commenter_username} />
+              <Avatar.Fallback name={comment.author_name} />
             </Avatar.Root>
             <VStack gap={0} align="start">
-              <Text fontWeight="medium">{comment.commenter_username}</Text>
+              <Text fontWeight="medium">{comment.author_name}</Text>
               <Text fontSize="sm" color="gray.500" fontFamily="mono">
-                {comment.commenter_address}
+                {comment.author_id}
               </Text>
             </VStack>
           </HStack>

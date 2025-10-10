@@ -14,13 +14,11 @@ const CreateCommentInput = graphql.type("InputObjectType", {
   fields: {
     publication_id: { type: graphql.type("NonNull", graphql.type("ID")) },
     body: { type: graphql.type("NonNull", graphql.type("String")) },
-    commenter_username: {
+    author_name: {
       type: graphql.type("NonNull", graphql.type("String")),
     },
     auth_type: { type: graphql.type("NonNull", graphql.type("String")) }, // 将根据 CommentAuthType 枚举进行验证
-    commenter_email: { type: graphql.type("String") },
-    commenter_address: { type: graphql.type("String") },
-    signature: { type: graphql.type("String") }, // 新增：签名字段
+    author_id: { type: graphql.type("String") }, // 用于EMAIL认证
   },
 })
 
@@ -86,13 +84,7 @@ const commentMutations = {
     },
     resolve: async (_parent, { input }, context) => {
       const { request } = context
-      const {
-        publication_id,
-        body,
-        commenter_username,
-        commenter_email,
-        commenter_address,
-      } = input
+      const { publication_id, body, author_name, author_id } = input
       const auth_type = input?.auth_type?.toUpperCase()
       const { app } = context
 
@@ -100,7 +92,7 @@ const commentMutations = {
         {
           publication_id,
           auth_type,
-          commenter_username,
+          author_name,
         },
         "Creating comment",
       )
@@ -121,11 +113,10 @@ const commentMutations = {
           code: "VALIDATION_FAILED",
         })
       }
-      if (commenter_username.length > 50) {
-        throw new ErrorWithProps(
-          "Commenter username too long (max 50 characters).",
-          { code: "VALIDATION_FAILED" },
-        )
+      if (author_name.length > 50) {
+        throw new ErrorWithProps("Author name too long (max 50 characters).", {
+          code: "VALIDATION_FAILED",
+        })
       }
       if (!["EMAIL", "ETHEREUM"].includes(auth_type)) {
         throw new ErrorWithProps(
@@ -145,37 +136,34 @@ const commentMutations = {
 
       // 3. 验证 auth_type 特定字段
       let status
-      const newCommentData = {
-        publication_id,
-        body,
-        commenter_username,
-        auth_type,
-        commenter_email: null,
-        commenter_address: null,
-        signature: null,
-      }
 
       if (auth_type === "EMAIL") {
-        if (!commenter_email || !validator.isEmail(commenter_email)) {
+        if (!author_id || !validator.isEmail(author_id)) {
           throw new ErrorWithProps("Invalid email format.", {
             code: "VALIDATION_FAILED",
           })
         }
         status = "PENDING"
-        newCommentData.commenter_email = commenter_email
       } else if (auth_type === "ETHEREUM") {
-        if (!commenter_address || !isAddress(commenter_address)) {
+        if (!author_id || !isAddress(author_id)) {
           throw new ErrorWithProps("Invalid Ethereum address format.", {
             code: "VALIDATION_FAILED",
           })
         }
         // 新流程：创建阶段不再校验或保存签名，一律标记为 PENDING
         status = "PENDING"
-        newCommentData.commenter_address = commenter_address
-        // 保持 signature 为 null，待确认阶段写入
+        // 保持 credential 为 null，待确认阶段写入
       }
 
-      newCommentData.status = status
+      const newCommentData = {
+        publication_id,
+        body,
+        author_name,
+        auth_type,
+        author_id,
+        credential: null,
+        status,
+      }
 
       // 4. 在数据库中创建评论
       const newComment = await Comment.query().insert(newCommentData)
@@ -188,7 +176,7 @@ const commentMutations = {
           {
             aud: "comment",
             comment_id: newComment.id,
-            sub: commenter_email,
+            sub: author_id,
             action: "confirm",
           },
           { expiresIn: "24h" },
@@ -204,7 +192,7 @@ const commentMutations = {
             "Verification link generated",
           )
           await sendEmail(
-            commenter_email,
+            author_id,
             "epress 评论确认",
             await renderEmail("commentVerificationEmail", {
               verificationLink,
@@ -282,7 +270,7 @@ const commentMutations = {
         if (comment.status === "CONFIRMED") {
           return comment
         }
-        if (comment.auth_type !== "EMAIL" || comment.commenter_email !== sub) {
+        if (comment.auth_type !== "EMAIL" || comment.author_id !== sub) {
           throw new ErrorWithProps("Token information does not match.", {
             code: "FORBIDDEN",
           })
@@ -294,9 +282,10 @@ const commentMutations = {
           )
         }
 
-        const updatedComment = await comment
-          .$query()
-          .patchAndFetch({ status: "CONFIRMED" })
+        const updatedComment = await comment.$query().patchAndFetch({
+          status: "CONFIRMED",
+          credential: tokenOrSignature, // 保存JWT token到credential字段
+        })
         await Publication.updateCommentCount(comment.publication_id)
 
         request.log.info(
@@ -322,7 +311,7 @@ const commentMutations = {
       if (comment.status === "CONFIRMED") {
         return comment
       }
-      if (comment.auth_type !== "ETHEREUM" || !comment.commenter_address) {
+      if (comment.auth_type !== "ETHEREUM" || !comment.author_id) {
         throw new ErrorWithProps("Signature information does not match.", {
           code: "FORBIDDEN",
         })
@@ -355,7 +344,7 @@ const commentMutations = {
         primaryType: "CommentSignature",
         message: {
           nodeAddress: getAddress(selfNode.address),
-          commenterAddress: getAddress(comment.commenter_address),
+          commenterAddress: getAddress(comment.author_id),
           publicationId: parseInt(comment.publication_id, 10),
           commentBodyHash,
           timestamp: timestampSec,
@@ -365,7 +354,7 @@ const commentMutations = {
       let signerAddress
       try {
         signerAddress = await recoverTypedDataAddress({
-          address: getAddress(comment.commenter_address),
+          address: getAddress(comment.author_id),
           domain: typedData.domain,
           types: typedData.types,
           primaryType: typedData.primaryType,
@@ -378,7 +367,7 @@ const commentMutations = {
         })
       }
 
-      if (getAddress(signerAddress) !== getAddress(comment.commenter_address)) {
+      if (getAddress(signerAddress) !== getAddress(comment.author_id)) {
         throw new ErrorWithProps("Signature does not match address.", {
           code: "INVALID_SIGNATURE",
         })
@@ -386,7 +375,7 @@ const commentMutations = {
 
       const updatedComment = await comment
         .$query()
-        .patchAndFetch({ status: "CONFIRMED", signature: tokenOrSignature })
+        .patchAndFetch({ status: "CONFIRMED", credential: tokenOrSignature })
       await Publication.updateCommentCount(comment.publication_id)
 
       request.log.info(
@@ -447,7 +436,7 @@ const commentMutations = {
             { code: "VALIDATION_FAILED" },
           )
         }
-        if (comment.commenter_email !== email) {
+        if (comment.author_id !== email) {
           throw new ErrorWithProps(
             "Provided email does not match the comment's email.",
             { code: "FORBIDDEN" },
@@ -459,7 +448,7 @@ const commentMutations = {
           {
             aud: "comment",
             comment_id: comment.id,
-            sub: comment.commenter_email,
+            sub: comment.author_id,
             action: "destroy",
           },
           { expiresIn: "24h" },
@@ -470,7 +459,7 @@ const commentMutations = {
           const deletionLink = `${selfNode.url}/verify?token=${token}`
           request.log.debug({ deletionLink }, "Deletion link generated")
           await sendEmail(
-            comment.commenter_email,
+            comment.author_id,
             "epress comment deletion confirmation",
             await renderEmail("commentDeletionEmail", {
               deletionLink,
@@ -505,7 +494,7 @@ const commentMutations = {
             { code: "VALIDATION_FAILED" },
           )
         }
-        if (!comment.commenter_address) {
+        if (!comment.author_id) {
           throw new ErrorWithProps(
             "Commenter Ethereum address not found for signature verification.",
             { code: "INTERNAL_SERVER_ERROR" },
@@ -519,14 +508,14 @@ const commentMutations = {
           message: {
             commentId: parseInt(comment.id, 10), // commentId 必须是 uint256，所以需要转换为数字
             nodeAddress: getAddress(selfNode.address), // 添加 nodeAddress
-            commenterAddress: getAddress(comment.commenter_address),
+            commenterAddress: getAddress(comment.author_id),
           },
         }
 
         let signerAddress
         try {
           signerAddress = await recoverTypedDataAddress({
-            address: getAddress(comment.commenter_address),
+            address: getAddress(comment.author_id),
             domain: typedData.domain,
             types: typedData.types,
             primaryType: typedData.primaryType,
@@ -538,9 +527,7 @@ const commentMutations = {
             code: "INVALID_SIGNATURE",
           })
         }
-        if (
-          getAddress(signerAddress) !== getAddress(comment.commenter_address)
-        ) {
+        if (getAddress(signerAddress) !== getAddress(comment.author_id)) {
           throw new ErrorWithProps(
             "Signature does not match the comment's Ethereum address.",
             { code: "FORBIDDEN" },
@@ -615,7 +602,7 @@ const commentMutations = {
       // 4. 验证评论的认证类型和邮箱是否匹配
       if (
         comment.auth_type !== "EMAIL" ||
-        comment.commenter_email !== comment_email
+        comment.author_id !== comment_email
       ) {
         throw new ErrorWithProps(
           "Token information does not match the comment.",
