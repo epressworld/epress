@@ -1,8 +1,8 @@
 "use client"
 
-import { CloseButton, Dialog, Portal, Tabs } from "@chakra-ui/react"
+import { CloseButton, Dialog, Portal, Separator, Tabs } from "@chakra-ui/react"
 import { useState } from "react"
-import { LuPalette, LuSettings, LuUser } from "react-icons/lu"
+import { LuSettings, LuUserCog } from "react-icons/lu"
 import { useTranslation } from "../../hooks/useTranslation"
 import { ProfileFormSection, SettingsFormSection } from "../forms"
 import { PreferencesFormSection } from "../forms/PreferencesFormSection"
@@ -33,12 +33,8 @@ export function SettingsDialog({ isOpen, onClose }) {
               <Tabs.Root value={activeTab} onValueChange={handleTabChange}>
                 <Tabs.List>
                   <Tabs.Trigger value="profile">
-                    <LuUser />
+                    <LuUserCog />
                     {settings.nodeBasicInfo()}
-                  </Tabs.Trigger>
-                  <Tabs.Trigger value="preferences">
-                    <LuPalette />
-                    {settings.preferences()}
                   </Tabs.Trigger>
                   <Tabs.Trigger value="settings">
                     <LuSettings />
@@ -48,12 +44,9 @@ export function SettingsDialog({ isOpen, onClose }) {
 
                 <Tabs.Content value="profile" pt={4}>
                   <ProfileFormSection onSuccess={handleSuccess} />
-                </Tabs.Content>
-
-                <Tabs.Content value="preferences" pt={4}>
+                  <Separator my={5} />
                   <PreferencesFormSection />
                 </Tabs.Content>
-
                 <Tabs.Content value="settings" pt={4}>
                   <SettingsFormSection onSuccess={handleSuccess} />
                 </Tabs.Content>

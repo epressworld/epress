@@ -268,7 +268,7 @@ export const translations = {
     },
     settings: {
       nodeSettings: "Node Settings",
-      nodeBasicInfo: "Profile",
+      nodeBasicInfo: "Personal Settings",
       preferences: "Preferences",
       systemSettings: "System Settings",
       language: "Language",
@@ -655,7 +655,7 @@ export const translations = {
     },
     settings: {
       nodeSettings: "节点设置",
-      nodeBasicInfo: "基本信息",
+      nodeBasicInfo: "个人设置",
       preferences: "偏好设置",
       systemSettings: "系统设置",
       language: "语言",
