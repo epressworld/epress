@@ -124,6 +124,11 @@ export const BROADCAST_PROFILE_UPDATE = gql`
 export const UPDATE_SETTINGS = gql`
   mutation UpdateSettings($input: UpdateSettingsInput!) {
     updateSettings(input: $input) {
+      defaultLanguage
+      defaultTheme
+      walletConnectProjectId
+      mailTransport
+      mailFrom
       enableRSS
       allowFollow
       allowComment

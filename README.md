@@ -116,16 +116,13 @@ The fastest and easiest deployment method, using the official pre-built image `g
     docker volume create epress-data
     ```
 
-2. **Run the Setup Wizard**:
-    ```bash
-    docker run -it --rm -v epress-data:/app/data ghcr.io/epressworld/epress install
-    ```
-    Follow the prompts to configure your node.
-
-3. **Start Your Node**:
+2. **Start Your Node**:
     ```bash
     docker run -d -p 8543:8543 -p 8544:8544 -v epress-data:/app/data --name my-epress-node ghcr.io/epressworld/epress
     ```
+
+3. **Complete Setup via Web Interface**:
+    Open your browser and navigate to `http://localhost:8543`. You'll be automatically redirected to the installation wizard where you can configure your node through a beautiful, user-friendly interface.
 
 For advanced Docker options (e.g., separating frontend/backend or custom builds), see [**`docs/en/INSTALLATION.md`**](/docs/en/INSTALLATION.md).
 
@@ -140,21 +137,20 @@ Ideal for developers who want to customize or contribute.
     npm install
     ```
 
-2. **Run the Setup Wizard**:
-    ```bash
-    node commands/install.mjs
-    ```
-    Follow the prompts to configure your node.
-
-3. **Build the Project**:
+2. **Build the Project**:
     ```bash
     npm run build
     ```
 
-4. **Start Your Node**:
+3. **Start Your Node**:
     ```bash
     npm run start
     ```
+
+4. **Complete Setup via Web Interface**:
+    Open your browser and navigate to `http://localhost:8543`. You'll be automatically redirected to the installation wizard at `/install` where you can configure your node.
+
+    **Note**: The project now includes a default `.env` file for standard configuration. If you need to customize infrastructure settings (e.g., ports, database path), create a `.env.local` file to override the defaults. Do not edit the `.env` file directly if you plan to pull future updates.
 
 For more details, see [**`docs/en/INSTALLATION.md`**](/docs/en/INSTALLATION.md).
 
@@ -169,11 +165,14 @@ To contribute to epress or build on top of it:
    npm install
    ```
 
-2. **Set Up Environment**:
+2. **Start Development Server**:
+   Start the server, which will use the default `.env` configuration.
    ```bash
-   node commands/install.mjs
+   npm run dev
    ```
-   Run this command to configure your node interactively, which also initializes the database. You can then further customize settings by editing the `.env` file. See `env.example` for all options.
+
+3. **Complete Setup & Develop**:
+   Open `http://localhost:8543/install` to complete the web-based setup. For any infrastructure customizations (like ports), create a `.env.local` file. The development server supports hot reloading.
 
 3. **Start Development Server**:
    ```bash

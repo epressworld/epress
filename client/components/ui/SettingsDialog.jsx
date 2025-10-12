@@ -1,11 +1,10 @@
 "use client"
 
-import { CloseButton, Dialog, Portal, Separator, Tabs } from "@chakra-ui/react"
+import { CloseButton, Dialog, Portal, Tabs } from "@chakra-ui/react"
 import { useState } from "react"
 import { LuSettings, LuUserCog } from "react-icons/lu"
 import { useTranslation } from "../../hooks/useTranslation"
 import { ProfileFormSection, SettingsFormSection } from "../forms"
-import { PreferencesFormSection } from "../forms/PreferencesFormSection"
 
 export function SettingsDialog({ isOpen, onClose }) {
   const { settings } = useTranslation()
@@ -44,8 +43,6 @@ export function SettingsDialog({ isOpen, onClose }) {
 
                 <Tabs.Content value="profile" pt={4}>
                   <ProfileFormSection onSuccess={handleSuccess} />
-                  <Separator my={5} />
-                  <PreferencesFormSection />
                 </Tabs.Content>
                 <Tabs.Content value="settings" pt={4}>
                   <SettingsFormSection onSuccess={handleSuccess} />

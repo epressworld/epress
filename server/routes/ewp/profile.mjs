@@ -46,7 +46,15 @@ router.get("/profile", async (request, reply) => {
       },
       "Profile endpoint failed",
     )
-    reply.code(500).send({ error: "INTERNAL_ERROR" })
+    if (error.message.includes("no such table")) {
+      reply.code(422).send({
+        error: "INSTALL_FIRST",
+        message:
+          "The application is not installed. Please complete the installation process before making requests.",
+      })
+    } else {
+      reply.code(500).send({ error: "INTERNAL_ERROR" })
+    }
   }
 })
 

@@ -3,7 +3,6 @@ import test from "ava"
 import FormData from "form-data"
 import { createMercuriusTestClient } from "mercurius-integration-testing"
 import nock from "nock"
-import nodemailer from "nodemailer"
 import { knexMigration, Model } from "swiftify"
 import { generateTestAccount, TEST_ETHEREUM_ADDRESS_NODE_A } from "./env.mjs"
 
@@ -48,6 +47,13 @@ test.before(async (t) => {
       value:
         "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
     }, // Existing default avatar
+    { key: "jwt_secret", value: "test-jwt-secret-for-testing-only" },
+    { key: "jwt_expires_in", value: "24h" },
+    { key: "default_language", value: "en" },
+    { key: "default_theme", value: "light" },
+    { key: "mail_transport", value: "" },
+    { key: "mail_from", value: "" },
+    { key: "walletconnect_projectid", value: "" },
   ]
 
   // Insert settings using a for loop
@@ -99,7 +105,7 @@ test.before(async (t) => {
   }
   t.context.createIntegrationJwt = (scope, expiresIn = "24h") =>
     app.jwt.sign(
-      { aud: "integration", sub: process.env.EPRESS_NODE_ADDRESS, scope },
+      { aud: "integration", sub: TEST_ETHEREUM_ADDRESS_NODE_A, scope },
       { expiresIn },
     )
   t.context.createNonceJwt = (address, expiresIn = "3m") =>
@@ -112,10 +118,6 @@ test.before(async (t) => {
   t.context.graphqlClient = createMercuriusTestClient(app, {
     url: "/api/graphql",
   })
-
-  // 4. Mocking setup (Nock for HTTP)
-  const testAccount = await nodemailer.createTestAccount()
-  process.env.EPRESS_MAIL_TRANSPORT = `smtp://${testAccount.user}:${testAccount.pass}@smtp.ethereal.email:587`
 })
 
 test.after.always(async (t) => {

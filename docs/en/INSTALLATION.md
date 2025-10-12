@@ -33,48 +33,24 @@ Create a Docker volume to persist your node’s data:
 docker volume create epress-data
 ```
 
-#### 2.2 Initial Setup and Configuration (Interactive Wizard)
+#### 2.2 Start Your Node
 
-Run an initial setup to configure your node, including database settings and node address, using a one-time container:
-
-```bash
-docker run -it --rm -v epress-data:/app/data ghcr.io/epressworld/epress:latest install
-```
-
-- `-it`: Enables interactive mode for the setup wizard.
-- `--rm`: Automatically deletes the container after exiting.
-- `-v epress-data:/app/data`: Mounts the `epress-data` volume to the container’s `/app/data` directory for persistent storage.
-- `install`: Triggers the interactive setup wizard.
-
-**The wizard will prompt you for the following**:
-
-- **`EPRESS_AUTH_JWT_SECRET`**: A key for encrypting user authentication tokens. Press Enter to use a secure, auto-generated key.
-- **`EPRESS_NODE_ADDRESS`**: Your node’s Ethereum address, serving as its unique network identity (must start with `0x`).
-- **`EPRESS_NODE_URL`**: The public URL for accessing your node (must start with `http://` or `https://`).
-- **`EPRESS_MAIL_TRANSPORT`**: Configuration for email services; leave blank to disable email functionality.
-
-**Configuration Notes**:
-
-- All settings are saved in the `epress-data` volume for persistence.
-- You can predefine settings via environment variables, e.g.:
-  ```bash
-  docker run -it --rm -v epress-data:/app/data -e EPRESS_NODE_ADDRESS=0x... ghcr.io/epressworld/epress:latest install
-  ```
-
-#### 2.3 Start the epress Node
-
-Once configured, start your node:
+Start your node using the following command:
 
 ```bash
 docker run -d -p 8543:8543 -p 8544:8544 -v epress-data:/app/data --name my-epress-node ghcr.io/epressworld/epress:latest
 ```
 
 - `-d`: Runs the container in the background.
-- `-p 8543:8543 -p 8544:8544`: Maps container ports to host ports.
-- `-v epress-data:/app/data`: Mounts the data volume for persistent configuration.
-- `--name my-epress-node`: Names the container for easy management.
+- `-p 8543:8543` (frontend) and `-p 8544:8544` (backend): Maps the necessary container ports to your host.
+- `-v epress-data:/app/data`: Mounts the `epress-data` volume to persist your node's database and configuration.
+- `--name my-epress-node`: Assigns a convenient name to your container.
 
-After starting, access your node via a browser at `http://localhost:8543` (or the configured client port).
+#### 2.3 Complete Setup via Web Interface
+
+Once the container is running, open your browser and navigate to `http://localhost:8543`.
+
+You will be automatically redirected to the web-based installation wizard. This user-friendly interface will guide you through configuring your node. The settings you configure here, such as your node's address, title, and mail server settings, will be stored in the database within the `epress-data` volume.
 
 ### 3. Method 2: Custom-Built Image
 
@@ -89,20 +65,17 @@ git clone https://github.com/epressworld/epress.git
 cd epress
 ```
 
-#### 3.2 Configure the .env File
+#### 3.2 Modify the Existing .env File (Optional)
 
-Create or edit the `.env` file in the project root. See `env.example` for a complete list of environment variables and their descriptions. Example configuration:
+The repository includes a `.env` file with default infrastructure settings. If you need to preset specific configurations for your custom image (e.g., specifying `EPRESS_API_URL` for backend separation), you can directly **modify** this existing file. Your changes will be bundled into the image during the build process.
 
-```bash
-EPRESS_AUTH_JWT_SECRET=your_jwt_secret
-EPRESS_NODE_ADDRESS=0xYourNodeAddress
-EPRESS_NODE_URL=http://your-node-url
-EPRESS_API_URL=http://your-api-url  # For frontend-backend separation
-EPRESS_MAIL_TRANSPORT=your_mail_transport_config
+**Example: Modifying .env for a separated backend**
+```
+# .env
+EPRESS_API_URL=http://localhost:8544
 ```
 
-- `EPRESS_API_URL`: Set to the API server’s address (e.g., `http://localhost:8544`) for frontend-backend separation.
-- Other settings align with the interactive wizard (see Method 1).
+Application-level settings (like Node Address, Title, etc.) are still recommended to be configured through the subsequent web installation wizard.
 
 #### 3.3 Build the Docker Image
 
@@ -115,16 +88,21 @@ docker build -t my-epress-custom:latest .
 - `-t my-epress-custom:latest`: Specifies the image name and tag.
 - `.`: Points to the Dockerfile in the current directory.
 
-#### 3.4 Initial Setup and Configuration
+#### 3.4 Start Your Node and Configure via Web
 
-Similar to Method 1, create a data volume and run the setup wizard:
+1.  **Create a data volume**:
+    ```bash
+    docker volume create epress-data
+    ```
 
-```bash
-docker volume create epress-data
-docker run -it --rm -v epress-data:/app/data my-epress-custom:latest install
-```
+2.  **Start your custom container**:
+    ```bash
+    docker run -d -p 8543:8543 -p 8544:8544 -v epress-data:/app/data --env-file .env --name my-epress-node my-epress-custom:latest
+    ```
+    - `--env-file .env`: Passes your custom infrastructure variables to the container.
 
-If the `.env` file already contains settings, the wizard will skip those prompts.
+3.  **Complete Setup**:
+    Open `http://localhost:8543` in your browser to access the web-based installation wizard.
 
 #### 3.5 Start the epress Node (Frontend-Backend Separation)
 
@@ -226,56 +204,39 @@ Install required Node.js dependencies:
 npm install
 ```
 
-### 4. Initial Setup and Configuration (Interactive Wizard)
+### 4. Build and Start the Node
 
-Run the interactive setup script:
-
-```bash
-node commands/install.mjs
-```
-
-**Wizard Prompts** (same as Docker setup):
-
-- **`EPRESS_AUTH_JWT_SECRET`**: Authentication key; use the auto-generated option for security.
-- **`EPRESS_NODE_ADDRESS`**: Ethereum address (starts with `0x`).
-- **`EPRESS_NODE_URL`**: Public URL (starts with `http://` or `https://`).
-- **`EPRESS_MAIL_TRANSPORT`**: Email service configuration; leave blank to disable.
-
-**Configuration Notes**:
-
-- Running `node commands/install.mjs` will create and populate the `.env` file in the project root, which also initializes the database.
-- You can then further customize settings by editing the `.env` file. See `env.example` for all available environment variables and their descriptions.
-
-### 5. Build the Project
-
-Before starting the node, build the project to generate necessary files:
+Build the project and start the server:
 
 ```bash
 npm run build
-```
-
-### 6. Start the epress Node
-
-Launch the node:
-
-```bash
 npm run start
 ```
 
-Once running, access the node via a browser at `http://localhost:8543` (or the configured client port).
+### 5. Complete Setup via Web Interface
+
+Once the server is running, open your browser and navigate to `http://localhost:8543`.
+
+You will be automatically redirected to the web-based installation wizard. This interface will guide you through configuring your node's application settings (Node Address, Profile, Mail Server, etc.). These settings will be saved to the database.
+
+### 6. Customizing Infrastructure Configuration (Optional)
+
+The project includes a default `.env` file with standard infrastructure settings. If you need to override these settings (e.g., to change server ports or the database file path), create a new file named `.env.local` in the project root.
+
+Any variables you define in `.env.local` will take precedence over the ones in `.env`.
+
+**Example `.env.local`**:
+```
+# .env.local
+# Change the default client and server ports
+EPRESS_CLIENT_PORT=8080
+EPRESS_SERVER_PORT=8081
+```
 
 ### 7. Managing an epress Node (Source)
 
 - **Stop the Node**: Press `Ctrl + C` in the terminal.
-- **Update Configuration**: Edit the `.env` file, then rerun `npm run build` and `npm run start`.
-- **Reconfigure**: Delete the `.env` file and run:
-  ```bash
-  node commands/install.mjs
-  ```
-  Or force reconfiguration:
-  ```bash
-  node commands/install.mjs --force
-  ```
+- **Update Configuration**: Infrastructure settings can be changed in the `.env.local` file (requires a server restart). Application settings can be updated from the settings panel within the epress application itself.
 
 ### 8. Troubleshooting (Source)
 

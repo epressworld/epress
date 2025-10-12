@@ -1,3 +1,4 @@
+import { GraphQLError } from "graphql"
 import mercurius from "mercurius"
 import { SiweMessage } from "siwe"
 import { graphql } from "swiftify"
@@ -131,12 +132,18 @@ const authMutations = {
         }
 
         // 5. 生成 JWT token (using Fastify's JWT plugin)
+        // Get JWT expiration from request config cache
+        const jwtExpiresIn = await request.config.getSetting(
+          "jwt_expires_in",
+          "24h",
+        )
+
         const token = await context.app.jwt.sign(
           {
             aud: "client",
             sub: address,
           },
-          { expiresIn: process.env.EPRESS_AUTH_JWT_EXPIRES_IN || "24h" },
+          { expiresIn: jwtExpiresIn },
         )
 
         const duration = Date.now() - startTime
@@ -223,11 +230,19 @@ const authMutations = {
       }
 
       // 生成集成 JWT，sub 必须是节点所有者地址
-      const nodeOwnerAddress = process.env.EPRESS_NODE_ADDRESS
+      const selfNode = await request.config.getSelfNode()
+      if (!selfNode) {
+        throw new GraphQLError("Node not configured", {
+          extensions: {
+            code: "INTERNAL_SERVER_ERROR",
+          },
+        })
+      }
+
       const token = await context.app.jwt.sign(
         {
           aud: "integration",
-          sub: nodeOwnerAddress,
+          sub: selfNode.address,
           scope: scope,
         },
         { expiresIn },

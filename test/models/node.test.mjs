@@ -2,7 +2,11 @@ import test from "ava"
 import nock from "nock"
 import { Content, Node, Publication } from "../../server/models/index.mjs"
 import { hash } from "../../server/utils/crypto.mjs"
-import { generateSignature, TEST_ACCOUNT_NODE_A } from "../setup.mjs"
+import {
+  generateSignature,
+  TEST_ACCOUNT_NODE_A,
+  TEST_ETHEREUM_ADDRESS_NODE_A,
+} from "../setup.mjs"
 
 // 辅助函数：计算内容哈希
 async function calculateContentHash(content) {
@@ -825,3 +829,36 @@ test.serial(
     t.is(result.errors[0].error, "Network error", "should have network error")
   },
 )
+
+test.serial(
+  "Node.isInstalled returns true when self-node exists",
+  async (t) => {
+    await Node.query().insert({
+      address: TEST_ETHEREUM_ADDRESS_NODE_A,
+      url: "https://node-a.com",
+      title: "Test Node A",
+      description: "Local epress instance we are testing.",
+      is_self: true,
+      profile_version: 0,
+    })
+    const isInstalled = await Node.isInstalled()
+    t.true(isInstalled, "Should be installed after setup")
+  },
+)
+
+test.serial("Node.getSelf returns the self-node record", async (t) => {
+  await Node.query().insert({
+    address: TEST_ETHEREUM_ADDRESS_NODE_A,
+    url: "https://node-a.com",
+    title: "Test Node A",
+    description: "Local epress instance we are testing.",
+    is_self: true,
+    profile_version: 0,
+  })
+  const selfNode = await Node.getSelf()
+  t.truthy(selfNode, "Self-node should exist")
+  // SQLite stores boolean as 1/0
+  t.truthy(selfNode.is_self, "Should be marked as self-node")
+  t.truthy(selfNode.address, "Should have an address")
+  t.truthy(selfNode.url, "Should have a URL")
+})

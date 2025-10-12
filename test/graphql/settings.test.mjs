@@ -3,8 +3,9 @@ import test from "ava"
 import { Setting } from "../../server/models/index.mjs"
 import { TEST_ETHEREUM_ADDRESS_NODE_A } from "../setup.mjs"
 
-test("settings query should return settings data", async (t) => {
+test("settings query should return settings data without mailTransport", async (t) => {
   const { graphqlClient } = t.context
+  await Setting.set("mail_transport", "test")
 
   const query = `
     query GetSettings {
@@ -12,6 +13,9 @@ test("settings query should return settings data", async (t) => {
         enableRSS
         allowFollow
         allowComment
+        defaultLanguage
+        defaultTheme
+        mailTransport
       }
     }
   `
@@ -24,6 +28,46 @@ test("settings query should return settings data", async (t) => {
   t.is(data.settings.enableRSS, true, "enableRSS should be true")
   t.is(data.settings.allowFollow, true, "allowFollow should be true")
   t.is(data.settings.allowComment, true, "allowComment should be true")
+  t.is(data.settings.defaultLanguage, "en", "defaultLanguage should be en")
+  t.is(data.settings.defaultTheme, "light", "defaultLanguage should be light")
+  t.is(data.settings.mailTransport, "", "defaultLanguage should be empty")
+})
+
+test("settings query should return settings data with mailTransport", async (t) => {
+  const { graphqlClient } = t.context
+
+  await Setting.set("mail_transport", "test")
+  const query = `
+    query GetSettings {
+      settings {
+        enableRSS
+        allowFollow
+        allowComment
+        defaultLanguage
+        defaultTheme
+        mailTransport
+      }
+    }
+  `
+
+  // Arrange: Get valid JWT for self node owner
+  const ownerAddress = TEST_ETHEREUM_ADDRESS_NODE_A
+  const token = t.context.createClientJwt(ownerAddress)
+
+  const { data, errors } = await graphqlClient.query(query, {
+    headers: {
+      authorization: `Bearer ${token}`,
+    },
+  })
+
+  t.falsy(errors, "Should not have any GraphQL errors")
+  t.truthy(data.settings, "Settings data should exist")
+
+  t.is(data.settings.enableRSS, true, "enableRSS should be true")
+  t.is(data.settings.allowFollow, true, "allowFollow should be true")
+  t.is(data.settings.allowComment, true, "allowComment should be true")
+  t.is(data.settings.defaultLanguage, "en", "defaultLanguage should be en")
+  t.is(data.settings.mailTransport, "test", "mailTransport should be test")
 })
 
 // Test case 2: Successfully update settings
@@ -210,7 +254,7 @@ test.serial(
   "updateSettings mutation should update allowComment setting with valid JWT",
   async (t) => {
     const { graphqlClient } = t.context
-    const token = t.context.createClientJwt(process.env.EPRESS_NODE_ADDRESS)
+    const token = t.context.createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
 
     const mutation = `
     mutation UpdateSettings($input: UpdateSettingsInput!) {

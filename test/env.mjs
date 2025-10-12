@@ -28,19 +28,12 @@ export function generateTestAccount() {
   return privateKeyToAccount(privateKey)
 }
 
-// Set test environment variables (must be before database migration and server initialization)
-process.env.EPRESS_NODE_ADDRESS = TEST_ETHEREUM_ADDRESS_NODE_A
-process.env.EPRESS_NODE_URL = "https://node-a.com"
+// Set test environment variables (infrastructure settings only)
+// Application settings (node address, JWT secret, etc.) are now stored in database
 process.env.EPRESS_DATABASE_CONNECTION = ":memory:"
-process.env.EPRESS_AUTH_JWT_SECRET =
-  "test-jwt-secret-key-for-testing-only-32-chars"
 process.env.EPRESS_API_URL = "http://localhost:4000"
 process.env.EPRESS_SERVER_HOST = "0.0.0.0"
 process.env.EPRESS_SERVER_PORT = "4000"
-process.env.EPRESS_CLIENT_DEFAULT_LANGUAGE = "en"
-process.env.EPRESS_CLIENT_DEFAULT_THEME = "light"
-process.env.EPRESS_NODE_TITLE = "Test Node A"
-process.env.EPRESS_NODE_DESCRIPTION = "Local epress instance we are testing."
 process.env.EPRESS_DEV_DEBUG = "false"
 process.env.EPRESS_DEV_LOG_LEVEL = "error"
 

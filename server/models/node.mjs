@@ -76,6 +76,32 @@ export class Node extends Model {
       followers: Node.hasMany(Connection, { foreignKey: "follower_address" }),
     }
   }
+
+  /**
+   * Get the self-node (the node representing this ePress instance)
+   * @returns {Promise<Node|null>} Self-node or null if not found
+   */
+  static async getSelf() {
+    try {
+      return await Node.query().findOne({ is_self: true })
+    } catch (_error) {
+      // If database not available or table doesn't exist, return null
+      return null
+    }
+  }
+
+  /**
+   * Check if the system is installed (self-node exists)
+   * @returns {Promise<boolean>} True if installed, false otherwise
+   */
+  static async isInstalled() {
+    try {
+      const selfNode = await Node.getSelf()
+      return !!selfNode
+    } catch (_error) {
+      return false
+    }
+  }
   get sync() {
     return {
       profile: async (remoteProfileVersion) => {

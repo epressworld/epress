@@ -1167,7 +1167,7 @@ test("Success: search PUBLICATION without token should return only self-authored
 
   // 验证返回的数据只包含自己节点的发布内容
   if (data.search.edges.length > 0) {
-    const nodeAddress = process.env.EPRESS_NODE_ADDRESS
+    const nodeAddress = TEST_ETHEREUM_ADDRESS_NODE_A
     data.search.edges.forEach((edge) => {
       t.is(
         edge.node.author.address,

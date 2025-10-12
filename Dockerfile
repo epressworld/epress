@@ -38,7 +38,7 @@ COPY --from=builder /app/client/next.config.mjs ./client/next.config.mjs
 COPY --from=builder /app/server ./server
 COPY --from=builder /app/config ./config
 COPY --from=builder /app/commands ./commands
-COPY --from=builder /app/env.example ./env.example
+COPY --from=builder /app/.env ./.env
 COPY --from=builder /app/deploy/seeds ./deploy/seeds
 
 # Copy the entrypoint script

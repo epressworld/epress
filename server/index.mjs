@@ -2,9 +2,12 @@ import { fastifyCors } from "@fastify/cors"
 import jwt from "@fastify/jwt"
 import mercuriusUpload from "mercurius-upload"
 import { WebServer } from "swiftify"
-import graphqlPlugin from "./graphql/index.mjs"
-import ewpRoutes from "./routes/index.mjs"
 import "../config/index.mjs"
+import graphqlPlugin from "./graphql/index.mjs"
+import { Node } from "./models/node.mjs"
+import { Setting } from "./models/setting.mjs"
+import ewpRoutes from "./routes/index.mjs"
+import installRoutes from "./routes/install.mjs"
 
 /**
  * 构建 Fastify 日志配置对象
@@ -76,15 +79,47 @@ export default async function () {
   // Register mercurius-upload for file handling
   server.register(mercuriusUpload)
 
-  // Register JWT plugin FIRST with audience and issuer validation
+  // Register installation routes (always available) with /api/install prefix
+  server.register(installRoutes)
+
+  // Get JWT secret from database (or use temporary for pre-install)
+  const jwtSecret = await Setting.get("jwt_secret")
+  const selfNode = await Node.getSelf()
+
+  // Register JWT plugin with secret from database or temporary secret
   server.register(jwt, {
-    secret: process.env.EPRESS_AUTH_JWT_SECRET,
-    sign: {
-      iss: process.env.EPRESS_NODE_ADDRESS,
-    },
-    verify: {
-      allowedIss: process.env.EPRESS_NODE_ADDRESS,
-    },
+    secret: jwtSecret || "temporary-secret-for-pre-install-mode",
+    sign: selfNode
+      ? {
+          iss: selfNode.address,
+        }
+      : undefined,
+    verify: selfNode
+      ? {
+          allowedIss: selfNode.address,
+        }
+      : undefined,
+  })
+
+  // Decorate request with config cache to avoid repeated database queries
+  server.decorateRequest("config", null)
+  server.addHook("onRequest", async (request) => {
+    // Initialize config cache for this request
+    request.config = {
+      _cache: {},
+      async getSelfNode() {
+        if (!this._cache.selfNode) {
+          this._cache.selfNode = await Node.getSelf()
+        }
+        return this._cache.selfNode
+      },
+      async getSetting(key, defaultValue) {
+        if (!(key in this._cache)) {
+          this._cache[key] = await Setting.get(key, defaultValue)
+        }
+        return this._cache[key]
+      },
+    }
   })
 
   // Decorate request with permission checking method
@@ -112,15 +147,39 @@ export default async function () {
     return false
   })
 
+  // Add preHandler hook to check installation status for GraphQL only
+  // EWP routes handle their own installation checks
+  server.addHook("preHandler", async (request, reply) => {
+    // Skip installation check for install routes
+    if (request.url.startsWith("/api/install")) {
+      return
+    }
+
+    // Check if installed for GraphQL routes only
+    if (request.url.startsWith("/api/graphql")) {
+      const isInstalled = await Node.isInstalled()
+      if (!isInstalled) {
+        return reply.code(503).send({
+          error: "NOT_INSTALLED",
+          message:
+            "System is not installed. Please complete installation first.",
+        })
+      }
+    }
+  })
+
+  // Add preHandler hook for JWT verification
   server.addHook("preHandler", async (request) => {
     try {
       await request.jwtVerify()
+      request.log.debug({ user: request.user }, "jwtVerify user successfully")
 
       // 首先检查 sub 是否是节点所有者地址
       const userSub = request.user?.sub
-      const nodeOwnerAddress = process.env.EPRESS_NODE_ADDRESS
+      const selfNode = await request.config.getSelfNode()
+      const nodeOwnerAddress = selfNode?.address
 
-      if (request.user && userSub !== nodeOwnerAddress) {
+      if (request.user && nodeOwnerAddress && userSub !== nodeOwnerAddress) {
         request.log.warn(
           {
             userId: userSub,
@@ -169,9 +228,10 @@ export default async function () {
     }
   })
 
-  // Register GraphQL plugin AFTER JWT
+  // Register GraphQL plugin AFTER JWT (always register, but queries will check installation)
   server.register(graphqlPlugin())
 
+  // Register EWP routes (always register, but routes will check installation)
   ewpRoutes(server)
 
   server.log.info("Server initialization completed")

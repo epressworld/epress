@@ -8,7 +8,7 @@ import { CREATE_PUBLICATION } from "../graphql/mutations"
 import { SEARCH_PUBLICATIONS } from "../graphql/queries"
 import { useTranslation } from "./useTranslation"
 
-export function useHomePage() {
+export function useHomePage({ variables, keyword: _keyword }) {
   const client = useApolloClient()
   const router = useRouter()
   const { authStatus, isNodeOwner } = useAuth()
@@ -116,11 +116,7 @@ export function useHomePage() {
           client.cache.updateQuery(
             {
               query: SEARCH_PUBLICATIONS,
-              variables: {
-                filterBy: null,
-                orderBy: "-created_at",
-                first: 10,
-              },
+              variables,
             },
             (data) => {
               if (!data) return
@@ -158,11 +154,7 @@ export function useHomePage() {
           refetchQueries: [
             {
               query: SEARCH_PUBLICATIONS,
-              variables: {
-                filterBy: null,
-                orderBy: "-created_at",
-                first: 10,
-              },
+              variables,
             },
           ],
           awaitRefetchQueries: true,

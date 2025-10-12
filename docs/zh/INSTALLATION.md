@@ -33,35 +33,7 @@
 docker volume create epress-data
 ```
 
-#### 2.2 首次安装与配置 (交互向导)
-
-首次运行 `epress` 节点需要进行基本配置，例如数据库连接、节点地址等。通过运行一个一次性容器完成交互式配置：
-
-```bash
-docker run -it --rm -v epress-data:/app/data ghcr.io/epressworld/epress:latest install
-```
-
-- `-it`：启用交互模式以与向导交互。
-- `--rm`：容器退出后自动删除。
-- `-v epress-data:/app/data`：将名为 `epress-data` 的数据卷挂载到容器的 `/app/data` 目录，用于持久化配置和数据库。
-- `install`：触发安装向导。
-
-**您将看到一个交互式命令行向导，请根据提示输入以下信息**：
-
-- **`EPRESS_AUTH_JWT_SECRET`**：用于加密用户身份验证令牌的密钥。建议按回车使用系统自动生成的安全密钥。
-- **`EPRESS_NODE_ADDRESS`**：节点的以太坊地址，作为网络中的唯一身份，需为有效的 `0x` 开头地址。
-- **`EPRESS_NODE_URL`**：节点的公开访问地址，需为 `http://` 或 `https://` 开头的有效 URL。
-- **`EPRESS_MAIL_TRANSPORT`**：邮件发送服务配置，可留空（将禁用邮件功能）。
-
-**配置说明**：
-
-- 所有配置保存在 `epress-data` 数据卷中，确保数据持久化。
-- 可通过环境变量预设配置，例如：
-  ```bash
-  docker run -it --rm -v epress-data:/app/data -e EPRESS_NODE_ADDRESS=0x... ghcr.io/epressworld/epress:latest install
-  ```
-
-#### 2.3 启动 epress 节点
+#### 2.2 启动 epress 节点
 
 配置完成后，启动 `epress` 节点：
 
@@ -70,11 +42,15 @@ docker run -d -p 8543:8543 -p 8544:8544 -v epress-data:/app/data --name my-epres
 ```
 
 - `-d`：后台运行容器。
-- `-p 8543:8543 -p 8544:8544`：将容器端口映射到主机端口。
+- `-p 8543:8543` (前端) 和 `-p 8544:8544` (后端): 映射必要的容器端口到您的主机。
 - `-v epress-data:/app/data`：挂载数据卷以访问持久化配置。
 - `--name my-epress-node`：为容器命名，便于管理。
 
-节点启动后，可通过浏览器访问 `http://localhost:8543`（或配置中设置的客户端端口）。
+#### 2.3 通过 Web 界面完成设置
+
+容器运行后，在浏览器中打开 `http://localhost:8543`。
+
+您将被自动重定向到网页安装向导。这个用户友好的界面将引导您完成节点的配置。您在此处配置的设置（例如节点地址、标题和邮件服务器设置）将存储在 `epress-data` 数据卷内的数据库中。
 
 ### 3. 方法 2：自定义构建镜像
 
@@ -89,42 +65,44 @@ git clone https://github.com/epressworld/epress.git
 cd epress
 ```
 
-#### 3.2 配置 .env 文件
+#### 3.2 修改已有的 .env 文件 (可选)
 
-在项目根目录下创建或编辑 `.env` 文件。完整的配置选项可在 `env.example` 文件中找到，包含所有可用的环境变量及其说明。示例配置：
+代码库中已包含一个 `.env` 文件，其中有默认的基础设施配置。如果您需要为自定义镜像预设特定配置（例如，分离前后端时指定 `EPRESS_API_URL`），可以直接**修改**这个已有的文件。构建镜像时，您所做的修改将会被打包进去。
 
-```bash
-EPRESS_AUTH_JWT_SECRET=your_jwt_secret
-EPRESS_NODE_ADDRESS=0xYourNodeAddress
-EPRESS_NODE_URL=http://your-node-url
-EPRESS_API_URL=http://your-api-url  # 用于前后端分离
-EPRESS_MAIL_TRANSPORT=your_mail_transport_config
+**示例：为分离后端修改 .env 文件**
+```
+# .env
+EPRESS_API_URL=http://localhost:8544
 ```
 
-- `EPRESS_API_URL`：在前后端分离场景下，设置为 API 服务器的地址（如 `http://localhost:8544`）。
-- 其他配置项与交互向导中的说明一致（见方法 1 的配置说明）。
+应用级别的设置（如节点地址、标题等）仍然建议通过后续的 Web 安装向导进行配置。
 
 #### 3.3 构建 Docker 镜像
 
-构建自定义 `epress` 镜像：
+构建您的自定义 `epress` 镜像：
 
 ```bash
 docker build -t my-epress-custom:latest .
 ```
 
 - `-t my-epress-custom:latest`：为镜像指定名称和标签。
-- `.`：表示 Dockerfile 位于当前目录。
+- `.`：指向当前目录中的 Dockerfile。
 
-#### 3.4 首次安装与配置
+#### 3.4 启动节点并通过 Web 配置
 
-与方法 1 类似，创建一个数据卷并运行安装向导：
+1.  **创建数据卷**：
+    ```bash
+    docker volume create epress-data
+    ```
 
-```bash
-docker volume create epress-data
-docker run -it --rm -v epress-data:/app/data my-epress-custom:latest install
-```
+2.  **启动您的自定义容器**：
+    ```bash
+    docker run -d -p 8543:8543 -p 8544:8544 -v epress-data:/app/data --env-file .env --name my-epress-node my-epress-custom:latest
+    ```
+    - `--env-file .env`：将您的自定义基础架构变量传递给容器。
 
-如果 `.env` 文件中已预设配置，向导将跳过相应提问。
+3.  **完成设置**：
+    在浏览器中打开 `http://localhost:8543` 以访问网页版安装向导。
 
 #### 3.5 启动 epress 节点（前后端分离）
 
@@ -226,56 +204,39 @@ cd epress
 npm install
 ```
 
-### 4. 首次安装与配置 (交互向导)
+### 4. 构建并启动节点
 
-运行交互式配置脚本：
-
-```bash
-node commands/install.mjs
-```
-
-**交互向导提示**（与 Docker 安装的配置项一致）：
-
-- **`EPRESS_AUTH_JWT_SECRET`**：身份验证密钥，建议使用自动生成。
-- **`EPRESS_NODE_ADDRESS`**：以太坊地址（`0x` 开头）。
-- **`EPRESS_NODE_URL`**：公开访问 URL（`http://` 或 `https://` 开头）。
-- **`EPRESS_MAIL_TRANSPORT`**：邮件服务配置，可留空。
-
-**配置说明**：
-
-- 运行 `node commands/install.mjs` 将会在项目根目录创建并填充 `.env` 文件，这也会初始化数据库。
-- 之后，您可以通过编辑 `.env` 文件进一步自定义设置。完整的配置选项可在 `env.example` 文件中找到，包含所有可用的环境变量及其说明。
-
-### 5. 构建项目
-
-在启动节点之前，需要构建项目以生成必要的文件：
+构建项目并启动服务器：
 
 ```bash
 npm run build
-```
-
-### 6. 启动 epress 节点
-
-构建完成后，启动节点：
-
-```bash
 npm run start
 ```
 
-节点启动后，可通过浏览器访问 `http://localhost:8543`（或配置的客户端端口）。
+### 5. 通过 Web 界面完成设置
+
+服务器运行后，在浏览器中打开 `http://localhost:8543`。
+
+您将被自动重定向到网页安装向导。该界面将引导您配置节点的应用设置（节点地址、个人资料、邮件服务器等）。这些设置将保存到数据库中。
+
+### 6. 自定义基础设施配置 (可选)
+
+项目包含一个带有标准基础设施设置的默认 `.env` 文件。如果您需要覆盖这些设置（例如，更改服务器端口或数据库文件路径），请在项目根目录中创建一个名为 `.env.local` 的新文件。
+
+您在 `.env.local` 中定义的任何变量都将优先于 `.env` 中的变量。
+
+**`.env.local` 示例**：
+```
+# .env.local
+# 更改默认的客户端和服务器端口
+EPRESS_CLIENT_PORT=8080
+EPRESS_SERVER_PORT=8081
+```
 
 ### 7. 管理 epress 节点（源码）
 
 - **停止节点**：在命令行窗口按 `Ctrl + C`。
-- **修改配置**：编辑 `.env` 文件后重新运行 `npm run build` 和 `npm run start`。
-- **重新配置**：删除 `.env` 文件并运行：
-  ```bash
-  node commands/install.mjs
-  ```
-  或强制重新配置：
-  ```bash
-  node commands/install.mjs --force
-  ```
+- **修改配置**：基础设施设置可以在 `.env.local` 文件中更改（需要重启服务器）。应用设置可以在 epress 应用内部的设置面板中更新。
 
 ### 8. 故障排除（源码）
 

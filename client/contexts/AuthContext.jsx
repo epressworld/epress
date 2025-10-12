@@ -36,11 +36,8 @@ export function AuthProvider({ children }) {
   const apolloClient = useApolloClient()
 
   // 从 PageContext 获取所有页面级数据
-  const {
-    profile,
-    loading: nodeLoading,
-    runtimeConfig: { nodeOwnerAddress },
-  } = usePage()
+  const { profile, loading: nodeLoading } = usePage()
+  const nodeOwnerAddress = profile.address
 
   // 依赖 wagmi 的底层状态 - 只在客户端使用
   const { address, isConnected, isDisconnected } = useAccount()
