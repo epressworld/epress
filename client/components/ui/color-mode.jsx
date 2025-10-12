@@ -27,26 +27,28 @@ export function useColorMode(defaultTheme) {
   React.useEffect(() => {
     setMounted(true)
 
-    // 优先使用 localStorage，环境变量作为默认值
-    const savedTheme = localStorage.getItem("epress-theme")
-    if (
-      savedTheme &&
-      (savedTheme === "light" ||
-        savedTheme === "dark" ||
-        savedTheme === "system")
-    ) {
-      setTheme(savedTheme)
-    } else {
-      // 如果没有 localStorage 设置，使用环境变量
-      const envTheme = defaultTheme
-      if (
-        envTheme &&
-        (envTheme === "light" || envTheme === "dark" || envTheme === "system")
-      ) {
-        setTheme(envTheme)
-        localStorage.setItem("epress-theme", envTheme)
-      }
-    }
+    setTheme(defaultTheme)
+    localStorage.setItem("epress-theme", defaultTheme)
+    // // 优先使用 localStorage，环境变量作为默认值
+    // const savedTheme = localStorage.getItem("epress-theme")
+    // if (
+    //   savedTheme &&
+    //   (savedTheme === "light" ||
+    //     savedTheme === "dark" ||
+    //     savedTheme === "system")
+    // ) {
+    //   setTheme(savedTheme)
+    // } else {
+    //   // 如果没有 localStorage 设置，使用环境变量
+    //   const envTheme = defaultTheme
+    //   if (
+    //     envTheme &&
+    //     (envTheme === "light" || envTheme === "dark" || envTheme === "system")
+    //   ) {
+    //     setTheme(envTheme)
+    //     localStorage.setItem("epress-theme", envTheme)
+    //   }
+    // }
   }, [])
 
   const colorMode = mounted ? forcedTheme || resolvedTheme || "light" : "light"

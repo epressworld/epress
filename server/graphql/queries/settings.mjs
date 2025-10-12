@@ -1,5 +1,5 @@
 // server/graphql/queries/settings.mjs
-import { graphql, Model } from "swiftify"
+import { graphql } from "swiftify"
 import { Setting } from "../../models/setting.mjs"
 
 // 定义 GraphQL Settings 对象类型
@@ -9,6 +9,11 @@ const SettingsType = graphql.type("ObjectType", {
     enableRSS: { type: graphql.type("NonNull", graphql.type("Boolean")) },
     allowFollow: { type: graphql.type("NonNull", graphql.type("Boolean")) },
     allowComment: { type: graphql.type("NonNull", graphql.type("Boolean")) },
+    defaultLanguage: { type: graphql.type("NonNull", graphql.type("String")) },
+    defaultTheme: { type: graphql.type("NonNull", graphql.type("String")) },
+    walletConnectProjectId: { type: graphql.type("String") },
+    mailTransport: { type: graphql.type("String") },
+    mailFrom: { type: graphql.type("String") },
   },
 })
 
@@ -19,34 +24,46 @@ const settingsQuery = {
     resolve: async (_parent, _args, context) => {
       const { request } = context
 
-      request.log.debug("Fetching settings")
+      request.log.debug({ contextUser: !!context.user }, "Fetching settings")
 
-      const settingsList = await Setting.query(Model.knex())
-      const settings = {}
+      const allSettings = await Setting.getAll()
 
       // 设置默认值
       const defaults = {
         enableRSS: false,
         allowFollow: true,
         allowComment: true,
+        defaultLanguage: "en",
+        defaultTheme: "light",
+        walletConnectProjectId: null,
+        mailTransport: "",
+        mailFrom: "",
       }
 
-      settingsList.forEach((setting) => {
-        if (setting.key === "enable_rss") {
-          settings.enableRSS = setting.value === "true"
-        } else if (setting.key === "allow_follow") {
-          settings.allowFollow = setting.value === "true"
-        } else if (setting.key === "allow_comment") {
-          settings.allowComment = setting.value === "true"
-        }
-      })
-
-      // 合并默认值，确保所有必需字段都有值
-      const result = { ...defaults, ...settings }
+      // 映射数据库字段到 GraphQL 字段
+      const result = {
+        enableRSS: allSettings.enable_rss === "true" || defaults.enableRSS,
+        allowFollow:
+          allSettings.allow_follow === "true" || defaults.allowFollow,
+        allowComment:
+          allSettings.allow_comment === "true" || defaults.allowComment,
+        defaultLanguage:
+          allSettings.default_language || defaults.defaultLanguage,
+        defaultTheme: allSettings.default_theme || defaults.defaultTheme,
+        walletConnectProjectId:
+          allSettings.walletconnect_projectid ||
+          defaults.walletConnectProjectId,
+        mailTransport: context.user
+          ? allSettings.mail_transport || defaults.mailTransport
+          : "",
+        mailFrom: context.user
+          ? allSettings.mail_from || defaults.mailFrom
+          : "",
+      }
 
       request.log.debug(
         {
-          settings_count: settingsList.length,
+          settings_count: Object.keys(allSettings).length,
           final_settings: result,
         },
         "Settings fetched successfully",

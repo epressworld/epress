@@ -1,11 +1,9 @@
 "use client"
 
 import { createListCollection, Select, Text, VStack } from "@chakra-ui/react"
-import { useLanguage } from "../../contexts/LanguageContext"
 import { useTranslation } from "../../hooks/useTranslation"
 
-export function LanguageSelect() {
-  const { currentLanguage, switchLanguage } = useLanguage()
+export function LanguageSelect({ value, onChange }) {
   const { settings } = useTranslation()
 
   // 动态创建语言选项，使用翻译
@@ -23,8 +21,8 @@ export function LanguageSelect() {
       </Text>
       <Select.Root
         collection={languageCollection}
-        value={[currentLanguage]}
-        onValueChange={(details) => switchLanguage(details.value[0])}
+        defaultValue={[value]}
+        onValueChange={(details) => onChange(details.value[0])}
       >
         <Select.HiddenSelect />
         <Select.Control>

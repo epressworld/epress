@@ -2,7 +2,9 @@
 
 import {
   Button,
+  Field,
   HStack,
+  Input,
   Separator,
   Switch,
   Text,
@@ -11,6 +13,7 @@ import {
 import { LuSettings } from "react-icons/lu"
 import { useSettingsForm } from "../../hooks/useSettingsForm"
 import { useTranslation } from "../../hooks/useTranslation"
+import { LanguageSelect, ThemeSelector } from "../ui"
 import { TokenGenerator } from "./TokenGenerator"
 
 export function SettingsFormSection({ onSuccess }) {
@@ -26,7 +29,29 @@ export function SettingsFormSection({ onSuccess }) {
 
   return (
     <form onSubmit={form.handleSubmit(handleSubmit)}>
-      <VStack gap={6} align="stretch">
+      <VStack gap={3} align="stretch">
+        <LanguageSelect
+          value={form.watch("defaultLanguage")}
+          onChange={(v) => form.setValue("defaultLanguage", v)}
+        />
+        <ThemeSelector
+          value={form.watch("defaultTheme")}
+          onChange={(v) => form.setValue("defaultTheme", v)}
+        />
+        <Field.Root>
+          <Field.Label>WalletConnect Project ID</Field.Label>
+          <Input {...form.register("walletConnectProjectId")} />
+        </Field.Root>
+        <Field.Root>
+          <Field.Label>Mail Transport</Field.Label>
+          <Input {...form.register("mailTransport")} />
+        </Field.Root>
+        <Field.Root>
+          <Field.Label>Mail From</Field.Label>
+          <Input {...form.register("mailFrom")} />
+        </Field.Root>
+      </VStack>
+      <VStack gap={6} mt={3} align="stretch">
         {/* RSS 设置 */}
         <VStack align="stretch" gap={2}>
           <HStack justify="space-between">

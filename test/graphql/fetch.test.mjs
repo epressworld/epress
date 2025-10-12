@@ -420,7 +420,7 @@ test("Success: fetch PUBLICATION without token should return only self-authored 
   t.truthy(data.fetch, "Should return self-authored publication without token")
   t.is(data.fetch.id, publication.id.toString())
   t.is(data.fetch.content.body, content.body)
-  t.is(data.fetch.author.address, process.env.EPRESS_NODE_ADDRESS)
+  t.is(data.fetch.author.address, TEST_ETHEREUM_ADDRESS_NODE_A)
 })
 
 test("Success: fetch COMMENT with integration token should return any comment", async (t) => {

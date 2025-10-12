@@ -12,6 +12,11 @@ const UpdateSettingsInput = graphql.type("InputObjectType", {
     enableRSS: { type: graphql.type("Boolean") },
     allowFollow: { type: graphql.type("Boolean") },
     allowComment: { type: graphql.type("Boolean") },
+    defaultLanguage: { type: graphql.type("String") },
+    defaultTheme: { type: graphql.type("String") },
+    walletConnectProjectId: { type: graphql.type("String") },
+    mailTransport: { type: graphql.type("String") },
+    mailFrom: { type: graphql.type("String") },
   },
 })
 
@@ -52,6 +57,11 @@ const updateSettingsMutation = {
             enableRSS: "enable_rss",
             allowFollow: "allow_follow",
             allowComment: "allow_comment",
+            defaultLanguage: "default_language",
+            defaultTheme: "default_theme",
+            walletConnectProjectId: "walletconnect_projectid",
+            mailTransport: "mail_transport",
+            mailFrom: "mail_from",
           }
 
           for (const graphqlKey in input) {
@@ -93,6 +103,11 @@ const updateSettingsMutation = {
             enableRSS: false,
             allowFollow: true,
             allowComment: true,
+            defaultLanguage: "en",
+            defaultTheme: "light",
+            walletConnectProjectId: "",
+            mailTransport: "",
+            mailFrom: "",
           }
 
           settingsList.forEach((setting) => {
@@ -102,6 +117,16 @@ const updateSettingsMutation = {
               settingsToReturn.allowFollow = setting.value === "true"
             } else if (setting.key === "allow_comment") {
               settingsToReturn.allowComment = setting.value === "true"
+            } else if (setting.key === "walletconnect_projectid") {
+              settingsToReturn.walletConnectProjectId = setting.value
+            } else if (setting.key === "default_language") {
+              settingsToReturn.defaultLanguage = setting.value
+            } else if (setting.key === "default_theme") {
+              settingsToReturn.defaultTheme = setting.value
+            } else if (setting.key === "mail_transport") {
+              settingsToReturn.mailTransport = setting.value
+            } else if (setting.key === "mail_from") {
+              settingsToReturn.mailFrom = setting.value
             }
           })
 

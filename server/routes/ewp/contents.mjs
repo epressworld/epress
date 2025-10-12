@@ -36,11 +36,14 @@ router.get("/contents/:content_hash", async (request, reply) => {
     const { content_hash } = request.params
     const { timestamp } = request.query
 
-    const authorAddress = process.env.EPRESS_NODE_ADDRESS
+    const selfNode = await request.config.getSelfNode()
+    if (!selfNode) {
+      return reply.code(503).send({ error: "Node not configured" })
+    }
 
     let publicationQuery = Publication.query().where({
       content_hash,
-      author_address: authorAddress,
+      author_address: selfNode.address,
     })
 
     if (timestamp) {

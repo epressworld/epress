@@ -282,12 +282,30 @@ export const FETCH = gql`
   }
 `
 
+export const GET_SETTINGS = gql`
+  query Settings {
+    settings {
+      enableRSS
+      allowFollow
+      allowComment
+      defaultLanguage
+      defaultTheme
+      walletConnectProjectId
+      mailTransport
+      mailFrom
+    }
+  }
+`
+
 export const PAGE_DATA = gql`
   query PageData {
     settings {
       enableRSS
       allowFollow
       allowComment
+      defaultLanguage
+      defaultTheme
+      walletConnectProjectId
     }
     profile {
       address

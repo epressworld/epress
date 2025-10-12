@@ -7,8 +7,9 @@ import {
 } from "@rainbow-me/rainbowkit"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { useMemo } from "react"
-import { WagmiProvider as WagmiProviderBase } from "wagmi"
+import { createConfig, http, WagmiProvider as WagmiProviderBase } from "wagmi"
 import { arbitrum, base, mainnet, optimism, polygon } from "wagmi/chains"
+import { injected } from "wagmi/connectors"
 
 // 全局单例实例
 const globalQueryClient = new QueryClient({
@@ -20,30 +21,37 @@ const globalQueryClient = new QueryClient({
   },
 })
 
+const defaultConnectors = [injected()]
+const defaultTransports = {
+  [mainnet.id]: http(),
+  [polygon.id]: http(),
+  [optimism.id]: http(),
+  [arbitrum.id]: http(),
+  [base.id]: http(),
+}
+
 export const WagmiProvider = ({
   children,
   walletConnectProjectId,
   ...props
 }) => {
-  // 使用 useMemo 确保 wagmi config 只在 projectId 变化时重新创建
   const config = useMemo(() => {
     if (!walletConnectProjectId) {
-      // 如果没有 project ID，则无法初始化 wagmi，可以返回 null 或者一个 fallback
-      // 这里我们选择不渲染 Provider，因为 wagmi 缺少 projectId 会抛出错误
-      return null
+      return createConfig({
+        chains: [mainnet, polygon, optimism, arbitrum, base],
+        connectors: defaultConnectors,
+        transports: defaultTransports,
+        ssr: true,
+      })
+    } else {
+      return getDefaultConfig({
+        appName: "epress",
+        projectId: walletConnectProjectId,
+        chains: [mainnet, polygon, optimism, arbitrum, base],
+        ssr: true, // If your dApp uses server side rendering (SSR)
+      })
     }
-    return getDefaultConfig({
-      appName: "epress",
-      projectId: walletConnectProjectId,
-      chains: [mainnet, polygon, optimism, arbitrum, base],
-      ssr: true, // If your dApp uses server side rendering (SSR)
-    })
   }, [walletConnectProjectId])
-
-  // 如果 config 未准备好，则不渲染 wagmi 相关 providers
-  if (!config) {
-    return <>{children}</>
-  }
 
   return (
     <WagmiProviderBase config={config} {...props}>

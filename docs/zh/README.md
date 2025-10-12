@@ -117,18 +117,15 @@ epress 通过几个关键的原创设计来实现彻底的去中心化，详情�
     docker volume create epress-data
     ```
 
-2. **首次运行安装向导**:
-    ```bash
-    docker run -it --rm -v epress-data:/app/data ghcr.io/epressworld/epress install
-    ```
-    根据向导提示完成配置。
-
-3. **启动节点**:
+2. **启动节点**:
     ```bash
     docker run -d -p 8543:8543 -p 8544:8544 -v epress-data:/app/data --name my-epress-node ghcr.io/epressworld/epress
     ```
 
-更多 Docker 安装选项（例如前后端分离或自定义构建），请查阅 [**`docs/en/INSTALLATION.md`**](/docs/zh/INSTALLATION.md)。
+3. **通过 Web 界面完成设置**:
+    在浏览器中打开 `http://localhost:8543`。您将被自动重定向到安装向导，在这里您可以通过一个美观、友好的用户界面来配置您的节点。
+
+更多 Docker 安装选项（例如前后端分离或自定义构建），请查阅 [**`docs/zh/INSTALLATION.md`**](/docs/zh/INSTALLATION.md)。
 
 #### 方式二: 从源码运行
 
@@ -141,23 +138,22 @@ epress 通过几个关键的原创设计来实现彻底的去中心化，详情�
     npm install
     ```
 
-2. **首次运行安装向导**:
-    ```bash
-    node commands/install.mjs
-    ```
-    根据向导提示完成配置。
-
-3. **构建项目**:
+2. **构建项目**:
     ```bash
     npm run build
     ```
 
-4. **启动节点**:
+3. **启动节点**:
     ```bash
     npm run start
     ```
 
-更多详情请查阅 [**`docs/INSTALLATION.md`**](/docs/zh/INSTALLATION.md)。
+4. **通过 Web 界面完成设置**:
+    在浏览器中打开 `http://localhost:8543`。您将被自动重定向到 `/install` 路径的安装向导，在这里配置您的节点。
+
+    **注意**：项目现在包含一个默认的 `.env` 文件用于标准配置。如果您需要自定义基础设施设置（例如端口、数据库路径），请创建一个 `.env.local` 文件来覆盖默认值。如果您计划拉取未来的更新，请不要直接编辑 `.env` 文件。
+
+更多详情请查阅 [**`docs/zh/INSTALLATION.md`**](/docs/zh/INSTALLATION.md)。
 
 ### 👨‍💻 开发者指南
 
@@ -170,11 +166,14 @@ epress 通过几个关键的原创设计来实现彻底的去中心化，详情�
    npm install
    ```
 
-2. **配置开发环境**:
+2. **启动开发环境**:
+   启动服务器，它将使用默认的 `.env` 配置。
    ```bash
-   node commands/install.mjs
+   npm run dev
    ```
-   运行此命令以交互方式配置您的节点，这也会初始化数据库。之后，您可以通过编辑 `.env` 文件进一步自定义设置。完整的配置选项可在 `env.example` 文件中找到。
+
+3. **完成设置并开始开发**:
+   打开 `http://localhost:8543/install` 以完成网页版设置。对于任何基础设施的自定义（如端口），请创建一个 `.env.local` 文件。开发服务器支持热重载。
 
 3. **启动开发环境**:
    ```bash

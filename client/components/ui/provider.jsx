@@ -5,8 +5,8 @@ import { usePage } from "../../contexts/PageContext"
 import { ColorModeProvider } from "./color-mode"
 
 export function Provider(props) {
-  const { runtimeConfig } = usePage()
-  const defaultTheme = runtimeConfig.defaultTheme || "light"
+  const { settings } = usePage()
+  const defaultTheme = settings.defaultTheme || "light"
   return (
     <ChakraProvider value={defaultSystem}>
       <ColorModeProvider

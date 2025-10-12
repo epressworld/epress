@@ -1,19 +1,19 @@
-import { useMutation } from "@apollo/client/react"
+import { useMutation, useQuery } from "@apollo/client/react"
 import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { toaster } from "../components/ui/toaster"
 import { usePage } from "../contexts/PageContext"
 import { UPDATE_SETTINGS } from "../graphql/mutations"
+import { GET_SETTINGS } from "../graphql/queries"
 import { useTranslation } from "./useTranslation"
 
 export function useSettingsForm() {
   const { settings } = useTranslation()
-  const {
-    settings: settingsData,
-    loading: settingsLoading,
-    refetchPageData,
-  } = usePage()
+  const { refetchPageData } = usePage()
+  const { data: response = {}, loading: settingsLoading } =
+    useQuery(GET_SETTINGS)
 
+  const { settings: settingsData } = response
   // 状态管理
   const [isLoading, setIsLoading] = useState(false)
 
@@ -23,6 +23,11 @@ export function useSettingsForm() {
       enableRSS: false,
       allowFollow: true,
       allowComment: true,
+      defaultLanguage: "en",
+      defaultTheme: "light",
+      walletConnectProjectId: "",
+      mailTransport: "",
+      mailFrom: "",
     },
   })
 
@@ -36,6 +41,11 @@ export function useSettingsForm() {
         enableRSS: settingsData.enableRSS ? "on" : undefined,
         allowFollow: settingsData.allowFollow ? "on" : undefined,
         allowComment: settingsData.allowComment ? "on" : undefined,
+        walletConnectProjectId: settingsData.walletConnectProjectId,
+        defaultLanguage: settingsData.defaultLanguage,
+        defaultTheme: settingsData.defaultTheme,
+        mailTransport: settingsData.mailTransport,
+        mailFrom: settingsData.mailFrom,
       })
     }
   }, [settingsData, form])
@@ -47,6 +57,11 @@ export function useSettingsForm() {
       await updateSettings({
         variables: {
           input: {
+            defaultLanguage: data.defaultLanguage,
+            defaultTheme: data.defaultTheme,
+            walletConnectProjectId: data.walletConnectProjectId,
+            mailTransport: data.mailTransport,
+            mailFrom: data.mailFrom,
             enableRSS: data.enableRSS === "on" || data.enableRSS === true,
             allowFollow: data.allowFollow === "on" || data.allowFollow === true,
             allowComment:

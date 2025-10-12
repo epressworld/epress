@@ -25,10 +25,10 @@ export const fetchQuery = {
 
         // 权限检查：如果没有 fetch:publications 权限，则只能获取自己的内容
         if (!context.request.cani("fetch:publications")) {
-          // 使用环境变量中的节点以太坊地址
-          const nodeAddress = process.env.EPRESS_NODE_ADDRESS
-          if (nodeAddress) {
-            query.where("author.address", nodeAddress)
+          // 从请求缓存获取节点地址
+          const selfNode = await context.request.config.getSelfNode()
+          if (selfNode) {
+            query.where("author.address", selfNode.address)
           }
         }
 
