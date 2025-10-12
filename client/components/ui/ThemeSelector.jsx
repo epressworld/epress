@@ -23,7 +23,7 @@ export function ThemeSelector({ value, onChange }) {
       </Text>
       <Select.Root
         collection={themeCollection}
-        defaultValue={[value]}
+        value={[value]}
         onValueChange={(details) => onChange(details.value[0])}
       >
         <Select.HiddenSelect />

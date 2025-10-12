@@ -21,7 +21,7 @@ export function LanguageSelect({ value, onChange }) {
       </Text>
       <Select.Root
         collection={languageCollection}
-        defaultValue={[value]}
+        value={[value]}
         onValueChange={(details) => onChange(details.value[0])}
       >
         <Select.HiddenSelect />
