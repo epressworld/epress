@@ -5,6 +5,11 @@
 # Node
 node_modules
 
+# env
+.env.local
+.env.production
+.env.development
+
 # Logs and data
 logs
 data
