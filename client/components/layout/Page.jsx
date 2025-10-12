@@ -31,14 +31,8 @@ export function Page({ children }) {
   // 创建 refetchPageData 函数
   const refetchPageData = useCallback(async () => {
     if (isClient) {
-      try {
-        const result = await refetch()
-        console.log("PageContext refetch successful:", result)
-        return result
-      } catch (refetchError) {
-        console.error("PageContext refetch failed:", refetchError)
-        throw refetchError
-      }
+      const result = await refetch()
+      return result
     }
   }, [refetch, isClient])
 
