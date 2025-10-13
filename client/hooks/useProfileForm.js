@@ -6,14 +6,14 @@ import { useAuth } from "../contexts/AuthContext"
 import { usePage } from "../contexts/PageContext"
 import { BROADCAST_PROFILE_UPDATE, UPDATE_PROFILE } from "../graphql/mutations"
 import { nodeProfileUpdateTypedData } from "../utils/eip712"
-import { useTranslation } from "./useTranslation"
+import { useIntl } from "./useIntl"
 import { useWallet } from "./useWallet"
 
 export function useProfileForm() {
   const { profile, authStatus, AUTH_STATUS } = useAuth()
   const { refetchPageData } = usePage()
   const { signEIP712Data } = useWallet()
-  const { settings } = useTranslation()
+  const { t } = useIntl()
 
   // 状态管理
   const [isLoading, setIsLoading] = useState(false)
@@ -59,7 +59,7 @@ export function useProfileForm() {
   const onSubmit = async (data) => {
     if (authStatus !== AUTH_STATUS.AUTHENTICATED) {
       toaster.create({
-        description: settings.pleaseLoginFirst(),
+        description: t("settings")("pleaseLoginFirst"),
         type: "error",
       })
       return
@@ -143,7 +143,7 @@ export function useProfileForm() {
       await refetchPageData()
 
       toaster.create({
-        description: settings.nodeInfoSaved(),
+        description: t("settings")("nodeInfoSaved"),
         type: "success",
       })
 
@@ -151,7 +151,7 @@ export function useProfileForm() {
     } catch (error) {
       console.error("保存节点信息失败:", error)
       toaster.create({
-        description: error.message || settings.saveFailed(),
+        description: error.message || t("settings")("saveFailed"),
         type: "error",
       })
       return { success: false, error }

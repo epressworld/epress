@@ -11,14 +11,14 @@ import {
 } from "@chakra-ui/react"
 import { FiMessageCircle } from "react-icons/fi"
 import { useCommentForm } from "../../../hooks/useCommentForm"
-import { useTranslation } from "../../../hooks/useTranslation"
+import { useIntl } from "../../../hooks/useIntl"
 
 export const CommentForm = ({
   publicationId,
   onCommentCreated,
   onPendingCommentChange,
 }) => {
-  const { comment, common, form } = useTranslation()
+  const { t } = useIntl()
 
   const {
     commentForm,
@@ -37,7 +37,7 @@ export const CommentForm = ({
   return (
     <Box>
       <Text fontSize="lg" fontWeight="semibold" mb={4}>
-        {comment.publishComment()}
+        {t("comment")("publishComment")}
       </Text>
 
       <form onSubmit={commentForm.handleSubmit(handleSubmit)}>
@@ -64,10 +64,10 @@ export const CommentForm = ({
             <Box flex="1" minW="120px">
               <Input
                 size="md"
-                placeholder={common.nicknamePlaceholder()}
+                placeholder={t("common")("nicknamePlaceholder")}
                 error={commentForm.formState.errors.username?.message}
                 {...commentForm.register("username", {
-                  required: common.nicknameRequired(),
+                  required: t("common")("nicknameRequired"),
                 })}
               />
             </Box>
@@ -78,13 +78,13 @@ export const CommentForm = ({
                 <Input
                   size="md"
                   type="email"
-                  placeholder={common.emailAddressPlaceholder()}
+                  placeholder={t("common")("emailAddressPlaceholder")}
                   error={commentForm.formState.errors.email?.message}
                   {...commentForm.register("email", {
-                    required: common.emailAddressRequired(),
+                    required: t("common")("emailAddressRequired"),
                     pattern: {
                       value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                      message: common.emailFormatIncorrect(),
+                      message: t("common")("emailFormatIncorrect"),
                     },
                   })}
                 />
@@ -94,11 +94,11 @@ export const CommentForm = ({
 
           {/* 第二行：评论内容输入 */}
           <Textarea
-            placeholder={comment.commentPlaceholder()}
+            placeholder={t("comment")("commentPlaceholder")}
             rows={4}
             error={commentForm.formState.errors.body?.message}
             {...commentForm.register("body", {
-              required: form.commentContentRequired(),
+              required: t("form")("commentContentRequired"),
             })}
           />
 
@@ -111,10 +111,10 @@ export const CommentForm = ({
             loading={isSubmitting || isWaitingForWallet || isConfirming}
             loadingText={
               isWaitingForWallet
-                ? common.waitingForWallet()
+                ? t("common")("waitingForWallet")
                 : isConfirming
-                  ? comment.verifyingComment()
-                  : comment.submitting()
+                  ? t("comment")("verifyingComment")
+                  : t("comment")("submitting")
             }
             onClick={(e) => {
               if (authType === "ETHEREUM" && pendingComment) {
@@ -125,8 +125,8 @@ export const CommentForm = ({
           >
             <FiMessageCircle />
             {isWaitingForWallet
-              ? common.waitingForWallet()
-              : comment.submitComment()}
+              ? t("common")("waitingForWallet")
+              : t("comment")("submitComment")}
           </Button>
         </VStack>
       </form>

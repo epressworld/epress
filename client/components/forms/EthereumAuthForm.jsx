@@ -1,19 +1,19 @@
 "use client"
 
-import { useTranslation } from "../../hooks/useTranslation"
+import { useIntl } from "../../hooks/useIntl"
 import { FormField } from "../ui"
 
 export function EthereumAuthForm({ form, errors }) {
-  const { common } = useTranslation()
+  const { t } = useIntl()
 
   return (
     <FormField
-      label={common.displayName()}
-      placeholder={common.displayNamePlaceholder()}
+      label={t("common")("displayName")}
+      placeholder={t("common")("displayNamePlaceholder")}
       error={errors.username?.message}
       required
       {...form.register("username", {
-        required: common.displayNameRequired(),
+        required: t("common")("displayNameRequired"),
       })}
     />
   )

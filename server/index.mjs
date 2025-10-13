@@ -171,6 +171,10 @@ export default async function () {
   // Add preHandler hook for JWT verification
   server.addHook("preHandler", async (request) => {
     try {
+      request.log.debug(
+        { headers: request.headers, url: request.url },
+        "request headers & url",
+      )
       await request.jwtVerify()
       request.log.debug({ user: request.user }, "jwtVerify user successfully")
 

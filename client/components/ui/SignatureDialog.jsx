@@ -15,7 +15,7 @@ import {
 import { useCopyToClipboard } from "@uidotdev/usehooks"
 import { useState } from "react"
 import { FiCheck, FiCopy } from "react-icons/fi"
-import { useTranslation } from "../../hooks/useTranslation"
+import { useIntl } from "../../hooks/useIntl"
 
 // 签名数据结构定义
 export const createSignatureData = (publication) => {
@@ -43,6 +43,7 @@ const CopyButton = ({ field, value, copiedFields, handleCopy }) => (
     bg="bg.subtle"
     onClick={() => handleCopy(field, value)}
     aria-label="Copy"
+    roundedLeft={0}
   >
     {copiedFields[field] ? <FiCheck /> : <FiCopy />}
   </IconButton>
@@ -67,7 +68,7 @@ const TextareaCopyButton = ({ field, value, copiedFields, handleCopy }) => (
 export const SignatureDialog = ({ isOpen, onClose, signatureData }) => {
   const [_copied, copyToClipboard] = useCopyToClipboard()
   const [copiedFields, setCopiedFields] = useState({})
-  const { signature: sig, common } = useTranslation()
+  const { t } = useIntl()
 
   const handleCopy = async (field, value) => {
     try {
@@ -103,7 +104,7 @@ export const SignatureDialog = ({ isOpen, onClose, signatureData }) => {
       <Dialog.Positioner>
         <Dialog.Content>
           <Dialog.Header>
-            <Dialog.Title>{sig.proofOfSource()}</Dialog.Title>
+            <Dialog.Title>{t("common")("proofOfSource")}</Dialog.Title>
             <Dialog.CloseTrigger asChild>
               <CloseButton size="sm" />
             </Dialog.CloseTrigger>
@@ -112,7 +113,7 @@ export const SignatureDialog = ({ isOpen, onClose, signatureData }) => {
           <Dialog.Body>
             <VStack gap={4} align="stretch">
               <Field.Root>
-                <Field.Label>{sig.statementOfSource()}</Field.Label>
+                <Field.Label>{t("common")("statementOfSource")}</Field.Label>
                 <Box position="relative" w="full">
                   <Textarea
                     value={statementOfSourceJson}
@@ -133,7 +134,7 @@ export const SignatureDialog = ({ isOpen, onClose, signatureData }) => {
                 </Box>
               </Field.Root>
               <Field.Root>
-                <Field.Label>{sig.signature()}</Field.Label>
+                <Field.Label>{t("common")("signature")}</Field.Label>
                 <Group attached w="full">
                   <Input
                     value={signatureData?.signature || ""}
@@ -156,7 +157,7 @@ export const SignatureDialog = ({ isOpen, onClose, signatureData }) => {
 
           <Dialog.Footer>
             <Button onClick={onClose} colorPalette="gray">
-              {common.close()}
+              {t("common")("close")}
             </Button>
           </Dialog.Footer>
         </Dialog.Content>

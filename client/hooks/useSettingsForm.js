@@ -1,19 +1,15 @@
-import { useMutation, useQuery } from "@apollo/client/react"
+import { useMutation } from "@apollo/client/react"
 import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { toaster } from "../components/ui/toaster"
 import { usePage } from "../contexts/PageContext"
 import { UPDATE_SETTINGS } from "../graphql/mutations"
-import { GET_SETTINGS } from "../graphql/queries"
-import { useTranslation } from "./useTranslation"
+import { useIntl } from "./useIntl"
 
 export function useSettingsForm() {
-  const { settings } = useTranslation()
-  const { refetchPageData } = usePage()
-  const { data: response = {}, loading: settingsLoading } =
-    useQuery(GET_SETTINGS)
+  const { t } = useIntl()
+  const { refetchPageData, settings, settingsLoading } = usePage()
 
-  const { settings: settingsData } = response
   // 状态管理
   const [isLoading, setIsLoading] = useState(false)
 
@@ -36,19 +32,19 @@ export function useSettingsForm() {
 
   // 初始化表单数据
   useEffect(() => {
-    if (settingsData) {
+    if (settings) {
       form.reset({
-        enableRSS: settingsData.enableRSS ? "on" : undefined,
-        allowFollow: settingsData.allowFollow ? "on" : undefined,
-        allowComment: settingsData.allowComment ? "on" : undefined,
-        walletConnectProjectId: settingsData.walletConnectProjectId,
-        defaultLanguage: settingsData.defaultLanguage,
-        defaultTheme: settingsData.defaultTheme,
-        mailTransport: settingsData.mailTransport,
-        mailFrom: settingsData.mailFrom,
+        enableRSS: settings.enableRSS ? "on" : undefined,
+        allowFollow: settings.allowFollow ? "on" : undefined,
+        allowComment: settings.allowComment ? "on" : undefined,
+        walletConnectProjectId: settings.walletConnectProjectId,
+        defaultLanguage: settings.defaultLanguage,
+        defaultTheme: settings.defaultTheme,
+        mailTransport: settings.mailTransport,
+        mailFrom: settings.mailFrom,
       })
     }
-  }, [settingsData, form])
+  }, [settings, form])
 
   // 表单提交处理函数
   const onSubmit = async (data) => {
@@ -74,7 +70,7 @@ export function useSettingsForm() {
       await refetchPageData()
 
       toaster.create({
-        description: settings.settingsSaved(),
+        description: t("settings")("settingsSaved"),
         type: "success",
       })
 
@@ -82,7 +78,7 @@ export function useSettingsForm() {
     } catch (error) {
       console.error("保存设置失败:", error)
       toaster.create({
-        description: error.message || settings.saveFailed(),
+        description: error.message || t("settings")("saveFailed"),
         type: "error",
       })
       return { success: false, error }

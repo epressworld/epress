@@ -1,10 +1,10 @@
 "use client"
 import { Alert, Button } from "@chakra-ui/react"
 import { useRouter } from "next/navigation"
-import { useTranslation } from "../../hooks/useTranslation"
+import { useIntl } from "../../hooks/useIntl"
 
 export function SearchResultAlert({ keyword, count }) {
-  const { common, t } = useTranslation()
+  const { t } = useIntl()
   const router = useRouter()
 
   if (!keyword) return null
@@ -17,9 +17,9 @@ export function SearchResultAlert({ keyword, count }) {
     <Alert.Root status="info" variant="subtle">
       <Alert.Indicator />
       <Alert.Content color="fg">
-        <Alert.Title>{t("common.searchResults")}</Alert.Title>
+        <Alert.Title>{t("common")("searchResults")}</Alert.Title>
         <Alert.Description>
-          {t("common.searchResultsCount", { keyword, count })}
+          {t("common")("searchResultsCount", { keyword, count })}
         </Alert.Description>
       </Alert.Content>
       <Button
@@ -28,7 +28,7 @@ export function SearchResultAlert({ keyword, count }) {
         colorPalette="blue"
         onClick={handleClearSearch}
       >
-        {common.clearSearch()}
+        {t("common")("clearSearch")}
       </Button>
     </Alert.Root>
   )

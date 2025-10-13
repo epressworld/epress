@@ -14,33 +14,36 @@ import {
 import { useState, useTransition } from "react"
 import { LuEllipsis, LuUsers } from "react-icons/lu"
 import { SEARCH_NODES } from "../../../graphql/queries"
-import { useTranslation } from "../../../hooks/useTranslation"
+import { useIntl } from "../../../hooks/useIntl"
 import { toaster, UnifiedCard } from "../../ui"
 import { EmptyStateComponent } from "../../ui/EmptyState"
 
-const Container = ({ children, lang, total }) => (
-  <UnifiedCard.Root>
-    <UnifiedCard.Header pb={2}>
-      <HStack justify="space-between" align="center">
-        <Heading size="lg" color="gray.700">
-          {lang.followers()}
-        </Heading>
-        <Text
-          fontSize="lg"
-          fontWeight="bold"
-          fontStyle="italic"
-          color="gray.400"
-          _dark={{ color: "gray.600" }}
-        >
-          {total}
-        </Text>
-      </HStack>
-    </UnifiedCard.Header>
-    <UnifiedCard.Body pt={0}>{children}</UnifiedCard.Body>
-  </UnifiedCard.Root>
-)
+const Container = ({ children, total }) => {
+  const { t } = useIntl()
+  return (
+    <UnifiedCard.Root>
+      <UnifiedCard.Header pb={2}>
+        <HStack justify="space-between" align="center">
+          <Heading size="lg" color="gray.700">
+            {t("connection")("followers")}
+          </Heading>
+          <Text
+            fontSize="lg"
+            fontWeight="bold"
+            fontStyle="italic"
+            color="gray.400"
+            _dark={{ color: "gray.600" }}
+          >
+            {total}
+          </Text>
+        </HStack>
+      </UnifiedCard.Header>
+      <UnifiedCard.Body pt={0}>{children}</UnifiedCard.Body>
+    </UnifiedCard.Root>
+  )
+}
 export function FollowersList({ onRefetch }) {
-  const { connection, common } = useTranslation()
+  const { t } = useIntl()
   const [loading, setLoading] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [hasAttemptedLoadMore, setHasAttemptedLoadMore] = useState(false)
@@ -78,7 +81,7 @@ export function FollowersList({ onRefetch }) {
         .catch((error) => {
           console.error("加载更多失败:", error)
           toaster.create({
-            description: common.loadMoreFailed(),
+            description: t("common")("loadMoreFailed"),
             type: "error",
           })
         })
@@ -98,7 +101,7 @@ export function FollowersList({ onRefetch }) {
 
   if (loading && !data) {
     return (
-      <Container lang={connection} total={data?.search?.total}>
+      <Container total={data?.search?.total}>
         <VStack colorPalette="orange">
           <Spinner color="colorPalette.600" />
           <Text color="colorPalette.600">Loading...</Text>
@@ -110,17 +113,17 @@ export function FollowersList({ onRefetch }) {
   // 处理错误状态
   if (error) {
     return (
-      <Container lang={connection} total={data?.search?.total}>
+      <Container total={data?.search?.total}>
         <Box textAlign="center" py={12}>
           <Icon as={LuUsers} boxSize={12} color="red.500" mb={4} />
           <Text color="red.500" fontSize="lg" mb={2}>
-            {common.loadFailed()}
+            {t("common")("loadFailed")}
           </Text>
           <Text color="gray.500" _dark={{ color: "gray.400" }} mb={4}>
-            {error.message || common.loadFailed()}
+            {error.message || t("common")("loadFailed")}
           </Text>
           <Button onClick={handleRefresh} colorPalette="orange" size="sm">
-            {common.retry()}
+            {t("common")("retry")}
           </Button>
         </Box>
       </Container>
@@ -132,10 +135,10 @@ export function FollowersList({ onRefetch }) {
   // 处理空状态
   if (followers.length === 0 && !loading) {
     return (
-      <Container lang={connection} total={0}>
+      <Container lang={t("connection")("followers")} total={0}>
         <EmptyStateComponent
-          title={connection.noFollowers()}
-          description={connection.noFollowersDescription()}
+          title={t("connection")("noFollowers")}
+          description={t("connection")("noFollowersDescription")}
           icon={<Icon as={LuUsers} />}
         />
       </Container>
@@ -143,7 +146,7 @@ export function FollowersList({ onRefetch }) {
   }
 
   return (
-    <Container lang={connection} total={data?.search?.total}>
+    <Container lang={t("connection")("followers")} total={data?.search?.total}>
       <VStack spacing={2} align="stretch">
         {followers.map(({ node }) => (
           <FollowerItem key={`follower-${node.address}`} follower={node} />
@@ -167,7 +170,7 @@ export function FollowersList({ onRefetch }) {
         {!hasMore && hasAttemptedLoadMore && (
           <Box textAlign="center" py={4}>
             <Text color="gray.400" _dark={{ color: "gray.500" }} fontSize="sm">
-              {common.noMore()}
+              {t("common")("noMore")}
             </Text>
           </Box>
         )}
@@ -177,11 +180,11 @@ export function FollowersList({ onRefetch }) {
 }
 
 function FollowerItem({ follower }) {
-  const { node } = useTranslation()
+  const { t } = useIntl()
 
   // 安全地处理可能为空的数据
-  const title = follower?.title || follower?.address || node.unnamedNode()
-  const description = follower?.description || node.noDescription()
+  const title = follower?.title || follower?.address || t("node")("unnamedNode")
+  const description = follower?.description || t("node")("noDescription")
   const address = follower?.address
   const url = follower?.url
   const avatar = url ? `${url}/ewp/avatar` : undefined

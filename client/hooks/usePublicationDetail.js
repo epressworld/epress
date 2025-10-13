@@ -11,7 +11,7 @@ import {
 } from "../graphql/mutations"
 import { FETCH } from "../graphql/queries"
 import { statementOfSourceTypedData } from "../utils/eip712"
-import { useTranslation } from "./useTranslation"
+import { useIntl } from "./useIntl"
 import { useWallet } from "./useWallet"
 
 export function usePublicationDetail(options = {}) {
@@ -24,7 +24,7 @@ export function usePublicationDetail(options = {}) {
 
   const { authStatus, isNodeOwner } = useAuth()
   const { signEIP712Data } = useWallet()
-  const { common } = useTranslation()
+  const { t } = useIntl()
 
   // 对话框状态
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -85,7 +85,7 @@ export function usePublicationDetail(options = {}) {
         // 这里需要调用文件上传API
         toaster.create({
           title: "功能限制",
-          description: common.fileUploadNotImplemented(),
+          description: t("common")("fileUploadNotImplemented"),
           type: "warning",
         })
         return
@@ -96,7 +96,7 @@ export function usePublicationDetail(options = {}) {
         onCompleted: () => {
           toaster.create({
             title: "保存成功",
-            description: common.contentUpdateSuccess(),
+            description: t("common")("contentUpdateSuccess"),
             type: "success",
           })
           // 刷新数据
@@ -109,7 +109,7 @@ export function usePublicationDetail(options = {}) {
           console.error("更新失败:", error)
           toaster.create({
             title: "保存失败",
-            description: error.message || common.contentUpdateError(),
+            description: error.message || t("common")("contentUpdateError"),
             type: "error",
           })
         },
@@ -118,7 +118,7 @@ export function usePublicationDetail(options = {}) {
       console.error("保存编辑时发生错误:", error)
       toaster.create({
         title: "保存失败",
-        description: common.saveEditError(),
+        description: t("common")("saveEditError"),
         type: "error",
       })
     }
@@ -128,7 +128,7 @@ export function usePublicationDetail(options = {}) {
   const handleSignPublication = async (publication) => {
     if (authStatus !== AUTH_STATUS.AUTHENTICATED || !isNodeOwner) {
       toaster.create({
-        description: common.onlyNodeOwnerCanSign(),
+        description: t("common")("onlyNodeOwnerCanSign"),
         type: "error",
       })
       return
@@ -157,7 +157,7 @@ export function usePublicationDetail(options = {}) {
       })
 
       toaster.update(toasterId, {
-        description: common.signSuccess(),
+        description: t("common")("signSuccess"),
         type: "success",
       })
 
@@ -167,7 +167,7 @@ export function usePublicationDetail(options = {}) {
     } catch (error) {
       console.error("签名失败:", error)
       toaster.update(toasterId, {
-        description: error.message || common.pleaseRetry(),
+        description: error.message || t("common")("pleaseRetry"),
         type: "error",
       })
     }
@@ -177,7 +177,7 @@ export function usePublicationDetail(options = {}) {
   const handleDeleteClick = () => {
     if (authStatus !== AUTH_STATUS.AUTHENTICATED || !isNodeOwner) {
       toaster.create({
-        description: common.onlyNodeOwnerCanDelete(),
+        description: t("common")("onlyNodeOwnerCanDelete"),
         type: "error",
       })
       return
@@ -199,7 +199,7 @@ export function usePublicationDetail(options = {}) {
       })
 
       toaster.create({
-        description: common.deleteSuccess(),
+        description: t("common")("deleteSuccess"),
         type: "success",
       })
 
@@ -210,7 +210,7 @@ export function usePublicationDetail(options = {}) {
     } catch (error) {
       console.error("删除失败:", error)
       toaster.create({
-        description: error.message || common.pleaseRetry(),
+        description: error.message || t("common")("pleaseRetry"),
         type: "error",
       })
     } finally {
@@ -238,7 +238,7 @@ export function usePublicationDetail(options = {}) {
   const handlePublish = async (formData) => {
     if (authStatus !== AUTH_STATUS.AUTHENTICATED || !isNodeOwner) {
       toaster.create({
-        description: common.onlyNodeOwnerCanPublish(),
+        description: t("common")("onlyNodeOwnerCanPublish"),
         type: "error",
       })
       return
@@ -261,7 +261,10 @@ export function usePublicationDetail(options = {}) {
       })
 
       const newId = data?.createPublication?.id
-      toaster.create({ description: common.publishSuccess(), type: "success" })
+      toaster.create({
+        description: t("common")("publishSuccess"),
+        type: "success",
+      })
 
       if (newId) {
         router.push(`/publications/${newId}`)
@@ -269,7 +272,7 @@ export function usePublicationDetail(options = {}) {
     } catch (error) {
       console.error("发布失败:", error)
       toaster.create({
-        description: error.message || common.pleaseRetry(),
+        description: error.message || t("common")("pleaseRetry"),
         type: "error",
       })
     }

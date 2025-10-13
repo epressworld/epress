@@ -20,10 +20,8 @@ import { LuQuote, LuSend } from "react-icons/lu"
 import ReactMarkdown from "react-markdown"
 import rehypeHighlight from "rehype-highlight"
 import remarkGfm from "remark-gfm"
-import { useLanguage } from "../../../contexts/LanguageContext"
+import { useIntl } from "../../../hooks/useIntl"
 import { usePublicationForm } from "../../../hooks/usePublicationForm"
-import { useTranslation } from "../../../hooks/useTranslation"
-import { formatRelativeTime, formatTime } from "../../../utils/dateFormat"
 import {
   createSignatureData,
   RichTextEditor,
@@ -50,8 +48,7 @@ export const PublicationItem = ({
   const [isQuoteDialogOpen, setIsQuoteDialogOpen] = useState(false)
   const [isPublishing, setIsPublishing] = useState(false)
   const [_copied, copyToClipboard] = useCopyToClipboard()
-  const { currentLanguage } = useLanguage()
-  const { publication: pub } = useTranslation()
+  const { t, formatDate, formatRelativeTime } = useIntl()
 
   // 格式化文件大小
   const formatFileSize = (bytes) => {
@@ -65,7 +62,7 @@ export const PublicationItem = ({
   const generateQuote = () => {
     const authorTitle = publication.author?.title || "Unknown Author"
     const authorUrl = publication.author?.url || ""
-    const createdAt = formatTime(publication.created_at, currentLanguage)
+    const createdAt = formatDate(publication.created_at)
     const contentHash = publication.content?.content_hash || ""
     const createdAtUnix = Math.floor(
       new Date(publication.created_at).getTime() / 1000,
@@ -101,7 +98,7 @@ export const PublicationItem = ({
         // 非图片文件：保持文本链接的行为
         const fileUrl = `${baseUrl}/ewp/contents/${contentHash}?timestamp=${createdAtUnix}`
         contentSection = [
-          `> 📁 ${pub.fileMode()}: ${filename}${fileInfo}`,
+          `> 📁 ${t("publication")("fileMode")}: ${filename}${fileInfo}`,
           `> [${filename}](${fileUrl})`,
           `> `, // 空行
           ...(publication.description || "")
@@ -144,13 +141,13 @@ export const PublicationItem = ({
       await copyToClipboard(quoteText)
 
       toaster.create({
-        description: pub.quoteCopied(),
+        description: t("publication")("quoteCopied"),
         type: "success",
       })
     } catch (error) {
       console.error("Failed to copy quote:", error)
       toaster.create({
-        description: pub.copyFailed(),
+        description: t("publication")("copyFailed"),
         type: "error",
       })
     }
@@ -195,7 +192,7 @@ export const PublicationItem = ({
 
     if (!quoteContent.trim()) {
       toaster.create({
-        description: pub.contentCannotBeEmpty(),
+        description: t("publication")("contentCannotBeEmpty"),
         type: "error",
       })
       return
@@ -318,7 +315,7 @@ export const PublicationItem = ({
               <Box w="full">
                 <Image
                   src={sourceUrl}
-                  alt={content.filename || pub.unknownFile()}
+                  alt={content.filename || t("publication")("unknownFile")}
                   display="block"
                   w="100%"
                   maxH={isImageExpanded ? "none" : "400px"}
@@ -337,7 +334,7 @@ export const PublicationItem = ({
               <Box w="full">
                 <video controls style={{ width: "100%" }}>
                   <source src={sourceUrl} type={content.mimetype} />
-                  {pub.browserNotSupportVideo()}
+                  {t("publication")("browserNotSupportVideo")}
                 </video>
               </Box>
             )
@@ -356,7 +353,7 @@ export const PublicationItem = ({
                       color="gray.800"
                       _dark={{ color: "gray.200" }}
                     >
-                      {content.filename || pub.unknownFile()}
+                      {content.filename || t("publication")("unknownFile")}
                     </Text>
                     {content.size != null && (
                       <Text
@@ -375,7 +372,7 @@ export const PublicationItem = ({
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      {pub.downloadFile()}
+                      {t("publication")("downloadFile")}
                     </Link>
                   )}
                 </HStack>
@@ -384,7 +381,7 @@ export const PublicationItem = ({
                   color="gray.500"
                   _dark={{ color: "gray.400" }}
                 >
-                  {content.mimetype || pub.unknownType()}
+                  {content.mimetype || t("publication")("unknownType")}
                 </Text>
               </VStack>
             </Box>
@@ -402,7 +399,9 @@ export const PublicationItem = ({
                       ? `${publication.author.url}/ewp/avatar`
                       : undefined
                   }
-                  alt={publication.author?.title || pub.unknownNode()}
+                  alt={
+                    publication.author?.title || t("publication")("unknownNode")
+                  }
                 />
                 <Avatar.Fallback>
                   {publication.author?.title?.charAt(0) || "N"}
@@ -423,11 +422,13 @@ export const PublicationItem = ({
                       textDecoration: "underline",
                     }}
                   >
-                    {publication.author?.title || pub.unknownNode()}
+                    {publication.author?.title ||
+                      t("publication")("unknownNode")}
                   </Text>
                 ) : (
                   <Text fontSize="sm" fontWeight="medium">
-                    {publication.author?.title || pub.unknownNode()}
+                    {publication.author?.title ||
+                      t("publication")("unknownNode")}
                   </Text>
                 )}
                 <Text fontSize="xs" color="gray.500">
@@ -451,12 +452,12 @@ export const PublicationItem = ({
               {/* 发布时间 */}
               <Link
                 href={getDetailUrl()}
-                title={formatTime(publication.created_at, currentLanguage)}
+                title={formatDate(publication.created_at)}
                 color="gray.500"
                 fontSize="sm"
                 suppressHydrationWarning
               >
-                {formatRelativeTime(publication.created_at, currentLanguage)}
+                {formatRelativeTime(publication.created_at)}
               </Link>
             </HStack>
 
@@ -464,7 +465,7 @@ export const PublicationItem = ({
             <HStack gap={1} className="publication-item-actions">
               {/* 评论按钮（显示数量）- 只有本节点内容才显示 */}
               {shouldShowComments && (
-                <Tooltip content={pub.viewComments()}>
+                <Tooltip content={t("publication")("viewComments")}>
                   <Button
                     size="xs"
                     variant="ghost"
@@ -482,7 +483,7 @@ export const PublicationItem = ({
               )}
 
               {/* 引用按钮 */}
-              <Tooltip content={pub.quote()}>
+              <Tooltip content={t("publication")("quote")}>
                 <IconButton size="xs" variant="ghost" onClick={handleQuote}>
                   <LuQuote size={12} />
                 </IconButton>
@@ -494,8 +495,8 @@ export const PublicationItem = ({
                   <Tooltip
                     content={
                       publication.signature
-                        ? pub.signedCannotEditMessage()
-                        : pub.edit()
+                        ? t("publication")("signedCannotEditMessage")
+                        : t("publication")("edit")
                     }
                   >
                     <IconButton
@@ -508,7 +509,7 @@ export const PublicationItem = ({
                     </IconButton>
                   </Tooltip>
 
-                  <Tooltip content={pub.delete()}>
+                  <Tooltip content={t("publication")("delete")}>
                     <IconButton
                       size="xs"
                       variant="ghost"
@@ -544,7 +545,7 @@ export const PublicationItem = ({
         <Dialog.Positioner>
           <Dialog.Content>
             <Dialog.Header>
-              <Dialog.Title>{pub.quotePublish()}</Dialog.Title>
+              <Dialog.Title>{t("publication")("quotePublish")}</Dialog.Title>
             </Dialog.Header>
 
             <Dialog.Body>
@@ -558,18 +559,18 @@ export const PublicationItem = ({
                   variant="outline"
                   onClick={() => setIsQuoteDialogOpen(false)}
                 >
-                  {pub.cancel()}
+                  {t("publication")("cancel")}
                 </Button>
                 <Button
                   size="sm"
                   colorPalette="orange"
                   onClick={handleQuotePublish}
                   loading={isPublishing}
-                  loadingText={pub.publishing()}
+                  loadingText={t("publication")("publishing")}
                   disabled={isPublishing || !quoteContent.trim()}
                 >
                   <LuSend size={14} style={{ marginRight: "4px" }} />
-                  {pub.publish()}
+                  {t("publication")("publish")}
                 </Button>
               </HStack>
             </Dialog.Footer>

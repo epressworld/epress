@@ -5,19 +5,20 @@ import {
   Field,
   HStack,
   Input,
+  Link,
   Separator,
   Switch,
   Text,
   VStack,
 } from "@chakra-ui/react"
 import { LuSettings } from "react-icons/lu"
+import { useIntl } from "../../hooks/useIntl"
 import { useSettingsForm } from "../../hooks/useSettingsForm"
-import { useTranslation } from "../../hooks/useTranslation"
 import { LanguageSelect, ThemeSelector } from "../ui"
 import { TokenGenerator } from "./TokenGenerator"
 
 export function SettingsFormSection({ onSuccess }) {
-  const { settings } = useTranslation()
+  const { t } = useIntl()
   const { form, isLoading, onSubmit } = useSettingsForm()
 
   const handleSubmit = async (data) => {
@@ -39,16 +40,36 @@ export function SettingsFormSection({ onSuccess }) {
           onChange={(v) => form.setValue("defaultTheme", v)}
         />
         <Field.Root>
-          <Field.Label>WalletConnect Project ID</Field.Label>
-          <Input {...form.register("walletConnectProjectId")} />
+          <Field.Label>{t("settings")("walletConnectProjectId")}</Field.Label>
+          <Input
+            {...form.register("walletConnectProjectId")}
+            placeholder={t("settings")("walletConnectProjectIdPlaceholder")}
+          />
+          <Field.HelperText>
+            {t("settings")("walletConnectProjectIdHelper")}{" "}
+            <Link target="_blank" href="https://reown.com">
+              Reown.com
+            </Link>
+          </Field.HelperText>
         </Field.Root>
         <Field.Root>
-          <Field.Label>Mail Transport</Field.Label>
-          <Input {...form.register("mailTransport")} />
+          <Field.Label>{t("settings")("mailTransport")}</Field.Label>
+          <Input
+            {...form.register("mailTransport")}
+            placeholder={t("settings")("mailTransportPlaceholder")}
+          />
+          <Field.HelperText>
+            {t("settings")("mailTransportHelper")}
+          </Field.HelperText>
         </Field.Root>
         <Field.Root>
-          <Field.Label>Mail From</Field.Label>
-          <Input {...form.register("mailFrom")} />
+          <Field.Label>{t("settings")("mailFrom")}</Field.Label>
+          <Input
+            {...form.register("mailFrom")}
+            type="email"
+            placeholder={t("settings")("mailFromPlaceholder")}
+          />
+          <Field.HelperText>{t("settings")("mailFromHelper")}</Field.HelperText>
         </Field.Root>
       </VStack>
       <VStack gap={6} mt={3} align="stretch">
@@ -57,10 +78,10 @@ export function SettingsFormSection({ onSuccess }) {
           <HStack justify="space-between">
             <VStack align="start" gap={1}>
               <Text fontSize="sm" fontWeight="medium">
-                {settings.enableRSS()}
+                {t("settings")("enableRSS")}
               </Text>
               <Text fontSize="xs" color="gray.500">
-                {settings.enableRSSHelper()}
+                {t("settings")("enableRSSHelper")}
               </Text>
             </VStack>
             <Switch.Root
@@ -81,10 +102,10 @@ export function SettingsFormSection({ onSuccess }) {
           <HStack justify="space-between">
             <VStack align="start" gap={1}>
               <Text fontSize="sm" fontWeight="medium">
-                {settings.allowFollow()}
+                {t("settings")("allowFollow")}
               </Text>
               <Text fontSize="xs" color="gray.500">
-                {settings.allowFollowHelper()}
+                {t("settings")("allowFollowHelper")}
               </Text>
             </VStack>
             <Switch.Root
@@ -105,10 +126,10 @@ export function SettingsFormSection({ onSuccess }) {
           <HStack justify="space-between">
             <VStack align="start" gap={1}>
               <Text fontSize="sm" fontWeight="medium">
-                {settings.allowComment()}
+                {t("settings")("allowComment")}
               </Text>
               <Text fontSize="xs" color="gray.500">
-                {settings.allowCommentHelper()}
+                {t("settings")("allowCommentHelper")}
               </Text>
             </VStack>
             <Switch.Root
@@ -130,10 +151,10 @@ export function SettingsFormSection({ onSuccess }) {
         <Button
           type="submit"
           loading={isLoading}
-          loadingText={settings.saving()}
+          loadingText={t("settings")("saving")}
           colorPalette="orange"
         >
-          <LuSettings /> {settings.saveSettings()}
+          <LuSettings /> {t("settings")("saveSettings")}
         </Button>
 
         <Separator />
@@ -142,10 +163,10 @@ export function SettingsFormSection({ onSuccess }) {
         <VStack align="stretch" gap={4}>
           <VStack align="start" gap={1}>
             <Text fontSize="sm" fontWeight="medium">
-              {settings.generateToken()}
+              {t("settings")("generateToken")}
             </Text>
             <Text fontSize="xs" color="gray.500">
-              {settings.generateTokenHelper()}
+              {t("settings")("generateTokenHelper")}
             </Text>
           </VStack>
 

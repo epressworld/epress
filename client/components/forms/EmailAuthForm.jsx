@@ -1,34 +1,34 @@
 "use client"
 
-import { useTranslation } from "../../hooks/useTranslation"
+import { useIntl } from "../../hooks/useIntl"
 import { FormField } from "../ui"
 
 export function EmailAuthForm({ form, errors }) {
-  const { common } = useTranslation()
+  const { t } = useIntl()
 
   return (
     <>
       <FormField
-        label={common.displayName()}
-        placeholder={common.displayNamePlaceholder()}
+        label={t("common")("displayName")}
+        placeholder={t("common")("displayNamePlaceholder")}
         error={errors.username?.message}
         required
         {...form.register("username", {
-          required: common.displayNameRequired(),
+          required: t("common")("displayNameRequired"),
         })}
       />
 
       <FormField
-        label={common.emailAddress()}
+        label={t("common")("emailAddress")}
         type="email"
-        placeholder={common.emailAddressPlaceholder()}
+        placeholder={t("common")("emailAddressPlaceholder")}
         error={errors.email?.message}
         required
         {...form.register("email", {
-          required: common.emailAddressRequired(),
+          required: t("common")("emailAddressRequired"),
           pattern: {
             value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-            message: common.emailFormatIncorrect(),
+            message: t("common")("emailFormatIncorrect"),
           },
         })}
       />

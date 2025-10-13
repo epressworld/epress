@@ -16,23 +16,38 @@ import { useCopyToClipboard } from "@uidotdev/usehooks"
 import { useState } from "react"
 import { LuCheck, LuCopy, LuKey } from "react-icons/lu"
 import { GENERATE_INTEGRATION_TOKEN } from "../../graphql/mutations"
-import { useTranslation } from "../../hooks/useTranslation"
+import { useIntl } from "../../hooks/useIntl"
 import { toaster } from "../ui/toaster"
 
 export function TokenGenerator() {
-  const { settings } = useTranslation()
+  const { t } = useIntl()
 
   // 权限选项
   const PERMISSIONS = createListCollection({
     items: [
-      { label: settings.searchPublications(), value: "search:publications" },
-      { label: settings.fetchPublications(), value: "fetch:publications" },
-      { label: settings.createPublications(), value: "create:publications" },
-      { label: settings.updatePublications(), value: "update:publications" },
-      { label: settings.deletePublications(), value: "delete:publications" },
-      { label: settings.searchComments(), value: "search:comments" },
-      { label: settings.fetchComments(), value: "fetch:comments" },
-      { label: settings.deleteComments(), value: "delete:comments" },
+      {
+        label: t("settings")("searchPublications"),
+        value: "search:publications",
+      },
+      {
+        label: t("settings")("fetchPublications"),
+        value: "fetch:publications",
+      },
+      {
+        label: t("settings")("createPublications"),
+        value: "create:publications",
+      },
+      {
+        label: t("settings")("updatePublications"),
+        value: "update:publications",
+      },
+      {
+        label: t("settings")("deletePublications"),
+        value: "delete:publications",
+      },
+      { label: t("settings")("searchComments"), value: "search:comments" },
+      { label: t("settings")("fetchComments"), value: "fetch:comments" },
+      { label: t("settings")("deleteComments"), value: "delete:comments" },
     ],
   })
   const [generateToken, { loading }] = useMutation(GENERATE_INTEGRATION_TOKEN)
@@ -46,7 +61,7 @@ export function TokenGenerator() {
     console.log("Selected permissions:", selectedPermissions)
     if (!selectedPermissions || selectedPermissions.length === 0) {
       toaster.create({
-        description: settings.selectAtLeastOnePermission(),
+        description: t("settings")("selectAtLeastOnePermission"),
         type: "error",
       })
       return
@@ -63,13 +78,13 @@ export function TokenGenerator() {
       setGeneratedToken(data.generateIntegrationToken)
 
       toaster.create({
-        description: settings.tokenGenerated(),
+        description: t("settings")("tokenGenerated"),
         type: "success",
       })
     } catch (error) {
       console.error("Token generation failed:", error)
       toaster.create({
-        description: error.message || settings.generateFailed(),
+        description: error.message || t("settings")("generateFailed"),
         type: "error",
       })
     }
@@ -79,13 +94,13 @@ export function TokenGenerator() {
     try {
       await copyToClipboard(generatedToken)
       toaster.create({
-        description: settings.tokenCopied(),
+        description: t("settings")("tokenCopied"),
         type: "success",
       })
     } catch (error) {
       console.error("Copy failed:", error)
       toaster.create({
-        description: settings.copyFailed(),
+        description: t("settings")("copyFailed"),
         type: "error",
       })
     }
@@ -97,10 +112,10 @@ export function TokenGenerator() {
       <VStack align="stretch" gap={2}>
         <VStack align="start" gap={1}>
           <Text fontSize="sm" fontWeight="medium">
-            {settings.selectPermissions()}
+            {t("settings")("selectPermissions")}
           </Text>
           <Text fontSize="xs" color="gray.500">
-            {settings.selectPermissionsHelper()}
+            {t("settings")("selectPermissionsHelper")}
           </Text>
         </VStack>
 
@@ -116,7 +131,9 @@ export function TokenGenerator() {
           <Select.HiddenSelect />
           <Select.Control>
             <Select.Trigger>
-              <Select.ValueText placeholder={settings.selectPermissions()} />
+              <Select.ValueText
+                placeholder={t("settings")("selectPermissions")}
+              />
             </Select.Trigger>
             <Select.IndicatorGroup>
               <Select.Indicator />
@@ -139,17 +156,17 @@ export function TokenGenerator() {
       <VStack align="stretch" gap={2}>
         <VStack align="start" gap={1}>
           <Text fontSize="sm" fontWeight="medium">
-            {settings.expirationTime()}
+            {t("settings")("expirationTime")}
           </Text>
           <Text fontSize="xs" color="gray.500">
-            {settings.expirationTimeHelper()}
+            {t("settings")("expirationTimeHelper")}
           </Text>
         </VStack>
 
         <Input
           value={expirationTime}
           onChange={(e) => setExpirationTime(e.target.value)}
-          placeholder={settings.expirationTimePlaceholder()}
+          placeholder={t("settings")("expirationTimePlaceholder")}
         />
       </VStack>
 
@@ -157,11 +174,11 @@ export function TokenGenerator() {
       <Button
         onClick={handleGenerate}
         loading={loading}
-        loadingText={settings.generating()}
+        loadingText={t("settings")("generating")}
         colorPalette="orange"
         disabled={!selectedPermissions || selectedPermissions.length === 0}
       >
-        <LuKey /> {settings.generateTokenButton()}
+        <LuKey /> {t("settings")("generateTokenButton")}
       </Button>
 
       {/* 生成的令牌 */}
@@ -169,10 +186,10 @@ export function TokenGenerator() {
         <VStack align="stretch" gap={2}>
           <VStack align="start" gap={1}>
             <Text fontSize="sm" fontWeight="medium">
-              {settings.tokenGenerated()}
+              {t("settings")("tokenGenerated")}
             </Text>
             <Text fontSize="xs" color="gray.500">
-              {settings.tokenGeneratedHelper()}
+              {t("settings")("tokenGeneratedHelper")}
             </Text>
           </VStack>
 
@@ -199,7 +216,9 @@ export function TokenGenerator() {
           </Box>
 
           <Text fontSize="xs" color="gray.500">
-            {copiedText ? settings.tokenCopied() : settings.copyToken()}
+            {copiedText
+              ? t("settings")("tokenCopied")
+              : t("settings")("copyToken")}
           </Text>
         </VStack>
       )}

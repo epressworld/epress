@@ -13,8 +13,8 @@ import {
 } from "@chakra-ui/react"
 import { useEffect } from "react"
 import { FiArrowLeft, FiFileText, FiSave } from "react-icons/fi"
+import { useIntl } from "../../../hooks/useIntl"
 import { usePublicationForm } from "../../../hooks/usePublicationForm"
-import { useTranslation } from "../../../hooks/useTranslation"
 import { PostModeForm } from "../../forms"
 import { UnifiedCard } from "../../ui"
 
@@ -26,7 +26,7 @@ export const PublicationEditForm = ({
   disabled = false,
   maxFileSize = 100 * 1024 * 1024, // 100MB
 }) => {
-  const { publication: pub } = useTranslation()
+  const { t } = useIntl()
   // 根据原始内容类型确定模式，不允许切换
   const originalMode = publication?.content?.type === "FILE" ? "file" : "post"
 
@@ -127,7 +127,7 @@ export const PublicationEditForm = ({
                   color="gray.800"
                   _dark={{ color: "gray.200" }}
                 >
-                  {fileContent.filename || pub.unknownFile()}
+                  {fileContent.filename || t("publication")("unknownFile")}
                 </Text>
                 {fileContent.size != null && (
                   <FormatByte value={fileContent.size} />
@@ -139,11 +139,11 @@ export const PublicationEditForm = ({
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                {pub.downloadFile()}
+                {t("publication")("downloadFile")}
               </Link>
             </HStack>
             <Text fontSize="xs" color="gray.500" _dark={{ color: "gray.400" }}>
-              {fileContent.mimetype || pub.unknownType()}
+              {fileContent.mimetype || t("publication")("unknownType")}
             </Text>
           </VStack>
         </Box>
@@ -220,7 +220,7 @@ export const PublicationEditForm = ({
               colorPalette="orange"
               onClick={handleSave}
               loading={isLoading}
-              loadingText={pub.saving()}
+              loadingText={t("publication")("saving")}
               disabled={
                 disabled ||
                 isLoading ||
@@ -231,7 +231,9 @@ export const PublicationEditForm = ({
               gap={2}
             >
               <FiSave />
-              {isSigned ? pub.signedCannotEdit() : pub.saveChanges()}
+              {isSigned
+                ? t("publication")("signedCannotEdit")
+                : t("publication")("saveChanges")}
             </Button>
           </HStack>
         </VStack>

@@ -2,10 +2,10 @@
 
 import { Button } from "@chakra-ui/react"
 import { FaPlus } from "react-icons/fa"
-import { useTranslation } from "../../hooks/useTranslation"
+import { useIntl } from "../../hooks/useIntl"
 
 export function FollowAction({ onClick, disabled = false, ...props }) {
-  const { connection } = useTranslation()
+  const { t } = useIntl()
 
   return (
     <Button
@@ -17,7 +17,7 @@ export function FollowAction({ onClick, disabled = false, ...props }) {
       {...props}
     >
       <FaPlus />
-      {connection.follow()}
+      {t("connection")("follow")}
     </Button>
   )
 }

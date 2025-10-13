@@ -5,7 +5,7 @@ import { Alert, Button, HStack, Spinner, Text, VStack } from "@chakra-ui/react"
 import { useEffect, useState } from "react"
 import { LuEllipsis } from "react-icons/lu"
 import { SEARCH_COMMENTS } from "../../../graphql/queries"
-import { useTranslation } from "../../../hooks/useTranslation"
+import { useIntl } from "../../../hooks/useIntl"
 import { toaster } from "../../ui/toaster"
 import { CommentItem } from "./Item"
 
@@ -18,7 +18,7 @@ const CommentList = ({
 }) => {
   const [hasMore, setHasMore] = useState(false)
   const [hasAttemptedLoadMore, setHasAttemptedLoadMore] = useState(false)
-  const { common } = useTranslation()
+  const { t } = useIntl()
 
   // 获取评论列表 - 使用 Apollo Client
   const { data, loading, error, fetchMore, refetch } = useSuspenseQuery(
@@ -90,7 +90,7 @@ const CommentList = ({
     } catch (error) {
       console.error("Failed to load more comments:", error)
       toaster.create({
-        description: common.loadMoreFailed(),
+        description: t("common")("loadMoreFailed"),
         type: "error",
       })
     }
@@ -110,7 +110,7 @@ const CommentList = ({
       <Alert.Root status="error" py={8}>
         <Alert.Indicator />
         <Alert.Content>
-          <Alert.Title>{common.loadFailed()}</Alert.Title>
+          <Alert.Title>{t("common")("loadFailed")}</Alert.Title>
           <Alert.Description>{error.message}</Alert.Description>
         </Alert.Content>
       </Alert.Root>
@@ -167,13 +167,13 @@ const CommentList = ({
 
       {!hasMore && comments.length > 0 && hasAttemptedLoadMore && (
         <Text textAlign="center" color="gray.500" py={4}>
-          {common.noMore()}
+          {t("common")("noMore")}
         </Text>
       )}
 
       {comments.length === 0 && !loading && !localPendingComment && (
         <Text textAlign="center" color="gray.500" py={8}>
-          {common.noComments()}
+          {t("common")("noComments")}
         </Text>
       )}
     </VStack>

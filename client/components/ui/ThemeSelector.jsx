@@ -1,25 +1,25 @@
 "use client"
 
 import { createListCollection, Select, Text, VStack } from "@chakra-ui/react"
-import { useTranslation } from "../../hooks/useTranslation"
+import { useIntl } from "../../hooks/useIntl"
 
 // 主题选项将在组件内部动态创建，以便使用翻译
 
 export function ThemeSelector({ value, onChange }) {
-  const { settings } = useTranslation()
+  const { t } = useIntl()
 
   // 动态创建主题选项，使用翻译
   const themeCollection = createListCollection({
     items: [
-      { label: settings.themeLight(), value: "light" },
-      { label: settings.themeDark(), value: "dark" },
+      { label: t("settings")("themeLight"), value: "light" },
+      { label: t("settings")("themeDark"), value: "dark" },
     ],
   })
 
   return (
     <VStack align="stretch" gap={2}>
       <Text fontSize="sm" fontWeight="medium">
-        {settings.themeSelect()}
+        {t("settings")("themeSelect")}
       </Text>
       <Select.Root
         collection={themeCollection}
@@ -29,7 +29,7 @@ export function ThemeSelector({ value, onChange }) {
         <Select.HiddenSelect />
         <Select.Control>
           <Select.Trigger>
-            <Select.ValueText placeholder={settings.themeSelect()} />
+            <Select.ValueText placeholder={t("settings")("themeSelect")} />
           </Select.Trigger>
           <Select.IndicatorGroup>
             <Select.Indicator />

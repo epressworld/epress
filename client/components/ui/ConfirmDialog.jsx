@@ -8,7 +8,7 @@ import {
   Portal,
   Text,
 } from "@chakra-ui/react"
-import { useTranslation } from "../../hooks/useTranslation"
+import { useIntl } from "../../hooks/useIntl"
 
 export const ConfirmDialog = ({
   isOpen,
@@ -21,13 +21,13 @@ export const ConfirmDialog = ({
   confirmColorPalette = "red",
   isLoading = false,
 }) => {
-  const { dialog, common } = useTranslation()
+  const { t } = useIntl()
 
   // 使用翻译的默认值
-  const dialogTitle = title || dialog.confirmOperation()
-  const dialogMessage = message || dialog.confirmMessage()
-  const dialogConfirmText = confirmText || common.confirm()
-  const dialogCancelText = cancelText || common.cancel()
+  const dialogTitle = title || t("dialog")("confirmOperation")
+  const dialogMessage = message || t("dialog")("confirmMessage")
+  const dialogConfirmText = confirmText || t("common")("confirm")
+  const dialogCancelText = cancelText || t("common")("cancel")
 
   return (
     <Dialog.Root

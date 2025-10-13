@@ -2,7 +2,7 @@ import { redirect } from "next/navigation"
 import { ApolloProvider } from "../../components/client/apollo-provider"
 import { Page } from "../../components/layout"
 import { PwaRegistry } from "../../components/ui/PwaRegistry"
-import { PreloadQuery } from "../../graphql/client"
+import { PreloadQuery, query } from "../../graphql/client"
 import { PAGE_DATA } from "../../graphql/queries"
 
 import "../../styles/globals.css"
@@ -63,13 +63,36 @@ export default async function RootLayout({ children }) {
 
   // 解析 JSON 数据
   const profile = await response.json()
+
+  // 直接查询 PAGE_DATA（会被缓存）
+  let locale = "en"
+  let messages = null
+
+  try {
+    const { data } = await query({ query: PAGE_DATA })
+    const defaultLanguage = data?.settings?.defaultLanguage
+
+    if (
+      defaultLanguage &&
+      (defaultLanguage === "en" || defaultLanguage === "zh")
+    ) {
+      locale = defaultLanguage
+    }
+
+    messages = (await import(`../../messages/${locale}.json`)).default
+  } catch (error) {
+    console.error("Failed to load settings or messages:", error)
+    messages = (await import(`../../messages/en.json`)).default
+    locale = "en"
+  }
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body suppressHydrationWarning>
         <PwaRegistry />
         <ApolloProvider url={profile.url}>
           <PreloadQuery query={PAGE_DATA}>
-            <Page>{children}</Page>
+            <Page intl={{ locale, messages }}>{children}</Page>
           </PreloadQuery>
         </ApolloProvider>
       </body>

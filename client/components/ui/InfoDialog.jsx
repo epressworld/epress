@@ -8,7 +8,7 @@ import {
   Portal,
   Text,
 } from "@chakra-ui/react"
-import { useTranslation } from "../../hooks/useTranslation"
+import { useIntl } from "../../hooks/useIntl"
 
 export const InfoDialog = ({
   isOpen,
@@ -19,11 +19,11 @@ export const InfoDialog = ({
   isPreformatted = false,
   showCloseButton = true,
 }) => {
-  const { common } = useTranslation()
+  const { t } = useIntl()
 
   // 使用翻译的默认值
-  const dialogTitle = title || common.info()
-  const dialogCloseText = closeText || common.close()
+  const dialogTitle = title || t("common")("info")
+  const dialogCloseText = closeText || t("common")("close")
   return (
     <Dialog.Root
       open={isOpen}

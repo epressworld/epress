@@ -10,10 +10,10 @@ import {
 } from "@chakra-ui/react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import { useTranslation } from "../../hooks/useTranslation"
+import { useIntl } from "../../hooks/useIntl"
 
 export function SearchDialog({ isOpen, onClose, initialKeyword = "" }) {
-  const { common } = useTranslation()
+  const { t } = useIntl()
   const router = useRouter()
   const [keyword, setKeyword] = useState(initialKeyword)
 
@@ -49,19 +49,19 @@ export function SearchDialog({ isOpen, onClose, initialKeyword = "" }) {
         <Dialog.Positioner>
           <Dialog.Content>
             <Dialog.Header>
-              <Dialog.Title>{common.search()}</Dialog.Title>
+              <Dialog.Title>{t("common")("search")}</Dialog.Title>
               <Dialog.CloseTrigger asChild>
                 <CloseButton size="sm" />
               </Dialog.CloseTrigger>
             </Dialog.Header>
             <Dialog.Body>
               <Field.Root>
-                <Field.Label>{common.keyword()}</Field.Label>
+                <Field.Label>{t("common")("keyword")}</Field.Label>
                 <Input
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder={common.enterKeyword()}
+                  placeholder={t("common")("enterKeyword")}
                   autoFocus
                 />
               </Field.Root>
@@ -69,10 +69,10 @@ export function SearchDialog({ isOpen, onClose, initialKeyword = "" }) {
             <Dialog.Footer>
               <HStack gap={2} justify="end">
                 <Button variant="outline" onClick={onClose}>
-                  {common.cancel()}
+                  {t("common")("cancel")}
                 </Button>
                 <Button onClick={handleSearch} colorPalette="orange">
-                  {common.search()}
+                  {t("common")("search")}
                 </Button>
               </HStack>
             </Dialog.Footer>

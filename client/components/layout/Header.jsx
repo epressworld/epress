@@ -32,7 +32,7 @@ import {
 } from "react-icons/lu"
 import { AUTH_STATUS, useAuth } from "../../contexts/AuthContext"
 import { usePage } from "../../contexts/PageContext"
-import { useTranslation } from "../../hooks/useTranslation"
+import { useIntl } from "../../hooks/useIntl"
 import { FollowButton } from "../business"
 import { ConnectWalletButton, SearchDialog, SettingsDialog } from "../ui"
 
@@ -45,7 +45,7 @@ export const Header = () => {
     error,
     errorDetails,
   } = usePage()
-  const { auth, navigation, common } = useTranslation()
+  const { t } = useIntl()
   const searchParams = useSearchParams()
   const currentKeyword = searchParams.get("q") || ""
 
@@ -123,7 +123,7 @@ export const Header = () => {
               loading={loginState?.loading}
               colorPalette="orange"
             >
-              <LuLogIn /> {auth.login()}
+              <LuLogIn /> {t("auth")("login")}
             </Button>,
           )
           break
@@ -143,11 +143,11 @@ export const Header = () => {
                     <Menu.Content>
                       <Menu.Item value="settings" onClick={openSettings}>
                         <LuSettings />
-                        {auth.settings()}
+                        {t("auth")("settings")}
                       </Menu.Item>
                       <Menu.Item value="logout" onClick={logout}>
                         <LuLogOut />
-                        {auth.logout()}
+                        {t("auth")("logout")}
                       </Menu.Item>
                     </Menu.Content>
                   </Menu.Positioner>
@@ -163,12 +163,12 @@ export const Header = () => {
                 onClick={openSettings}
                 variant="subtle"
               >
-                <LuSettings /> {auth.settings()}
+                <LuSettings /> {t("auth")("settings")}
               </Button>,
             )
             buttons.push(
               <Button key="logout" size="xs" onClick={logout} variant="outline">
-                <LuLogOut /> {auth.logout()}
+                <LuLogOut /> {t("auth")("logout")}
               </Button>,
             )
           }
@@ -258,7 +258,7 @@ export const Header = () => {
                         href="/feed"
                         target="_blank"
                         rel="noopener noreferrer"
-                        title={common.rssFeed}
+                        title={t("common")("rssFeed")}
                         color="orange.500"
                         _hover={{ color: "orange.600" }}
                         transition="color 0.2s"
@@ -339,7 +339,7 @@ export const Header = () => {
                   }}
                 >
                   <LuFileText />
-                  {navigation.content()}
+                  {t("navigation")("content")}
                 </Tabs.Trigger>
                 <Tabs.Trigger
                   value="connections"
@@ -350,7 +350,7 @@ export const Header = () => {
                   }}
                 >
                   <LuUsers />
-                  {navigation.connections()}
+                  {t("navigation")("connections")}
                 </Tabs.Trigger>
               </Tabs.List>
             </Tabs.Root>

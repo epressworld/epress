@@ -26,27 +26,13 @@ import {
 } from "@chakra-ui/react"
 import { ConnectButton } from "@rainbow-me/rainbowkit"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 import { useForm } from "react-hook-form"
 import { FaGithub, FaHome } from "react-icons/fa"
 import { FaEthereum } from "react-icons/fa6"
 import { GrClose, GrInstall, GrNext, GrPrevious } from "react-icons/gr"
 import { useAccount } from "wagmi"
-
-const installSteps = [
-  {
-    title: "Node Configuration",
-    description: "Configure your epress node profile",
-  },
-  {
-    title: "Advanced Settings",
-    description: "Optional mail, WalletConnect and other settings",
-  },
-  {
-    title: "Review & Install",
-    description: "Review your configuration and complete installation",
-  },
-]
 
 const getOrigin = () => {
   if (typeof window !== "undefined") {
@@ -56,6 +42,7 @@ const getOrigin = () => {
 }
 
 export default function InstallPage() {
+  const t = useTranslations("installer")
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(0)
   const [isCheckingStatus, setIsCheckingStatus] = useState(true)
@@ -64,12 +51,28 @@ export default function InstallPage() {
   const { address } = useAccount()
   const fileInputRef = useRef(null)
 
+  // Define install steps with translations
+  const installSteps = [
+    {
+      title: t("nodeConfiguration"),
+      description: t("nodeConfigurationDescription"),
+    },
+    {
+      title: t("advancedSettings"),
+      description: t("advancedSettingsDescription"),
+    },
+    {
+      title: t("reviewAndInstall"),
+      description: t("reviewAndInstallDescription"),
+    },
+  ]
+
   const defaultValues = {
     node: {
       address: "",
       url: "",
-      title: "My ePress Node",
-      description: "Personal publishing node",
+      title: t("nodeTitlePlaceholder"),
+      description: t("nodeDescriptionPlaceholder"),
       avatar: "",
     },
     settings: {
@@ -181,13 +184,13 @@ export default function InstallPage() {
         throw new Error(data.message || "Installation failed")
       }
       setInstallResult({
-        title: "Installation Successful",
-        description: "Your epress node has been configured successfully!",
+        title: t("installationSuccessful"),
+        description: t("installationSuccessfulDescription"),
         type: "success",
       })
     } catch (error) {
       setInstallResult({
-        title: "Installation Failed",
+        title: t("installationFailed"),
         description: error.message,
         type: "error",
       })
@@ -217,15 +220,15 @@ export default function InstallPage() {
 
   const languageCollection = createListCollection({
     items: [
-      { label: "English", value: "en" },
-      { label: "中文", value: "zh" },
+      { label: t("languageEnglish"), value: "en" },
+      { label: t("languageChinese"), value: "zh" },
     ],
   })
 
   const themeCollection = createListCollection({
     items: [
-      { label: "Light", value: "light" },
-      { label: "Dark", value: "dark" },
+      { label: t("themeLight"), value: "light" },
+      { label: t("themeDark"), value: "dark" },
     ],
   })
 
@@ -250,10 +253,9 @@ export default function InstallPage() {
                   />
                 </Link>
               </Box>
-              <Heading size="2xl">Welcome to epress</Heading>
+              <Heading size="2xl">{t("welcome")}</Heading>
               <Text color="gray.600" fontSize="lg">
-                {installSteps[currentStep]?.description ||
-                  "Let's set up your epress node"}
+                {t("welcomeDescription")}
               </Text>
             </VStack>
           </Box>
@@ -286,7 +288,7 @@ export default function InstallPage() {
                 <Card.Body>
                   <Stack gap={4}>
                     <Field.Root>
-                      <Field.Label>Node Avatar</Field.Label>
+                      <Field.Label>{t("nodeAvatar")}</Field.Label>
                       <Box>
                         <input
                           ref={fileInputRef}
@@ -308,7 +310,7 @@ export default function InstallPage() {
                         </Avatar.Root>
                       </Box>
                       <Field.HelperText>
-                        Click the avatar to upload an image (max 2MB)
+                        {t("nodeAvatarHelper")}
                       </Field.HelperText>
                     </Field.Root>
 
@@ -317,19 +319,19 @@ export default function InstallPage() {
                       invalid={!!form.formState.errors.node?.address}
                     >
                       <Field.Label>
-                        Node Address
+                        {t("nodeAddress")}
                         <Field.RequiredIndicator />
                       </Field.Label>
                       <Group attached w="full">
                         <Input
                           {...form.register("node.address", {
-                            required: "Node address is required",
+                            required: t("nodeAddressRequired"),
                             pattern: {
                               value: /^0x[a-fA-F0-9]{40}$/,
-                              message: "Invalid Ethereum address format",
+                              message: t("invalidEthereumAddress"),
                             },
                           })}
-                          placeholder="0x..."
+                          placeholder={t("nodeAddressPlaceholder")}
                         />
                         <ConnectButton.Custom>
                           {({
@@ -411,18 +413,18 @@ export default function InstallPage() {
                       invalid={!!form.formState.errors.node?.url}
                     >
                       <Field.Label>
-                        Node URL
+                        {t("nodeUrl")}
                         <Field.RequiredIndicator />
                       </Field.Label>
                       <Input
                         {...form.register("node.url", {
-                          required: "Node URL is required",
+                          required: t("nodeUrlRequired"),
                           pattern: {
                             value: /^https?:\/\/.+/,
-                            message: "Invalid URL format",
+                            message: t("invalidUrl"),
                           },
                         })}
-                        placeholder="https://your-domain.blog"
+                        placeholder={t("nodeUrlPlaceholder")}
                       />
                       <Field.ErrorText>
                         {form.formState.errors.node?.url?.message}
@@ -434,14 +436,14 @@ export default function InstallPage() {
                       invalid={!!form.formState.errors.node?.title}
                     >
                       <Field.Label>
-                        Node Title
+                        {t("nodeTitle")}
                         <Field.RequiredIndicator />
                       </Field.Label>
                       <Input
                         {...form.register("node.title", {
-                          required: "Node title is required",
+                          required: t("nodeTitleRequired"),
                         })}
-                        placeholder="My ePress Node"
+                        placeholder={t("nodeTitlePlaceholder")}
                       />
                       <Field.ErrorText>
                         {form.formState.errors.node?.title?.message}
@@ -453,12 +455,12 @@ export default function InstallPage() {
                       invalid={!!form.formState.errors.node?.description}
                     >
                       <Field.Label>
-                        Node Description
+                        {t("nodeDescription")}
                         <Field.RequiredIndicator />
                       </Field.Label>
                       <Textarea
                         {...form.register("node.description")}
-                        placeholder="Personal publishing node"
+                        placeholder={t("nodeDescriptionPlaceholder")}
                         rows={3}
                       />
                       <Field.ErrorText>
@@ -480,7 +482,7 @@ export default function InstallPage() {
                 <Card.Body>
                   <Stack gap={4}>
                     <Field.Root>
-                      <Field.Label>Default Language</Field.Label>
+                      <Field.Label>{t("defaultLanguage")}</Field.Label>
                       <Select.Root
                         defaultValue={[defaultValues.settings.defaultLanguage]}
                         collection={languageCollection}
@@ -495,7 +497,7 @@ export default function InstallPage() {
                         <Select.Control>
                           <Select.Trigger>
                             <Select.ValueText
-                              placeholder={"Default Language"}
+                              placeholder={t("defaultLanguage")}
                             />
                           </Select.Trigger>
                           <Select.IndicatorGroup>
@@ -515,7 +517,7 @@ export default function InstallPage() {
                       </Select.Root>
                     </Field.Root>
                     <Field.Root>
-                      <Field.Label>Default Theme</Field.Label>
+                      <Field.Label>{t("defaultTheme")}</Field.Label>
                       <Select.Root
                         defaultValue={[defaultValues.settings.defaultTheme]}
                         collection={themeCollection}
@@ -529,7 +531,7 @@ export default function InstallPage() {
                         <Select.HiddenSelect />
                         <Select.Control>
                           <Select.Trigger>
-                            <Select.ValueText placeholder={"Default Theme"} />
+                            <Select.ValueText placeholder={t("defaultTheme")} />
                           </Select.Trigger>
                           <Select.IndicatorGroup>
                             <Select.Indicator />
@@ -548,17 +550,13 @@ export default function InstallPage() {
                       </Select.Root>
                     </Field.Root>
                     <Field.Root>
-                      <Field.Label>
-                        WalletConnect Project ID (Optional)
-                      </Field.Label>
+                      <Field.Label>{t("walletConnectOptional")}</Field.Label>
                       <Input
                         {...form.register("settings.walletConnectProjectId")}
-                        placeholder="Enter your WalletConnect project ID"
+                        placeholder={t("walletConnectProjectIdPlaceholder")}
                       />
                       <Field.HelperText>
-                        Enter your unique Project ID from Wallet Connect to
-                        enable secure wallet connections for your application.
-                        get it free from{" "}
+                        {t("walletConnectHelper")}{" "}
                         <Link target="_blank" href="https://reown.com">
                           Reown.com
                         </Link>
@@ -566,22 +564,23 @@ export default function InstallPage() {
                       <Field.ErrorText />
                     </Field.Root>
                     <Field.Root>
-                      <Field.Label>Mail Transport (Optional)</Field.Label>
+                      <Field.Label>{t("mailTransportOptional")}</Field.Label>
                       <Input
                         {...form.register("settings.mailTransport")}
-                        placeholder="smtp://user:pass@smtp.example.com"
+                        placeholder={t("mailTransportPlaceholder")}
                       />
                       <Field.HelperText>
-                        SMTP connection string
+                        {t("mailTransportHelper")}
                       </Field.HelperText>
                     </Field.Root>
                     <Field.Root>
-                      <Field.Label>Mail From Address (Optional)</Field.Label>
+                      <Field.Label>{t("mailFromOptional")}</Field.Label>
                       <Input
                         {...form.register("settings.mailFrom")}
-                        placeholder="no-reply@example.com"
+                        placeholder={t("mailFromPlaceholder")}
                         type="email"
                       />
+                      <Field.HelperText>{t("mailFromHelper")}</Field.HelperText>
                       <Field.ErrorText />
                     </Field.Root>
                   </Stack>
@@ -599,50 +598,52 @@ export default function InstallPage() {
                 <Card.Body>
                   <Stack gap={4}>
                     <Box>
-                      <Text fontWeight="bold">Node Avatar:</Text>
+                      <Text fontWeight="bold">{t("nodeAvatar")}:</Text>
                       <Avatar.Root size="2xl" mt={2}>
                         <Avatar.Fallback name={form.watch("node.title")} />
                         <Avatar.Image src={form.watch("node.avatar") || null} />
                       </Avatar.Root>
                       {!form.watch("node.avatar") && (
                         <Text color="gray.500" fontSize="sm" mt={1}>
-                          No avatar uploaded
+                          {t("nodeAvatarEmpty")}
                         </Text>
                       )}
                     </Box>
                     <Box>
-                      <Text fontWeight="bold">Node Address:</Text>
+                      <Text fontWeight="bold">{t("nodeAddress")}</Text>
                       <Text>{form.watch("node.address")}</Text>
                     </Box>
                     <Box>
-                      <Text fontWeight="bold">Node URL:</Text>
+                      <Text fontWeight="bold">{t("nodeUrl")}:</Text>
                       <Text>{form.watch("node.url")}</Text>
                     </Box>
                     <Box>
-                      <Text fontWeight="bold">Node Title:</Text>
+                      <Text fontWeight="bold">{t("nodeTitle")}:</Text>
                       <Text>{form.watch("node.title")}</Text>
                     </Box>
                     <Box>
-                      <Text fontWeight="bold">Node Description:</Text>
+                      <Text fontWeight="bold">{t("nodeDescription")}:</Text>
                       <Text>{form.watch("node.description")}</Text>
                     </Box>
                     <Box>
-                      <Text fontWeight="bold">Default Language:</Text>
+                      <Text fontWeight="bold">{t("defaultLanguage")}:</Text>
                       <Text>{form.watch("settings.defaultLanguage")}</Text>
                     </Box>
                     <Box>
-                      <Text fontWeight="bold">Default Theme:</Text>
+                      <Text fontWeight="bold">{t("defaultTheme")}:</Text>
                       <Text>{form.watch("settings.defaultTheme")}</Text>
                     </Box>
                     <Box>
-                      <Text fontWeight="bold">WalletConnect Project ID:</Text>
+                      <Text fontWeight="bold">
+                        {t("walletConnectProjectId")}
+                      </Text>
                       <Text>
                         {form.watch("settings.walletConnectProjectId") ||
                           "Not set"}
                       </Text>
                     </Box>
                     <Box>
-                      <Text fontWeight="bold">Mail Transport:</Text>
+                      <Text fontWeight="bold">{t("mailTransport")}:</Text>
                       <Text>
                         {form.watch("settings.mailTransport") || "Not set"}
                       </Text>
@@ -650,14 +651,13 @@ export default function InstallPage() {
                         <Alert.Root mt={1} status="warning">
                           <Alert.Indicator />
                           <Alert.Content>
-                            Warning: Email sending functionality will be
-                            unavailable if not configured.
+                            {t("mailTransportEmptyWarning")}
                           </Alert.Content>
                         </Alert.Root>
                       )}
                     </Box>
                     <Box>
-                      <Text fontWeight="bold">Mail From:</Text>
+                      <Text fontWeight="bold">{t("mailFrom")}:</Text>
                       <Text>
                         {form.watch("settings.mailFrom") || "Not set"}
                       </Text>
@@ -673,7 +673,7 @@ export default function InstallPage() {
                   {isInstalling && (
                     <VStack gap={4}>
                       <Center>
-                        <Heading size="3xl">Installing...</Heading>
+                        <Heading size="3xl">{t("installing")}</Heading>
                       </Center>
                       <Center>
                         <Progress.Root minW={"240px"} value={null}>
@@ -684,7 +684,7 @@ export default function InstallPage() {
                       </Center>
                       <Center>
                         <Box>
-                          <Text>Please wait...</Text>
+                          <Text>{t("pleaseWait")}</Text>
                         </Box>
                       </Center>
                     </VStack>
@@ -710,7 +710,7 @@ export default function InstallPage() {
                           variant={"subtle"}
                           mr={4}
                         >
-                          <FaHome /> Home
+                          <FaHome /> {t("goToHomePage")}
                         </Button>
                         <Button
                           variant={"subtle"}
@@ -720,7 +720,7 @@ export default function InstallPage() {
                           }}
                           mr={4}
                         >
-                          <FaGithub /> Awesome Nodes
+                          <FaGithub /> {t("goToAwesomeNodes")}
                         </Button>
                       </Center>
                     </VStack>

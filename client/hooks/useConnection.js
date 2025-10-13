@@ -10,7 +10,7 @@ import {
   createConnectionTypedData,
   deleteConnectionTypedData,
 } from "../utils/eip712"
-import { useTranslation } from "./useTranslation"
+import { useIntl } from "./useIntl"
 import { useWallet } from "./useWallet"
 
 export function useConnection() {
@@ -18,7 +18,7 @@ export function useConnection() {
   const { openConnectModal } = useConnectModal()
   const { signEIP712Data } = useWallet()
   const { profile, isFollower, refetchFollowerStatus, isNodeOwner } = useAuth()
-  const { connection } = useTranslation()
+  const { t } = useIntl()
 
   const [url, setUrl] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -53,7 +53,7 @@ export function useConnection() {
 
     if (!url.trim()) {
       toaster.create({
-        description: connection.enterNodeUrl(),
+        description: t("connection")("enterNodeUrl"),
         type: "warning",
       })
       return
@@ -63,11 +63,11 @@ export function useConnection() {
     try {
       const urlObj = new URL(url)
       if (urlObj.protocol !== "https:" && urlObj.protocol !== "http:") {
-        throw new Error(connection.mustBeHttpOrHttps())
+        throw new Error(t("connection")("mustBeHttpOrHttps"))
       }
     } catch {
       toaster.create({
-        description: connection.enterValidUrl(),
+        description: t("connection")("enterValidUrl"),
         type: "error",
       })
       return
@@ -76,7 +76,7 @@ export function useConnection() {
     // 检查是否有当前节点的profile信息
     if (!profile || !profile.address || !profile.url) {
       toaster.create({
-        description: connection.cannotGetNodeInfo(),
+        description: t("connection")("cannotGetNodeInfo"),
         type: "error",
       })
       return
@@ -95,7 +95,7 @@ export function useConnection() {
 
       if (!signature) {
         toaster.create({
-          description: connection.signatureFailed(),
+          description: t("connection")("signatureFailed"),
           type: "error",
         })
         return
@@ -119,7 +119,7 @@ export function useConnection() {
         awaitRefetchQueries: true,
       })
       toaster.create({
-        description: connection.followSuccess(url),
+        description: t("connection")("followSuccess", { url }),
         type: "success",
       })
 
@@ -130,7 +130,7 @@ export function useConnection() {
     } catch (error) {
       console.error("关注失败:", error)
       toaster.create({
-        description: error.message || connection.followFailed(),
+        description: error.message || t("connection")("followFailed"),
         type: "error",
       })
     } finally {
@@ -144,7 +144,7 @@ export function useConnection() {
 
     if (!profile || !profile.address) {
       toaster.create({
-        description: connection.cannotGetNodeInfo(),
+        description: t("connection")("cannotGetNodeInfo"),
         type: "error",
       })
       return
@@ -163,7 +163,7 @@ export function useConnection() {
 
       if (!signature) {
         toaster.create({
-          description: connection.signatureFailed(),
+          description: t("connection")("signatureFailed"),
           type: "error",
         })
         return
@@ -188,7 +188,7 @@ export function useConnection() {
       })
 
       toaster.create({
-        description: connection.unfollowSuccess(),
+        description: t("connection")("unfollowSuccess"),
         type: "success",
       })
 
@@ -198,7 +198,7 @@ export function useConnection() {
     } catch (error) {
       console.error("取消关注失败:", error)
       toaster.create({
-        description: error.message || connection.unfollowFailed(),
+        description: error.message || t("connection")("unfollowFailed"),
         type: "error",
       })
     } finally {

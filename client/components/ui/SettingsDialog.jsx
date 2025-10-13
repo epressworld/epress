@@ -3,11 +3,11 @@
 import { CloseButton, Dialog, Portal, Tabs } from "@chakra-ui/react"
 import { useState } from "react"
 import { LuSettings, LuUserCog } from "react-icons/lu"
-import { useTranslation } from "../../hooks/useTranslation"
+import { useIntl } from "../../hooks/useIntl"
 import { ProfileFormSection, SettingsFormSection } from "../forms"
 
 export function SettingsDialog({ isOpen, onClose }) {
-  const { settings } = useTranslation()
+  const { t } = useIntl()
   const [activeTab, setActiveTab] = useState("profile")
 
   const handleSuccess = () => {
@@ -25,7 +25,7 @@ export function SettingsDialog({ isOpen, onClose }) {
         <Dialog.Positioner>
           <Dialog.Content maxW="2xl">
             <Dialog.Header>
-              <Dialog.Title>{settings.nodeSettings()}</Dialog.Title>
+              <Dialog.Title>{t("settings")("nodeSettings")}</Dialog.Title>
             </Dialog.Header>
 
             <Dialog.Body>
@@ -33,11 +33,11 @@ export function SettingsDialog({ isOpen, onClose }) {
                 <Tabs.List>
                   <Tabs.Trigger value="profile">
                     <LuUserCog />
-                    {settings.nodeBasicInfo()}
+                    {t("settings")("nodeBasicInfo")}
                   </Tabs.Trigger>
                   <Tabs.Trigger value="settings">
                     <LuSettings />
-                    {settings.systemSettings()}
+                    {t("settings")("systemSettings")}
                   </Tabs.Trigger>
                 </Tabs.List>
 

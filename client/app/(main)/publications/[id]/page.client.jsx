@@ -13,13 +13,13 @@ import {
   UnifiedCard,
 } from "../../../../components/ui"
 import { usePage } from "../../../../contexts/PageContext"
+import { useIntl } from "../../../../hooks/useIntl"
 import { usePageTitle } from "../../../../hooks/usePageTitle"
 import { usePublicationDetail } from "../../../../hooks/usePublicationDetail"
-import { useTranslation } from "../../../../hooks/useTranslation"
 import { stripMarkdown, truncateText } from "../../../../utils/textUtils"
 
 export default function PublicationDetailPage({ variables }) {
-  const { common } = useTranslation()
+  const { t } = useIntl()
   const { settings } = usePage()
   const [localPendingComment, setLocalPendingComment] = useState(null)
   const [retrySignatureFn, setRetrySignatureFn] = useState(null)
@@ -48,7 +48,7 @@ export default function PublicationDetailPage({ variables }) {
 
   // 生成页面标题
   const getPageTitle = () => {
-    if (!publication) return common.pageTitle.contentDetail()
+    if (!publication) return t("common")("pageTitle.contentDetail")
 
     let textToTruncate = ""
     if (publication.content?.type === "FILE") {
@@ -57,7 +57,7 @@ export default function PublicationDetailPage({ variables }) {
       textToTruncate = publication.content?.body || ""
     }
 
-    if (!textToTruncate) return common.pageTitle.contentDetail()
+    if (!textToTruncate) return t("common")("pageTitle.contentDetail")
 
     const plainText = stripMarkdown(textToTruncate)
     const truncatedText = truncateText(plainText, 30)
@@ -76,7 +76,7 @@ export default function PublicationDetailPage({ variables }) {
       <Alert.Root status="error">
         <Alert.Indicator />
         <Alert.Title>
-          {common.loadFailed()} {publicationError.message}
+          {t("common")("loadFailed")} {publicationError.message}
         </Alert.Title>
       </Alert.Root>
     )
@@ -85,7 +85,7 @@ export default function PublicationDetailPage({ variables }) {
   if (!publication) {
     return (
       <VStack gap={4} align="center" py={8}>
-        <Text color="gray.500">{common.contentNotExists()}</Text>
+        <Text color="gray.500">{t("common")("contentNotExists")}</Text>
       </VStack>
     )
   }
@@ -120,7 +120,7 @@ export default function PublicationDetailPage({ variables }) {
           <UnifiedCard.Root>
             <UnifiedCard.Header>
               <Text fontSize="xl" fontWeight="semibold">
-                {common.comments()} ({publication?.comment_count || 0})
+                {t("common")("comments")} ({publication?.comment_count || 0})
               </Text>
             </UnifiedCard.Header>
 
@@ -168,10 +168,10 @@ export default function PublicationDetailPage({ variables }) {
         isOpen={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={handleConfirmDelete}
-        title={common.confirmDelete()}
-        message={common.confirmDeleteMessage()}
-        confirmText={common.confirmDeleteText()}
-        cancelText={common.cancel()}
+        title={t("common")("confirmDelete")}
+        message={t("common")("confirmDeleteMessage")}
+        confirmText={t("common")("confirmDeleteText")}
+        cancelText={t("common")("cancel")}
         confirmColorPalette="red"
         isLoading={isDeleting}
       />

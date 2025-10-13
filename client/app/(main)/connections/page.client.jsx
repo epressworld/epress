@@ -1,13 +1,13 @@
 "use client"
 import { VStack } from "@chakra-ui/react"
 import { FollowersList, FollowingList } from "../../../components/business"
+import { useIntl } from "../../../hooks/useIntl"
 import { usePageTitle } from "../../../hooks/usePageTitle"
-import { useTranslation } from "../../../hooks/useTranslation"
 
 export default function ClientPage() {
-  const { common } = useTranslation()
+  const { t } = useIntl()
 
-  usePageTitle(common.pageTitle.connections())
+  usePageTitle(t("common")("pageTitle.connections"))
 
   return (
     <VStack spacing={6} align="stretch">
