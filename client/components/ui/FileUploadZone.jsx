@@ -12,11 +12,11 @@ import {
   VStack,
 } from "@chakra-ui/react"
 import { FiFileText, FiUpload, FiX } from "react-icons/fi"
-import { useTranslation } from "../../hooks/useTranslation"
+import { useIntl } from "../../hooks/useIntl"
 
 const UploadOrPreview = ({ maxSize, onFileRemove }) => {
   const { acceptedFiles: files } = useFileUploadContext()
-  const { common, publication: pub } = useTranslation()
+  const { t } = useIntl()
   return files.length !== 0 ? (
     <FileUpload.ItemGroup>
       {files.map((file) => (
@@ -57,7 +57,7 @@ const UploadOrPreview = ({ maxSize, onFileRemove }) => {
                       color="gray.800"
                       _dark={{ color: "gray.200" }}
                     >
-                      {file.name || pub.unknownFile()}
+                      {file.name || t("publication")("unknownFile")}
                     </Text>
                     {file.size != null && <FormatByte value={file.size} />}
                   </HStack>
@@ -68,7 +68,7 @@ const UploadOrPreview = ({ maxSize, onFileRemove }) => {
                   textAlign={"left"}
                   _dark={{ color: "gray.400" }}
                 >
-                  {file.type || pub.unknownType()}
+                  {file.type || t("publication")("unknownType")}
                 </Text>
               </VStack>
             </Box>
@@ -91,9 +91,9 @@ const UploadOrPreview = ({ maxSize, onFileRemove }) => {
         <FiUpload />
       </Icon>
       <FileUpload.DropzoneContent>
-        <Box>{common.clickToSelectFile()}</Box>
+        <Box>{t("common")("clickToSelectFile")}</Box>
         <Box color="fg.muted">
-          {common.supportAllFormats()} {maxSize / 1024 / 1024}MB
+          {t("common")("supportAllFormats")} {maxSize / 1024 / 1024}MB
         </Box>
       </FileUpload.DropzoneContent>
     </>
@@ -166,21 +166,21 @@ export function FileUploadZone({
   //         {filePreview && (
   //           <Image
   //             src={filePreview}
-  //             alt={common.preview()}
+  //             alt={t('common')('preview')}
   //             maxH="60px"
   //             objectFit="contain"
   //           />
   //         )}
   //         <Text fontSize="sm" color="gray.600">
-  //           {common.selected()} {selectedFile.name}
+  //           {t('common')('selected')} {selectedFile.name}
   //         </Text>
   //         <Text fontSize="xs" color="gray.500">
-  //           {common.size()} {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+  //           {t('common')('size')} {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
   //         </Text>
   //         <IconButton
   //           size="sm"
   //           onClick={onRemoveFile}
-  //           aria-label={common.removeFile()}
+  //           aria-label={t('common')('removeFile')}
   //           disabled={disabled}
   //         >
   //           <FiX />

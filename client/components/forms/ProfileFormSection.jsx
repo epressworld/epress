@@ -18,12 +18,12 @@ import {
 import { useRef, useState } from "react"
 import { LuCamera, LuSave } from "react-icons/lu"
 import { usePage } from "../../contexts/PageContext"
+import { useIntl } from "../../hooks/useIntl"
 import { useProfileForm } from "../../hooks/useProfileForm"
-import { useTranslation } from "../../hooks/useTranslation"
 import { FormField } from "../ui"
 
 export function ProfileFormSection({ onSuccess }) {
-  const { settings, common } = useTranslation()
+  const { t } = useIntl()
   const inputRef = useRef(null)
   const { profile } = usePage()
   const { form, isLoading, avatarPreview, handleAvatarChange, onSubmit } =
@@ -72,7 +72,7 @@ export function ProfileFormSection({ onSuccess }) {
           <Alert.Indicator />
           <Alert.Content>
             <Alert.Description>
-              {settings.modifyRequiresSignature()}
+              {t("settings")("modifyRequiresSignature")}
             </Alert.Description>
           </Alert.Content>
         </Alert.Root>
@@ -121,25 +121,25 @@ export function ProfileFormSection({ onSuccess }) {
               />
             </Box>
             <Text fontSize="xs" color="gray.500" textAlign="center">
-              {settings.supportedFormats(2)}
+              {t("settings")("supportedFormats", { maxSize: 2 })}
             </Text>
           </VStack>
 
           {/* 标题和描述 */}
           <VStack gap={4} align="stretch" flex="1">
             <FormField
-              label={settings.nodeTitle()}
-              placeholder={settings.nodeTitlePlaceholder()}
+              label={t("settings")("nodeTitle")}
+              placeholder={t("settings")("nodeTitlePlaceholder")}
               error={form.formState.errors.title?.message}
               required
               {...form.register("title", {
-                required: settings.titleRequired(),
+                required: t("settings")("titleRequired"),
               })}
             />
 
             <FormField
-              label={settings.nodeDescription()}
-              placeholder={settings.nodeDescriptionPlaceholder()}
+              label={t("settings")("nodeDescription")}
+              placeholder={t("settings")("nodeDescriptionPlaceholder")}
               multiline
               rows={3}
               {...form.register("description")}
@@ -150,7 +150,7 @@ export function ProfileFormSection({ onSuccess }) {
         {/* 第二行：节点URL */}
         <VStack gap={2} align="stretch">
           <Text fontSize="sm" fontWeight="medium">
-            {settings.nodeUrl()}{" "}
+            {t("settings")("nodeUrl")}{" "}
             <Text as="span" color="red.500">
               *
             </Text>
@@ -169,20 +169,20 @@ export function ProfileFormSection({ onSuccess }) {
                     color="gray.600"
                     _dark={{ color: "gray.400" }}
                   >
-                    {settings.edit()}
+                    {t("settings")("edit")}
                   </Checkbox.Label>
                 </Checkbox.Root>
               </HStack>
             }
           >
             <Input
-              placeholder={settings.nodeUrlPlaceholder()}
+              placeholder={t("settings")("nodeUrlPlaceholder")}
               disabled={!isUrlEnabled}
               {...form.register("url", {
-                required: isUrlEnabled ? settings.urlRequired() : false,
+                required: isUrlEnabled ? t("settings")("urlRequired") : false,
                 pattern: {
                   value: /^https?:\/\/.+/,
-                  message: settings.urlFormatIncorrect(),
+                  message: t("settings")("urlFormatIncorrect"),
                 },
               })}
             />
@@ -193,17 +193,17 @@ export function ProfileFormSection({ onSuccess }) {
             </Text>
           )}
           <Text fontSize="sm" color="gray.500" _dark={{ color: "gray.400" }}>
-            {settings.nodeUrlHelper()}
+            {t("settings")("nodeUrlHelper")}
           </Text>
         </VStack>
 
         <Button
           type="submit"
           loading={isLoading}
-          loadingText={settings.saving()}
+          loadingText={t("settings")("saving")}
           colorPalette="orange"
         >
-          <LuSave /> {settings.saveAndBroadcast()}
+          <LuSave /> {t("settings")("saveAndBroadcast")}
         </Button>
       </VStack>
 
@@ -219,18 +219,18 @@ export function ProfileFormSection({ onSuccess }) {
           <Dialog.Positioner>
             <Dialog.Content maxW="md">
               <Dialog.Header>
-                <Dialog.Title>{settings.nodeUrl()}</Dialog.Title>
+                <Dialog.Title>{t("settings")("nodeUrl")}</Dialog.Title>
               </Dialog.Header>
               <Dialog.Body>
-                <Text>{settings.urlEditWarning()}</Text>
+                <Text>{t("settings")("urlEditWarning")}</Text>
               </Dialog.Body>
               <Dialog.Footer>
                 <HStack gap={2} justify="end">
                   <Button variant="outline" onClick={handleUrlWarningCancel}>
-                    {common.cancel()}
+                    {t("common")("cancel")}
                   </Button>
                   <Button onClick={handleUrlWarningConfirm}>
-                    {common.confirm()}
+                    {t("common")("confirm")}
                   </Button>
                 </HStack>
               </Dialog.Footer>

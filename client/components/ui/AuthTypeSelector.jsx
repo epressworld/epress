@@ -1,7 +1,7 @@
 "use client"
 
 import { Tabs } from "@chakra-ui/react"
-import { useTranslation } from "../../hooks/useTranslation"
+import { useIntl } from "../../hooks/useIntl"
 
 export function AuthTypeSelector({
   authType,
@@ -9,7 +9,7 @@ export function AuthTypeSelector({
   isConnected,
   disabled = false,
 }) {
-  const { common } = useTranslation()
+  const { t } = useIntl()
 
   return (
     <Tabs.Root
@@ -21,9 +21,11 @@ export function AuthTypeSelector({
     >
       <Tabs.List>
         <Tabs.Trigger value="EMAIL" disabled={isConnected}>
-          {common.emailAuth()}
+          {t("common")("emailAuth")}
         </Tabs.Trigger>
-        <Tabs.Trigger value="ETHEREUM">{common.ethereumAuth()}</Tabs.Trigger>
+        <Tabs.Trigger value="ETHEREUM">
+          {t("common")("ethereumAuth")}
+        </Tabs.Trigger>
       </Tabs.List>
     </Tabs.Root>
   )

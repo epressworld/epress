@@ -18,16 +18,13 @@ import { useEffect, useState } from "react"
 import { FaCodeBranch } from "react-icons/fa6"
 import { LuCalendar, LuClock } from "react-icons/lu"
 import { SiEthereum } from "react-icons/si"
-import { useLanguage } from "../../contexts/LanguageContext"
 import { usePage } from "../../contexts/PageContext"
-import { useTranslation } from "../../hooks/useTranslation"
-import { formatDate, formatRelativeTime } from "../../utils/dateFormat"
+import { useIntl } from "../../hooks/useIntl"
 import { Toaster } from "../ui/toaster"
 
 export const Footer = () => {
   const { profile, nodeStatus } = usePage()
-  const { common } = useTranslation()
-  const { currentLanguage: language } = useLanguage()
+  const { t, formatDate, formatRelativeTime } = useIntl()
 
   const [runningDays, setRunningDays] = useState(0)
   const [uptimeText, setUptimeText] = useState("")
@@ -49,18 +46,18 @@ export const Footer = () => {
         const validDays = Math.max(0, days)
 
         setRunningDays(validDays)
-        setUptimeText(formatRelativeTime(nodeStatus.startedAt, language))
+        setUptimeText(formatRelativeTime(nodeStatus.startedAt))
       }
 
       calculateUptime()
       const interval = setInterval(calculateUptime, 60000) // Update every minute
       return () => clearInterval(interval)
     }
-  }, [nodeStatus.startedAt, language])
+  }, [nodeStatus.startedAt, formatRelativeTime])
 
   const formattedInstallDate = profile.created_at
-    ? formatDate(profile.created_at, language)
-    : common.unknown()
+    ? formatDate(profile.created_at)
+    : t("common")("unknown")
 
   return (
     <>
@@ -109,7 +106,7 @@ export const Footer = () => {
                       color="gray.500"
                       _dark={{ color: "gray.400" }}
                     >
-                      {common.onlineDays(runningDays)}
+                      {t("common")("onlineDays", { days: runningDays })}
                     </Text>
                     <Box
                       w={3}
@@ -130,7 +127,9 @@ export const Footer = () => {
                       <VStack gap={2} align="start">
                         <HStack gap={2}>
                           <FaCodeBranch size={16} />
-                          <Text fontWeight="semibold">{common.version()}</Text>
+                          <Text fontWeight="semibold">
+                            {t("common")("version")}
+                          </Text>
                         </HStack>
                         <Text
                           fontSize="sm"
@@ -151,7 +150,7 @@ export const Footer = () => {
                         <HStack gap={2}>
                           <SiEthereum size={16} />
                           <Text fontWeight="semibold">
-                            {common.ethereumAddress()}
+                            {t("common")("ethereumAddress")}
                           </Text>
                         </HStack>
                         <Text
@@ -172,7 +171,7 @@ export const Footer = () => {
                         <HStack gap={2}>
                           <LuCalendar size={16} />
                           <Text fontWeight="semibold">
-                            {common.installTime()}
+                            {t("common")("installTime")}
                           </Text>
                         </HStack>
                         <Text
@@ -191,19 +190,23 @@ export const Footer = () => {
                         <HStack gap={2}>
                           <LuClock size={16} />
                           <Text fontWeight="semibold">
-                            {common.runningDays()}
+                            {t("common")("runningDays")}
                           </Text>
                         </HStack>
                         <HStack gap={2}>
                           <Badge colorPalette="green" variant="solid">
-                            {common.daysWithCount(runningDays)}
+                            {t("common")("daysWithCount", {
+                              count: runningDays,
+                            })}
                           </Badge>
                           <Text
                             fontSize="sm"
                             color="gray.600"
                             _dark={{ color: "gray.300" }}
                           >
-                            ({common.sinceWithTime(uptimeText)})
+                            (
+                            {t("common")("sinceWithTime", { time: uptimeText })}
+                            )
                           </Text>
                         </HStack>
                       </VStack>

@@ -1,11 +1,11 @@
 "use client"
 import { PublicationForm, PublicationList } from "../../../components/business"
 import { useHomePage } from "../../../hooks/useHomePage"
+import { useIntl } from "../../../hooks/useIntl"
 import { usePageTitle } from "../../../hooks/usePageTitle"
-import { useTranslation } from "../../../hooks/useTranslation"
 
 export default function HomePage({ variables, keyword }) {
-  const { common } = useTranslation()
+  const { t } = useIntl()
   const {
     isLoading,
     formResetTrigger,
@@ -20,7 +20,7 @@ export default function HomePage({ variables, keyword }) {
   } = useHomePage({ variables, keyword })
 
   // 设置页面标题
-  usePageTitle(common.pageTitle.home())
+  usePageTitle(t("common")("pageTitle.home"))
 
   return (
     <>

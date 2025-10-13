@@ -6,14 +6,14 @@ import { AUTH_STATUS, useAuth } from "../contexts/AuthContext"
 import { usePage } from "../contexts/PageContext"
 import { CREATE_PUBLICATION } from "../graphql/mutations"
 import { SEARCH_PUBLICATIONS } from "../graphql/queries"
-import { useTranslation } from "./useTranslation"
+import { useIntl } from "./useIntl"
 
 export function useHomePage({ variables, keyword: _keyword }) {
   const client = useApolloClient()
   const router = useRouter()
   const { authStatus, isNodeOwner } = useAuth()
   const { profile } = usePage()
-  const { common } = useTranslation()
+  const { t } = useIntl()
 
   // 状态管理
   const [isLoading, setIsLoading] = useState(false)
@@ -51,7 +51,7 @@ export function useHomePage({ variables, keyword: _keyword }) {
   const handleSubmit = async (formData) => {
     if (authStatus !== AUTH_STATUS.AUTHENTICATED || !isNodeOwner) {
       toaster.create({
-        description: common.onlyNodeOwnerCanPublish(),
+        description: t("common")("onlyNodeOwnerCanPublish"),
         type: "error",
       })
       return
@@ -162,7 +162,7 @@ export function useHomePage({ variables, keyword: _keyword }) {
       }
 
       toaster.create({
-        description: common.publishSuccess(),
+        description: t("common")("publishSuccess"),
         type: "success",
       })
 
@@ -171,7 +171,7 @@ export function useHomePage({ variables, keyword: _keyword }) {
     } catch (error) {
       console.error("发布失败:", error)
       toaster.create({
-        description: error.message || common.pleaseRetry(),
+        description: error.message || t("common")("pleaseRetry"),
         type: "error",
       })
     } finally {

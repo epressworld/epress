@@ -1,23 +1,23 @@
 "use client"
 
 import { createListCollection, Select, Text, VStack } from "@chakra-ui/react"
-import { useTranslation } from "../../hooks/useTranslation"
+import { useIntl } from "../../hooks/useIntl"
 
 export function LanguageSelect({ value, onChange }) {
-  const { settings } = useTranslation()
+  const { t } = useIntl()
 
   // 动态创建语言选项，使用翻译
   const languageCollection = createListCollection({
     items: [
-      { label: settings.languageEnglish(), value: "en" },
-      { label: settings.languageChinese(), value: "zh" },
+      { label: t("settings")("languageEnglish"), value: "en" },
+      { label: t("settings")("languageChinese"), value: "zh" },
     ],
   })
 
   return (
     <VStack align="stretch" gap={2}>
       <Text fontSize="sm" fontWeight="medium">
-        {settings.languageSelect()}
+        {t("settings")("languageSelect")}
       </Text>
       <Select.Root
         collection={languageCollection}
@@ -27,7 +27,7 @@ export function LanguageSelect({ value, onChange }) {
         <Select.HiddenSelect />
         <Select.Control>
           <Select.Trigger>
-            <Select.ValueText placeholder={settings.languageSelect()} />
+            <Select.ValueText placeholder={t("settings")("languageSelect")} />
           </Select.Trigger>
           <Select.IndicatorGroup>
             <Select.Indicator />

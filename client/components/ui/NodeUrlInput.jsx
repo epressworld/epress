@@ -1,7 +1,7 @@
 "use client"
 
 import { Button, HStack, Input, Text, VStack } from "@chakra-ui/react"
-import { useTranslation } from "../../hooks/useTranslation"
+import { useIntl } from "../../hooks/useIntl"
 
 export function NodeUrlInput({
   url,
@@ -11,7 +11,7 @@ export function NodeUrlInput({
   isLoading = false,
   disabled = false,
 }) {
-  const { connection, common } = useTranslation()
+  const { t } = useIntl()
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && url.trim() && !isLoading) {
@@ -22,10 +22,10 @@ export function NodeUrlInput({
   return (
     <VStack gap={3} align="stretch">
       <Text fontSize="sm" color="gray.600">
-        {connection.enterYourNodeUrl()}
+        {t("connection")("enterYourNodeUrl")}
       </Text>
       <Input
-        placeholder={connection.yourNodeUrlPlaceholder()}
+        placeholder={t("connection")("yourNodeUrlPlaceholder")}
         size="sm"
         value={url}
         onChange={(e) => setUrl(e.target.value)}
@@ -38,17 +38,17 @@ export function NodeUrlInput({
           colorPalette="orange"
           onClick={onFollow}
           loading={isLoading}
-          loadingText={connection.following()}
+          loadingText={t("connection")("following")}
           disabled={!url.trim() || disabled}
         >
-          {connection.confirmFollow()}
+          {t("connection")("confirmFollow")}
         </Button>
         <Button
           variant="outline"
           onClick={onCancel}
           disabled={isLoading || disabled}
         >
-          {common.cancel()}
+          {t("common")("cancel")}
         </Button>
       </HStack>
     </VStack>

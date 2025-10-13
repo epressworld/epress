@@ -2,12 +2,12 @@
 import { Button, Popover, Portal } from "@chakra-ui/react"
 import { FaPlus } from "react-icons/fa"
 import { useConnection } from "../../../hooks/useConnection"
-import { useTranslation } from "../../../hooks/useTranslation"
+import { useIntl } from "../../../hooks/useIntl"
 import { NodeUrlInput } from "../../ui"
 import { FollowAction, UnfollowAction } from ".."
 
 const FollowButton = ({ ...props }) => {
-  const { connection } = useTranslation()
+  const { t } = useIntl()
 
   const {
     address,
@@ -53,10 +53,10 @@ const FollowButton = ({ ...props }) => {
             {...props}
             onClick={handleButtonClick}
             loading={isLoading}
-            loadingText={connection.following()}
+            loadingText={t("connection")("following")}
           >
             <FaPlus />
-            {connection.follow()}
+            {t("connection")("follow")}
           </Button>
         )}
       </Popover.Trigger>

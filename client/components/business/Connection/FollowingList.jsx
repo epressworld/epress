@@ -16,34 +16,37 @@ import { LuEllipsis, LuUsers } from "react-icons/lu"
 import { useAuth } from "../../../contexts/AuthContext"
 import { DESTROY_CONNECTION } from "../../../graphql/mutations"
 import { SEARCH_NODES } from "../../../graphql/queries"
-import { useTranslation } from "../../../hooks/useTranslation"
+import { useIntl } from "../../../hooks/useIntl"
 import { useWallet } from "../../../hooks/useWallet"
 import { deleteConnectionTypedData } from "../../../utils/eip712"
 import { ConfirmDialog, UnifiedCard } from "../../ui"
 import { EmptyStateComponent } from "../../ui/EmptyState"
 import { toaster } from "../../ui/toaster"
 
-const Container = ({ children, lang, total }) => (
-  <UnifiedCard.Root>
-    <UnifiedCard.Header pb={2}>
-      <HStack justify="space-between" align="center">
-        <Heading size="lg" color="gray.700">
-          {lang.following()}
-        </Heading>
-        <Text
-          fontSize="lg"
-          fontWeight="bold"
-          fontStyle="italic"
-          color="gray.400"
-          _dark={{ color: "gray.600" }}
-        >
-          {total}
-        </Text>
-      </HStack>
-    </UnifiedCard.Header>
-    <UnifiedCard.Body pt={0}>{children}</UnifiedCard.Body>
-  </UnifiedCard.Root>
-)
+const Container = ({ children, total }) => {
+  const { t } = useIntl()
+  return (
+    <UnifiedCard.Root>
+      <UnifiedCard.Header pb={2}>
+        <HStack justify="space-between" align="center">
+          <Heading size="lg" color="gray.700">
+            {t("connection")("following")}
+          </Heading>
+          <Text
+            fontSize="lg"
+            fontWeight="bold"
+            fontStyle="italic"
+            color="gray.400"
+            _dark={{ color: "gray.600" }}
+          >
+            {total}
+          </Text>
+        </HStack>
+      </UnifiedCard.Header>
+      <UnifiedCard.Body pt={0}>{children}</UnifiedCard.Body>
+    </UnifiedCard.Root>
+  )
+}
 
 const FollowingList = () => {
   const [hasAttemptedLoadMore, setHasAttemptedLoadMore] = useState(false)
@@ -53,7 +56,7 @@ const FollowingList = () => {
   const [loading, setLoading] = useState(false)
   const { isNodeOwner } = useAuth()
   const { address, signEIP712Data } = useWallet()
-  const { connection, common } = useTranslation()
+  const { t } = useIntl()
 
   // 使用传入的数据或查询数据
   const { data, error, fetchMore } = useSuspenseQuery(SEARCH_NODES, {
@@ -94,7 +97,7 @@ const FollowingList = () => {
         .catch((error) => {
           console.error("加载更多失败:", error)
           toaster.create({
-            description: common.loadMoreFailed(),
+            description: t("common")("loadMoreFailed"),
             type: "error",
           })
         })
@@ -108,7 +111,7 @@ const FollowingList = () => {
   const handleUnfollow = async (node) => {
     if (!isNodeOwner || !address) {
       toaster.create({
-        description: connection.onlyNodeOwnerCanUnfollow(),
+        description: t("connection")("onlyNodeOwnerCanUnfollow"),
         type: "error",
       })
       return
@@ -134,7 +137,7 @@ const FollowingList = () => {
 
       if (!signature) {
         toaster.create({
-          description: connection.signatureFailed(),
+          description: t("connection")("signatureFailed"),
           type: "error",
         })
         return
@@ -159,7 +162,7 @@ const FollowingList = () => {
       })
 
       toaster.create({
-        description: connection.unfollowSuccess(),
+        description: t("connection")("unfollowSuccess"),
         type: "success",
       })
 
@@ -168,7 +171,7 @@ const FollowingList = () => {
     } catch (error) {
       console.error("取消关注失败:", error)
       toaster.create({
-        description: error.message || connection.unfollowFailed(),
+        description: error.message || t("connection")("unfollowFailed"),
         type: "error",
       })
     }
@@ -177,7 +180,7 @@ const FollowingList = () => {
 
   if (loading && !data) {
     return (
-      <Container lang={connection} total={total}>
+      <Container total={total}>
         <VStack colorPalette="orange">
           <Spinner color="colorPalette.600" />
           <Text color="colorPalette.600">Loading...</Text>
@@ -188,10 +191,10 @@ const FollowingList = () => {
 
   if (error) {
     return (
-      <Container lang={connection} total={total}>
+      <Container total={total}>
         <Box p={4}>
           <Text color="red.500">
-            {common.loadFailed()}: {error.message}
+            {t("common")("loadFailed")}: {error.message}
           </Text>
         </Box>
       </Container>
@@ -201,7 +204,7 @@ const FollowingList = () => {
   const following = data?.search?.edges?.map((edge) => edge.node) || []
 
   return (
-    <Container lang={connection} total={total}>
+    <Container total={total}>
       <Box>
         <VStack spacing={4} align="stretch">
           {following.map((node) => (
@@ -271,7 +274,7 @@ const FollowingList = () => {
                   onClick={() => handleUnfollow(node)}
                   loading={isDestroying}
                 >
-                  {connection.unfollow()}
+                  {t("connection")("unfollow")}
                 </Button>
               )}
             </HStack>
@@ -302,14 +305,14 @@ const FollowingList = () => {
               fontSize="sm"
               py={4}
             >
-              {common.noMore()}
+              {t("common")("noMore")}
             </Text>
           )}
 
           {following.length === 0 && !loading && (
             <EmptyStateComponent
-              title={connection.noFollowing()}
-              description={connection.noFollowingDescription()}
+              title={t("connection")("noFollowing")}
+              description={t("connection")("noFollowingDescription")}
               icon={<Icon as={LuUsers} />}
             />
           )}
@@ -323,12 +326,12 @@ const FollowingList = () => {
             setSelectedNode(null)
           }}
           onConfirm={handleConfirmUnfollow}
-          title={connection.confirmUnfollow()}
-          description={connection.confirmUnfollowMessage(
-            selectedNode?.title || "",
-          )}
-          confirmText={connection.unfollow()}
-          cancelText={common.cancel()}
+          title={t("connection")("confirmUnfollow")}
+          description={t("connection")("confirmUnfollowMessage", {
+            title: selectedNode?.title || "",
+          })}
+          confirmText={t("connection")("unfollow")}
+          cancelText={t("common")("cancel")}
           isLoading={isDestroying}
           colorPalette="red"
         />

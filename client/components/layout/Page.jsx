@@ -1,9 +1,9 @@
 "use client"
 import { useSuspenseQuery } from "@apollo/client/react"
 import { Container } from "@chakra-ui/react"
+import { NextIntlClientProvider } from "next-intl"
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react"
 import { AuthProvider } from "../../contexts/AuthContext"
-import { LanguageProvider } from "../../contexts/LanguageContext"
 import { PageContext } from "../../contexts/PageContext"
 import { ThemeProvider } from "../../contexts/ThemeContext"
 import { PAGE_DATA } from "../../graphql/queries"
@@ -12,7 +12,7 @@ import { Provider } from "../ui/provider"
 import { Footer } from "./Footer"
 import { Header } from "./Header"
 
-export function Page({ children }) {
+export function Page({ children, intl }) {
   // 客户端 Apollo 查询 - 复用相同的查询
   const { data, loading, error, refetch } = useSuspenseQuery(PAGE_DATA, {
     fetchPolicy: "cache-and-network",
@@ -56,15 +56,18 @@ export function Page({ children }) {
 
   return (
     <PageContext.Provider value={value}>
-      <WagmiProvider
-        walletConnectProjectId={value.settings.walletConnectProjectId}
+      <NextIntlClientProvider
+        locale={intl.locale}
+        messages={intl.messages}
+        timeZone={Intl.DateTimeFormat().resolvedOptions().timeZone}
+        now={new Date()}
       >
-        <Provider>
-          <AuthProvider>
-            <ThemeProvider defaultTheme={value.settings.defaultTheme}>
-              <LanguageProvider
-                defaultLanguage={value.settings.defaultLanguage}
-              >
+        <WagmiProvider
+          walletConnectProjectId={value.settings.walletConnectProjectId}
+        >
+          <Provider>
+            <AuthProvider>
+              <ThemeProvider defaultTheme={value.settings.defaultTheme}>
                 <div className="layout-container page-container">
                   <Header />
                   <main className="content-area">
@@ -74,11 +77,11 @@ export function Page({ children }) {
                   </main>
                   <Footer />
                 </div>
-              </LanguageProvider>
-            </ThemeProvider>
-          </AuthProvider>
-        </Provider>
-      </WagmiProvider>
+              </ThemeProvider>
+            </AuthProvider>
+          </Provider>
+        </WagmiProvider>
+      </NextIntlClientProvider>
     </PageContext.Provider>
   )
 }

@@ -7,7 +7,7 @@ import StarterKit from "@tiptap/starter-kit"
 import { common, createLowlight } from "lowlight"
 import { useEffect, useState } from "react"
 import { Markdown } from "tiptap-markdown"
-import { useTranslation } from "./useTranslation"
+import { useIntl } from "./useIntl"
 
 const lowlight = createLowlight(common)
 
@@ -21,7 +21,7 @@ export function usePublicationForm({
   resetTrigger = 0,
   disabled = false,
 }) {
-  const { publication } = useTranslation()
+  const { t } = useIntl()
   const [mode, setMode] = useState(initialMode)
   const [content, setContent] = useState(initialContent)
   const [fileDescription, setFileDescription] = useState("")
@@ -43,7 +43,7 @@ export function usePublicationForm({
         lowlight,
       }),
       Placeholder.configure({
-        placeholder: publication.writeSomething(),
+        placeholder: t("publication")("writeSomething"),
       }),
       Markdown.configure({
         html: false,

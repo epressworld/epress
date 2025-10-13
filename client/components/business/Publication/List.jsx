@@ -11,7 +11,7 @@ import {
   SIGN_PUBLICATION,
 } from "../../../graphql/mutations"
 import { SEARCH_PUBLICATIONS } from "../../../graphql/queries"
-import { useTranslation } from "../../../hooks/useTranslation"
+import { useIntl } from "../../../hooks/useIntl"
 import { useWallet } from "../../../hooks/useWallet"
 import { statementOfSourceTypedData } from "../../../utils/eip712"
 import { ConfirmDialog, SearchResultAlert, Skeletons } from "../../ui"
@@ -29,7 +29,7 @@ const PublicationList = ({
   const router = useRouter()
   const { authStatus, isNodeOwner } = useAuth()
   const { signEIP712Data } = useWallet()
-  const { publication: pub, common } = useTranslation()
+  const { t } = useIntl()
   const [hasAttemptedLoadMore, setHasAttemptedLoadMore] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [isLoading, setIsLoading] = useState(false)
@@ -50,8 +50,8 @@ const PublicationList = ({
       variables,
       notifyOnNetworkStatusChange: true,
       // 始终进行网络校验，确保登录状态变化后列表及时刷新
-      fetchPolicy: "cache-and-network",
-      nextFetchPolicy: "cache-and-network",
+      fetchPolicy: "network-only",
+      nextFetchPolicy: "network-only",
     },
   )
 
@@ -84,7 +84,7 @@ const PublicationList = ({
         .catch((error) => {
           console.error("加载更多失败:", error)
           toaster.create({
-            description: common.pleaseRetry(),
+            description: t("common")("pleaseRetry"),
             type: "error",
           })
         })
@@ -98,7 +98,7 @@ const PublicationList = ({
   const handleSignPublication = async (publication) => {
     if (authStatus !== AUTH_STATUS.AUTHENTICATED || !isNodeOwner) {
       toaster.create({
-        description: common.pleaseLoginAndConfirmOwner(),
+        description: t("common")("pleaseLoginAndConfirmOwner"),
         type: "error",
       })
       return
@@ -121,7 +121,7 @@ const PublicationList = ({
 
       if (!signature) {
         toaster.update(toasterId, {
-          description: common.signFailed(),
+          description: t("common")("signFailed"),
           type: "error",
         })
         return
@@ -138,14 +138,14 @@ const PublicationList = ({
 
       if (result?.signPublication) {
         toaster.update(toasterId, {
-          description: common.signSuccess(),
+          description: t("common")("signSuccess"),
           type: "success",
         })
       }
     } catch (error) {
       console.error("签名失败:", error)
       toaster.update(toasterId, {
-        description: `${common.signFailed()}, ${common.pleaseRetry()}`,
+        description: `${t("common")("signFailed")}, ${t("common")("pleaseRetry")}`,
         type: "error",
       })
     }
@@ -191,7 +191,7 @@ const PublicationList = ({
 
       if (result?.destroyPublication) {
         toaster.create({
-          description: common.deleteSuccess(),
+          description: t("common")("deleteSuccess"),
           type: "success",
         })
         setDeleteDialogOpen(false)
@@ -201,7 +201,7 @@ const PublicationList = ({
     } catch (error) {
       console.error("删除失败:", error)
       toaster.create({
-        description: `${common.deleteFailed()}, ${common.pleaseRetry()}`,
+        description: `${t("common")("deleteFailed")}, ${t("common")("pleaseRetry")}`,
         type: "error",
       })
     } finally {
@@ -218,7 +218,7 @@ const PublicationList = ({
       <Alert.Root status="error" py={8}>
         <Alert.Indicator />
         <Alert.Content>
-          <Alert.Title>{pub.loadFailed()}</Alert.Title>
+          <Alert.Title>{t("publication")("loadFailed")}</Alert.Title>
           <Alert.Description>{error.message}</Alert.Description>
         </Alert.Content>
       </Alert.Root>
@@ -282,7 +282,7 @@ const PublicationList = ({
             _dark={{ color: "gray.400" }}
             py={4}
           >
-            {common.noMore()}
+            {t("common")("noMore")}
           </Text>
         )}
 
@@ -293,7 +293,7 @@ const PublicationList = ({
             _dark={{ color: "gray.400" }}
             py={8}
           >
-            {pub.noContent()}
+            {t("publication")("noContent")}
           </Text>
         )}
       </VStack>
@@ -303,10 +303,10 @@ const PublicationList = ({
         isOpen={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={handleDeleteConfirm}
-        title={common.confirmDelete()}
-        message={common.confirmDeleteContent()}
-        confirmText={common.confirmDeleteText()}
-        cancelText={common.cancel()}
+        title={t("common")("confirmDelete")}
+        message={t("common")("confirmDeleteContent")}
+        confirmText={t("common")("confirmDeleteText")}
+        cancelText={t("common")("cancel")}
         isLoading={isDeleting}
         confirmColorPalette="red"
       />

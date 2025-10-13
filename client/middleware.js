@@ -1,30 +1,24 @@
 import { NextResponse } from "next/server"
 
-/**
- * Middleware to handle installation status and auth token injection
- */
 export async function middleware(request) {
-  // Inject auth token if present
   const token = request.cookies.get("authToken")?.value
-  if (token) {
-    const requestHeaders = new Headers(request.headers)
-    requestHeaders.set("authorization", `Bearer ${token}`)
-    return NextResponse.next({ request: { headers: requestHeaders } })
+
+  // 没有 token 直接放行
+  if (!token) {
+    return NextResponse.next()
   }
 
-  return NextResponse.next()
+  // 有 token 时添加到 headers
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set("authorization", `Bearer ${token}`)
+
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  })
 }
 
-// Match all routes except static files and Next.js internals
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
-    "/((?!_next/static|_next/image|favicon.ico|icons|manifest.json).*)",
-  ],
+  matcher: "/api/:path*", // 只匹配 /api 开头的所有路径
 }

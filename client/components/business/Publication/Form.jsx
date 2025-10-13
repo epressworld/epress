@@ -3,8 +3,8 @@
 import { Box, Button, Group, HStack, Input, VStack } from "@chakra-ui/react"
 import { FiFile, FiFileText } from "react-icons/fi"
 import { LuSend } from "react-icons/lu"
+import { useIntl } from "../../../hooks/useIntl"
 import { usePublicationForm } from "../../../hooks/usePublicationForm"
-import { useTranslation } from "../../../hooks/useTranslation"
 import { FileModeForm, PostModeForm } from "../../forms"
 import { UnifiedCard } from "../../ui"
 
@@ -20,7 +20,7 @@ export const PublicationForm = ({
   onFileRemove,
   resetTrigger = 0,
 }) => {
-  const { publication, common } = useTranslation()
+  const { t } = useIntl()
 
   const {
     mode,
@@ -75,7 +75,7 @@ export const PublicationForm = ({
             </Box>
           ) : (
             <Input
-              placeholder={common.addFileDescription()}
+              placeholder={t("common")("addFileDescription")}
               value={fileDescription}
               onChange={(e) => setFileDescription(e.target.value)}
               disabled={disabled}
@@ -90,7 +90,7 @@ export const PublicationForm = ({
                 onClick={(_e) => setMode("post")}
               >
                 <FiFileText />
-                {publication.postMode()}
+                {t("publication")("postMode")}
               </Button>
               <Button
                 size="xs"
@@ -98,7 +98,7 @@ export const PublicationForm = ({
                 onClick={(_e) => setMode("file")}
               >
                 <FiFile />
-                {publication.fileMode()}
+                {t("publication")("fileMode")}
               </Button>
             </Group>
 
@@ -107,7 +107,7 @@ export const PublicationForm = ({
               size="sm"
               onClick={handleFormSubmit}
               loading={isLoading}
-              loadingText={publication.publishing()}
+              loadingText={t("publication")("publishing")}
               disabled={
                 disabled ||
                 isLoading ||
@@ -116,7 +116,7 @@ export const PublicationForm = ({
               }
             >
               <LuSend />
-              {publication.publish()}
+              {t("publication")("publish")}
             </Button>
           </HStack>
         </VStack>

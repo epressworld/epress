@@ -1,3 +1,4 @@
+import "../config/index.mjs"
 export default {
   experimental: {
     optimizePackageImports: ["@chakra-ui/react"],
@@ -48,15 +49,14 @@ export default {
     return config
   },
   async rewrites() {
-    const apiUrl = process.env.EPRESS_API_URL || "http://localhost:8544"
     return [
       {
         source: "/ewp/:path*",
-        destination: `${apiUrl}/ewp/:path*`,
+        destination: `${process.env.EPRESS_API_URL}/ewp/:path*`,
       },
       {
         source: "/api/:path*",
-        destination: `${apiUrl}/api/:path*`,
+        destination: `${process.env.EPRESS_API_URL}/api/:path*`,
       },
     ]
   },
