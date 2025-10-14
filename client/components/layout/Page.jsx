@@ -3,12 +3,10 @@ import { useSuspenseQuery } from "@apollo/client/react"
 import { Container } from "@chakra-ui/react"
 import { NextIntlClientProvider } from "next-intl"
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react"
-import { AuthProvider } from "../../contexts/AuthContext"
-import { PageContext } from "../../contexts/PageContext"
-import { ThemeProvider } from "../../contexts/ThemeContext"
-import { PAGE_DATA } from "../../graphql/queries"
-import { WagmiProvider } from "../client/wagmi-provider"
-import { Provider } from "../ui/provider"
+import { AuthProvider } from "@/contexts/AuthContext"
+import { PageContext } from "@/contexts/PageContext"
+import { PAGE_DATA } from "@/lib/apollo/queries"
+import { ChakraProvider, WagmiProvider } from "../providers"
 import { Footer } from "./Footer"
 import { Header } from "./Header"
 
@@ -65,21 +63,19 @@ export function Page({ children, intl }) {
         <WagmiProvider
           walletConnectProjectId={value.settings.walletConnectProjectId}
         >
-          <Provider>
+          <ChakraProvider defaultTheme={value.settings.defaultTheme}>
             <AuthProvider>
-              <ThemeProvider defaultTheme={value.settings.defaultTheme}>
-                <div className="layout-container page-container">
-                  <Header />
-                  <main className="content-area">
-                    <Container maxW="6xl" py={6}>
-                      <Suspense fallback={null}>{children}</Suspense>
-                    </Container>
-                  </main>
-                  <Footer />
-                </div>
-              </ThemeProvider>
+              <div className="layout-container page-container">
+                <Header />
+                <main className="content-area">
+                  <Container maxW="6xl" py={6}>
+                    <Suspense fallback={null}>{children}</Suspense>
+                  </Container>
+                </main>
+                <Footer />
+              </div>
             </AuthProvider>
-          </Provider>
+          </ChakraProvider>
         </WagmiProvider>
       </NextIntlClientProvider>
     </PageContext.Provider>

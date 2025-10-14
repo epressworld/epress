@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation"
-import { ApolloProvider } from "../../components/client/apollo-provider"
-import { Page } from "../../components/layout"
-import { PwaRegistry } from "../../components/ui/PwaRegistry"
-import { PreloadQuery, query } from "../../graphql/client"
-import { PAGE_DATA } from "../../graphql/queries"
+import { Page } from "@/components/layout"
+import { ApolloProvider } from "@/components/providers"
+import { PwaRegistry } from "@/components/ui/PwaRegistry"
+import { PAGE_DATA } from "@/lib/apollo"
+import { PreloadQuery, query } from "@/lib/apollo/client"
 
-import "../../styles/globals.css"
+import "@/styles/globals.css"
 
 export const dynamic = "force-dynamic"
 

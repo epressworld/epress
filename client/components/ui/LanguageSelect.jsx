@@ -1,7 +1,7 @@
 "use client"
 
 import { createListCollection, Select, Text, VStack } from "@chakra-ui/react"
-import { useIntl } from "../../hooks/useIntl"
+import { useIntl } from "@/hooks/utils"
 
 export function LanguageSelect({ value, onChange }) {
   const { t } = useIntl()

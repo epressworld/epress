@@ -7,9 +7,9 @@ import {
 } from "@chakra-ui/react"
 import { NextIntlClientProvider } from "next-intl"
 import { useEffect, useState } from "react"
-import { WagmiProvider } from "../../../components/client/wagmi-provider"
-import { LanguageSwitcher } from "../../../components/installer/LanguageSwitcher"
-import installerMessages from "../../../messages/installer.json"
+import { LanguageSwitcher } from "@/components/features/installer"
+import { WagmiProvider } from "@/components/providers"
+import installerMessages from "@/messages/installer.json"
 
 export default function InstallerLayout({ children }) {
   const [locale, setLocale] = useState("en")

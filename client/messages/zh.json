@@ -6,6 +6,7 @@
     "delete": "删除",
     "search": "搜索",
     "keyword": "关键词",
+    "download": "下载",
     "enterKeyword": "输入关键词",
     "searchResults": "搜索结果",
     "searchResultsCount": "找到 {count} 条关于 \"{keyword}\" 的结果",

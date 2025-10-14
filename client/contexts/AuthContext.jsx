@@ -14,9 +14,12 @@ import {
   useState,
 } from "react"
 import { useAccount, useDisconnect, useWalletClient } from "wagmi"
-import { SIGN_IN_WITH_ETHEREUM } from "../graphql/mutations"
-import { GET_SIWE_MESSAGE, IS_FOLLOWER } from "../graphql/queries"
-import { usePage } from "./PageContext"
+import { usePage } from "@/contexts/PageContext"
+import {
+  GET_SIWE_MESSAGE,
+  IS_FOLLOWER,
+  SIGN_IN_WITH_ETHEREUM,
+} from "@/lib/apollo"
 
 // 1. 定义清晰的状态枚举
 export const AUTH_STATUS = {

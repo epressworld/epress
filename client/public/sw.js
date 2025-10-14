@@ -32,21 +32,31 @@ self.addEventListener("activate", (event) => {
   return self.clients.claim()
 })
 
-// 监听 fetch 事件，应用“网络优先”策略
+// 监听 fetch 事件，应用“网络优先”策略，但对 Range Request 特殊处理
 self.addEventListener("fetch", (event) => {
   // 我们只处理 GET 请求
   if (event.request.method !== "GET") {
     return
   }
 
-  // 对所有 GET 请求采用“网络优先”策略
+  // --- 新增：处理 Range Requests ---
+  if (event.request.headers.has("range")) {
+    // 对于 Range Request，总是直接从网络获取，不经过缓存
+    event.respondWith(fetch(event.request))
+    return
+  }
+
+  // --- 对非 Range Request 沿用“网络优先”策略 ---
   event.respondWith(
     fetch(event.request)
       .then((networkResponse) => {
         // 请求成功，克隆响应并存入缓存
         const responseToCache = networkResponse.clone()
         caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache)
+          // 只缓存状态码为 200 的成功响应
+          if (responseToCache.status === 200) {
+            cache.put(event.request, responseToCache)
+          }
         })
         return networkResponse
       })
