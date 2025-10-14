@@ -290,3 +290,501 @@ test("GET /contents/:content_hash should return INVALID_TIMESTAMP for invalid ti
   t.is(response.statusCode, 400, "should return 400 Bad Request")
   t.deepEqual(response.json(), { error: "INVALID_TIMESTAMP" })
 })
+
+// New tests for 100% coverage
+
+test.serial(
+  "GET /contents/:content_hash should return 503 if node is not configured",
+  async (t) => {
+    // Mock the request to override getSelfNode
+    const selfNode = await Node.query().findOne({ is_self: true })
+    await selfNode.$query().delete()
+
+    const response = await t.context.app.inject({
+      method: "GET",
+      url: `/ewp/contents/0xsomehash`,
+    })
+
+    t.is(response.statusCode, 503, "should return 503 Service Unavailable")
+    t.deepEqual(response.json(), { error: "Node not configured" })
+    await Node.query().insert(selfNode)
+  },
+)
+
+test("GET /contents/:content_hash should return CONTENT_NOT_FOUND if publication exists but content does not", async (t) => {
+  const fakeHash = `0x${"a".repeat(66)}`
+
+  await Publication.query().insert({
+    content_hash: fakeHash,
+    author_address: t.context.selfNode.address,
+    signature: "0x123",
+  })
+
+  const response = await t.context.app.inject({
+    method: "GET",
+    url: `/ewp/contents/${fakeHash}`,
+  })
+
+  t.is(response.statusCode, 404, "should return 404 Not Found")
+  t.deepEqual(response.json(), { error: "CONTENT_NOT_FOUND" })
+})
+
+test("GET /contents/:content_hash should return INTERNAL_ERROR if FILE type has no local_path", async (t) => {
+  const content = await Content.query().insertAndFetch({
+    content_hash: `0x${"b".repeat(66)}`,
+    type: "FILE",
+    mimetype: "image/png",
+    filename: "test.png",
+    local_path: null, // Missing local_path
+  })
+
+  await Publication.query().insert({
+    content_hash: content.content_hash,
+    author_address: t.context.selfNode.address,
+    signature: "0x123",
+  })
+
+  const response = await t.context.app.inject({
+    method: "GET",
+    url: `/ewp/contents/${content.content_hash}`,
+  })
+
+  t.is(response.statusCode, 500, "should return 500 Internal Server Error")
+  t.deepEqual(response.json(), { error: "INTERNAL_ERROR" })
+})
+
+test("GET /contents/:content_hash should return CONTENT_NOT_FOUND (404) if file does not exist on disk", async (t) => {
+  const nonExistentPath = `non_existent_file_${Date.now()}.png`
+
+  const content = await Content.query().insertAndFetch({
+    content_hash: `0x${"c".repeat(66)}`,
+    type: "FILE",
+    mimetype: "image/png",
+    filename: "missing.png",
+    local_path: nonExistentPath,
+  })
+
+  await Publication.query().insert({
+    content_hash: content.content_hash,
+    author_address: t.context.selfNode.address,
+    signature: "0x123",
+  })
+
+  const response = await t.context.app.inject({
+    method: "GET",
+    url: `/ewp/contents/${content.content_hash}`,
+  })
+
+  t.is(response.statusCode, 404, "should return 404 Not Found")
+  t.deepEqual(response.json(), { error: "CONTENT_NOT_FOUND" })
+})
+
+test("GET /contents/:content_hash should support Range request with valid range", async (t) => {
+  const testContent = Buffer.from("0123456789abcdef") // 16 bytes
+  const fileName = `range_test_${Date.now()}.bin`
+  const filePath = `/tmp/${fileName}`
+
+  await fs.writeFile(filePath, testContent)
+
+  const content = await Content.create({
+    type: "FILE",
+    file: {
+      filename: fileName,
+      mimetype: "application/octet-stream",
+      createReadStream: () => createReadStream(filePath),
+    },
+  })
+
+  await Publication.query().insert({
+    content_hash: content.content_hash,
+    author_address: t.context.selfNode.address,
+    signature: "0x123",
+  })
+
+  const response = await t.context.app.inject({
+    method: "GET",
+    url: `/ewp/contents/${content.content_hash}`,
+    headers: {
+      range: "bytes=0-7",
+    },
+  })
+
+  t.is(response.statusCode, 206, "should return 206 Partial Content")
+  t.is(response.headers["content-range"], "bytes 0-7/16")
+  t.is(response.headers["content-length"], "8")
+  t.deepEqual(response.rawPayload, Buffer.from("01234567"))
+
+  await fs.unlink(filePath)
+})
+
+test("GET /contents/:content_hash should support Range request without end byte", async (t) => {
+  const testContent = Buffer.from("ABCDEFGHIJ123456") // 16 bytes - unique content
+  const fileName = `range_no_end_${Date.now()}.bin`
+  const filePath = `/tmp/${fileName}`
+
+  await fs.writeFile(filePath, testContent)
+
+  const content = await Content.create({
+    type: "FILE",
+    file: {
+      filename: fileName,
+      mimetype: "application/octet-stream",
+      createReadStream: () => createReadStream(filePath),
+    },
+  })
+
+  await Publication.query().insert({
+    content_hash: content.content_hash,
+    author_address: t.context.selfNode.address,
+    signature: "0x123",
+  })
+
+  const response = await t.context.app.inject({
+    method: "GET",
+    url: `/ewp/contents/${content.content_hash}`,
+    headers: {
+      range: "bytes=10-",
+    },
+  })
+
+  t.is(response.statusCode, 206, "should return 206 Partial Content")
+  t.is(response.headers["content-range"], "bytes 10-15/16")
+  t.deepEqual(response.rawPayload, Buffer.from("123456"))
+
+  await fs.unlink(filePath)
+})
+
+test("GET /contents/:content_hash should return 416 if Range start is beyond file size", async (t) => {
+  const testContent = Buffer.from("0123456789") // 10 bytes
+  const fileName = `range_invalid_${Date.now()}.bin`
+  const filePath = `/tmp/${fileName}`
+
+  await fs.writeFile(filePath, testContent)
+
+  const content = await Content.create({
+    type: "FILE",
+    file: {
+      filename: fileName,
+      mimetype: "application/octet-stream",
+      createReadStream: () => createReadStream(filePath),
+    },
+  })
+
+  await Publication.query().insert({
+    content_hash: content.content_hash,
+    author_address: t.context.selfNode.address,
+    signature: "0x123",
+  })
+
+  const response = await t.context.app.inject({
+    method: "GET",
+    url: `/ewp/contents/${content.content_hash}`,
+    headers: {
+      range: "bytes=20-30",
+    },
+  })
+
+  t.is(response.statusCode, 416, "should return 416 Range Not Satisfiable")
+  t.is(response.headers["content-range"], "bytes */10")
+
+  await fs.unlink(filePath)
+})
+
+test("GET /contents/:content_hash should ignore Range header if If-Range does not match", async (t) => {
+  const testContent = Buffer.from("XYZ0123456789ABC") // 16 bytes - unique content
+  const fileName = `if_range_mismatch_${Date.now()}.bin`
+  const filePath = `/tmp/${fileName}`
+
+  await fs.writeFile(filePath, testContent)
+
+  const content = await Content.create({
+    type: "FILE",
+    file: {
+      filename: fileName,
+      mimetype: "application/octet-stream",
+      createReadStream: () => createReadStream(filePath),
+    },
+  })
+
+  await Publication.query().insert({
+    content_hash: content.content_hash,
+    author_address: t.context.selfNode.address,
+    signature: "0x123",
+  })
+
+  const response = await t.context.app.inject({
+    method: "GET",
+    url: `/ewp/contents/${content.content_hash}`,
+    headers: {
+      range: "bytes=0-7",
+      "if-range": "Wed, 01 Jan 2020 00:00:00 GMT", // Mismatched date
+    },
+  })
+
+  t.is(response.statusCode, 200, "should return 200 OK with full content")
+  t.is(response.headers["content-length"], "16")
+  t.deepEqual(response.rawPayload, testContent)
+
+  await fs.unlink(filePath)
+})
+
+test("GET /contents/:content_hash should honor Range header if If-Range matches", async (t) => {
+  const testContent = Buffer.from("QWE0123456789RTY") // 16 bytes - unique content
+  const fileName = `if_range_match_${Date.now()}.bin`
+  const filePath = `/tmp/${fileName}`
+
+  await fs.writeFile(filePath, testContent)
+  const stats = await fs.stat(filePath)
+  const lastModified = stats.mtime.toUTCString()
+
+  const content = await Content.create({
+    type: "FILE",
+    file: {
+      filename: fileName,
+      mimetype: "application/octet-stream",
+      createReadStream: () => createReadStream(filePath),
+    },
+  })
+
+  await Publication.query().insert({
+    content_hash: content.content_hash,
+    author_address: t.context.selfNode.address,
+    signature: "0x123",
+  })
+
+  const response = await t.context.app.inject({
+    method: "GET",
+    url: `/ewp/contents/${content.content_hash}`,
+    headers: {
+      range: "bytes=0-7",
+      "if-range": lastModified,
+    },
+  })
+
+  t.is(response.statusCode, 206, "should return 206 Partial Content")
+  t.is(response.headers["content-range"], "bytes 0-7/16")
+  t.deepEqual(response.rawPayload, Buffer.from("QWE01234"))
+
+  await fs.unlink(filePath)
+})
+
+test("GET /contents/:content_hash should handle FILE without filename (use 'download' as default)", async (t) => {
+  const testContent = Buffer.from("no filename content here")
+  const fileName = `will_remove_name_${Date.now()}.bin`
+  const filePath = `/tmp/${fileName}`
+
+  await fs.writeFile(filePath, testContent)
+
+  const content = await Content.create({
+    type: "FILE",
+    file: {
+      filename: fileName,
+      mimetype: "application/octet-stream",
+      createReadStream: () => createReadStream(filePath),
+    },
+  })
+
+  // Get the created content with id
+  const createdContent = await Content.query().findOne({
+    content_hash: content.content_hash,
+  })
+
+  // Manually update to remove filename
+  await Content.query()
+    .findById(createdContent.content_hash)
+    .patch({ filename: null })
+
+  await Publication.query().insert({
+    content_hash: content.content_hash,
+    author_address: t.context.selfNode.address,
+    signature: "0x123",
+  })
+
+  const response = await t.context.app.inject({
+    method: "GET",
+    url: `/ewp/contents/${content.content_hash}`,
+  })
+
+  t.is(response.statusCode, 200)
+  t.true(response.headers["content-disposition"].includes("download"))
+
+  await fs.unlink(filePath)
+})
+
+test("GET /contents/:content_hash should handle FILE with empty description", async (t) => {
+  const testContent = Buffer.from("test")
+  const fileName = `empty_desc_${Date.now()}.bin`
+  const filePath = `/tmp/${fileName}`
+
+  await fs.writeFile(filePath, testContent)
+
+  const content = await Content.create({
+    type: "FILE",
+    file: {
+      filename: fileName,
+      mimetype: "text/plain",
+      createReadStream: () => createReadStream(filePath),
+    },
+  })
+
+  await Publication.query().insert({
+    content_hash: content.content_hash,
+    author_address: t.context.selfNode.address,
+    signature: "0x123",
+    description: "", // Empty description
+  })
+
+  const response = await t.context.app.inject({
+    method: "GET",
+    url: `/ewp/contents/${content.content_hash}`,
+  })
+
+  t.is(response.statusCode, 200)
+  t.is(response.headers["content-description"], "")
+
+  await fs.unlink(filePath)
+})
+
+test("GET /contents/:content_hash should handle FILE with non-ASCII filename", async (t) => {
+  const testContent = Buffer.from("Chinese filename test 中文")
+  const fileName = `测试文件_${Date.now()}.txt`
+  const filePath = `/tmp/${fileName}`
+
+  await fs.writeFile(filePath, testContent)
+
+  const content = await Content.create({
+    type: "FILE",
+    file: {
+      filename: fileName,
+      mimetype: "text/plain",
+      createReadStream: () => createReadStream(filePath),
+    },
+  })
+
+  await Publication.query().insert({
+    content_hash: content.content_hash,
+    author_address: t.context.selfNode.address,
+    signature: "0x123",
+  })
+
+  const response = await t.context.app.inject({
+    method: "GET",
+    url: `/ewp/contents/${content.content_hash}`,
+  })
+
+  t.is(response.statusCode, 200)
+  const disposition = response.headers["content-disposition"]
+  t.true(
+    disposition.includes("filename*=UTF-8''"),
+    "should use RFC 5987 encoding for non-ASCII",
+  )
+
+  await fs.unlink(filePath)
+})
+
+test("GET /contents/:content_hash should handle FILE with special characters in filename", async (t) => {
+  const testContent = Buffer.from('Special chars "quotes" test')
+  const fileName = `file"with\\quotes_${Date.now()}.txt`
+  const filePath = `/tmp/${fileName}`
+
+  await fs.writeFile(filePath, testContent)
+
+  const content = await Content.create({
+    type: "FILE",
+    file: {
+      filename: fileName,
+      mimetype: "text/plain",
+      createReadStream: () => createReadStream(filePath),
+    },
+  })
+
+  await Publication.query().insert({
+    content_hash: content.content_hash,
+    author_address: t.context.selfNode.address,
+    signature: "0x123",
+  })
+
+  const response = await t.context.app.inject({
+    method: "GET",
+    url: `/ewp/contents/${content.content_hash}`,
+  })
+
+  t.is(response.statusCode, 200)
+  const disposition = response.headers["content-disposition"]
+  t.true(
+    disposition.includes("filename*=UTF-8''"),
+    "should use RFC 5987 encoding for special chars",
+  )
+
+  await fs.unlink(filePath)
+})
+
+test("GET /contents/:content_hash should handle POST content with custom mimetype", async (t) => {
+  const customContent = "Custom content type"
+  const customMimetype = "text/custom"
+
+  const content = await Content.query().insertAndFetch({
+    content_hash: `0x${"d".repeat(66)}`,
+    type: "POST",
+    body: customContent,
+    mimetype: customMimetype,
+  })
+
+  await Publication.query().insert({
+    content_hash: content.content_hash,
+    author_address: t.context.selfNode.address,
+    signature: "0x123",
+  })
+
+  const response = await t.context.app.inject({
+    method: "GET",
+    url: `/ewp/contents/${content.content_hash}`,
+  })
+
+  t.is(response.statusCode, 200)
+  t.is(response.headers["content-type"], customMimetype)
+  t.is(response.payload, customContent)
+})
+
+test("GET /contents/:content_hash should handle FILE without mimetype (use default)", async (t) => {
+  const testContent = Buffer.from("mimetype test content")
+  const fileName = `no_mime_${Date.now()}.bin`
+  const filePath = `/tmp/${fileName}`
+
+  await fs.writeFile(filePath, testContent)
+
+  const content = await Content.create({
+    type: "FILE",
+    file: {
+      filename: fileName,
+      mimetype: "application/octet-stream",
+      createReadStream: () => createReadStream(filePath),
+    },
+  })
+
+  // Get the created content with id
+  const createdContent = await Content.query().findOne({
+    content_hash: content.content_hash,
+  })
+
+  // Remove mimetype
+  await Content.query()
+    .findById(createdContent.content_hash)
+    .patch({ mimetype: null })
+
+  await Publication.query().insert({
+    content_hash: content.content_hash,
+    author_address: t.context.selfNode.address,
+    signature: "0x123",
+  })
+
+  const response = await t.context.app.inject({
+    method: "GET",
+    url: `/ewp/contents/${content.content_hash}`,
+  })
+
+  t.is(response.statusCode, 200)
+  t.is(response.headers["content-type"], "application/octet-stream")
+
+  await fs.unlink(filePath)
+})
