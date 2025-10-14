@@ -1,7 +1,7 @@
 "use client"
 
 import { createListCollection, Select, Text, VStack } from "@chakra-ui/react"
-import { useIntl } from "../../hooks/useIntl"
+import { useIntl } from "@/hooks/utils"
 
 // 主题选项将在组件内部动态创建，以便使用翻译
 

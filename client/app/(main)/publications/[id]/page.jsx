@@ -1,9 +1,9 @@
 import { notFound, redirect } from "next/navigation"
 import { Suspense } from "react"
-import { Skeletons } from "../../../../components/ui"
-import { PreloadQuery, query } from "../../../../graphql/client"
-import { FETCH, SEARCH_PUBLICATIONS } from "../../../../graphql/queries"
-import ClientPage from "./page.client"
+import { PublicationItemPage } from "@/components/features/publication"
+import { Skeletons } from "@/components/ui"
+import { FETCH, SEARCH_PUBLICATIONS } from "@/lib/apollo"
+import { PreloadQuery, query } from "@/lib/apollo/client"
 
 export default async function PublicationDetailServerPage({
   params,
@@ -71,7 +71,7 @@ export default async function PublicationDetailServerPage({
   return (
     <PreloadQuery query={FETCH} variables={variables}>
       <Suspense fallback={<Skeletons.PublicationDetail />}>
-        <ClientPage variables={variables} />
+        <PublicationItemPage variables={variables} />
       </Suspense>
     </PreloadQuery>
   )

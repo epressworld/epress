@@ -18,8 +18,8 @@ import { useEffect, useState } from "react"
 import { FaCodeBranch } from "react-icons/fa6"
 import { LuCalendar, LuClock } from "react-icons/lu"
 import { SiEthereum } from "react-icons/si"
-import { usePage } from "../../contexts/PageContext"
-import { useIntl } from "../../hooks/useIntl"
+import { usePage } from "@/contexts/PageContext"
+import { useIntl } from "@/hooks/utils"
 import { Toaster } from "../ui/toaster"
 
 export const Footer = () => {

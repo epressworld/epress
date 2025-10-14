@@ -1,10 +1,7 @@
 import { Alert } from "@chakra-ui/react"
 import { redirect } from "next/navigation"
-import { getClient } from "../../../graphql/client"
-import {
-  CONFIRM_COMMENT,
-  CONFIRM_COMMENT_DELETION,
-} from "../../../graphql/mutations"
+import { CONFIRM_COMMENT, CONFIRM_COMMENT_DELETION } from "@/lib/apollo"
+import { getClient } from "@/lib/apollo/client"
 
 const VerifyError = ({ message, description }) => (
   <Alert.Root status="error">

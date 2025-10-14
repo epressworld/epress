@@ -1,16 +1,21 @@
 "use client"
-import { EmptyState, VStack } from "@chakra-ui/react"
+import { EmptyState as ChakraEmptyState, VStack } from "@chakra-ui/react"
 
-export const EmptyStateComponent = ({ title, description, icon, ...props }) => {
+export const EmptyState = ({ title, description, icon, ...props }) => {
   return (
-    <EmptyState.Root {...props}>
-      <EmptyState.Content>
-        <EmptyState.Indicator>{icon}</EmptyState.Indicator>
+    <ChakraEmptyState.Root {...props}>
+      <ChakraEmptyState.Content>
+        <ChakraEmptyState.Indicator>{icon}</ChakraEmptyState.Indicator>
         <VStack textAlign="center">
-          <EmptyState.Title>{title}</EmptyState.Title>
-          <EmptyState.Description>{description}</EmptyState.Description>
+          <ChakraEmptyState.Title>{title}</ChakraEmptyState.Title>
+          <ChakraEmptyState.Description>
+            {description}
+          </ChakraEmptyState.Description>
         </VStack>
-      </EmptyState.Content>
-    </EmptyState.Root>
+      </ChakraEmptyState.Content>
+    </ChakraEmptyState.Root>
   )
 }
+
+// Backward compatibility
+export const EmptyStateComponent = EmptyState

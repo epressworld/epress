@@ -1,6 +1,6 @@
 import { Box } from "@chakra-ui/react"
 import { FaExclamationTriangle } from "react-icons/fa"
-import { EmptyStateComponent } from "../../components/ui/EmptyState"
+import { EmptyStateComponent } from "@/components/ui/EmptyState"
 
 export const metadata = {
   title: "404 - Page Not Found",

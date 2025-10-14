@@ -1,6 +1,5 @@
 "use client"
 import {
-  Avatar,
   Box,
   Button,
   Container,
@@ -30,11 +29,13 @@ import {
   LuSettings,
   LuUsers,
 } from "react-icons/lu"
-import { AUTH_STATUS, useAuth } from "../../contexts/AuthContext"
-import { usePage } from "../../contexts/PageContext"
-import { useIntl } from "../../hooks/useIntl"
-import { FollowButton } from "../business"
-import { ConnectWalletButton, SearchDialog, SettingsDialog } from "../ui"
+import { FollowButton } from "@/components/features/connection"
+import { SettingsDialog } from "@/components/features/settings"
+import { AUTH_STATUS, useAuth } from "@/contexts/AuthContext"
+import { usePage } from "@/contexts/PageContext"
+import { useIntl } from "@/hooks/utils"
+import { ConnectWalletButton, SearchDialog } from "../ui"
+import { NodeAvatar } from "../ui/avatar"
 
 export const Header = () => {
   const { authStatus, isNodeOwner, login, loginState, logout } = useAuth()
@@ -214,17 +215,12 @@ export const Header = () => {
             {/* 左侧：头像和标题信息 */}
             <HStack gap={4} align="center" flex="1" minW={0}>
               <Link href="/" _hover={{ textDecoration: "none" }}>
-                <Avatar.Root
-                  size={"lg"}
+                <NodeAvatar
+                  node={profile}
+                  size="lg"
                   className="header-avatar"
-                  flexShrink={0}
                   cursor="pointer"
-                >
-                  <Avatar.Fallback name={profile.title} />
-                  <Avatar.Image
-                    src={profile.url ? `${profile.url}/ewp/avatar` : undefined}
-                  />
-                </Avatar.Root>
+                />
               </Link>
 
               <VStack gap={0} align="start" flex="1" minW={0} maxW="100%">

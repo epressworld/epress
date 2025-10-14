@@ -6,6 +6,7 @@
     "delete": "Delete",
     "search": "Search",
     "keyword": "Keyword",
+    "download": "Download",
     "enterKeyword": "Input Keyword",
     "searchResults": "Search Results",
     "searchResultsCount": "Found {count} results for \"{keyword}\"",

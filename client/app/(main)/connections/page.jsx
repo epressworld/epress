@@ -1,8 +1,8 @@
 import { Suspense } from "react"
-import { Skeletons } from "../../../components/ui"
-import { PreloadQuery } from "../../../graphql/client"
-import { SEARCH_NODES } from "../../../graphql/queries"
-import ClientPage from "./page.client"
+import { ConnectionPage } from "@/components/features/connection"
+import { Skeletons } from "@/components/ui"
+import { SEARCH_NODES } from "@/lib/apollo"
+import { PreloadQuery } from "@/lib/apollo/client"
 
 export default async function ConnectionsServerPage() {
   return (
@@ -23,7 +23,7 @@ export default async function ConnectionsServerPage() {
         }}
       >
         <Suspense fallback={<Skeletons.Connections />}>
-          <ClientPage />
+          <ConnectionPage />
         </Suspense>
       </PreloadQuery>
     </PreloadQuery>

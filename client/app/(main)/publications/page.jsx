@@ -1,8 +1,8 @@
 import { Suspense } from "react"
-import { Skeletons } from "../../../components/ui"
-import { PreloadQuery } from "../../../graphql/client"
-import { SEARCH_PUBLICATIONS } from "../../../graphql/queries"
-import ClientPage from "./page.client"
+import { PublicationListPage } from "@/components/features/publication"
+import { Skeletons } from "@/components/ui"
+import { SEARCH_PUBLICATIONS } from "@/lib/apollo"
+import { PreloadQuery } from "@/lib/apollo/client"
 
 export default async function PublicationsServerPage({ searchParams }) {
   const params = await searchParams
@@ -17,7 +17,7 @@ export default async function PublicationsServerPage({ searchParams }) {
   return (
     <PreloadQuery query={SEARCH_PUBLICATIONS} variables={variables}>
       <Suspense fallback={<Skeletons.Publications />}>
-        <ClientPage variables={variables} keyword={keyword} />
+        <PublicationListPage variables={variables} keyword={keyword} />
       </Suspense>
     </PreloadQuery>
   )
