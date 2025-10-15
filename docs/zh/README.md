@@ -155,12 +155,6 @@ epress 通过几个关键的原创设计来实现彻底的去中心化，详情�
 
 更多详情请查阅 [**`docs/zh/INSTALLATION.md`**](/docs/zh/INSTALLATION.md)。
 
-#### 方式三: 使用 Railway 一键部署 (最简单)
-
-为了最简单的试用体验，您可以使用 Railway 一键部署您自己的 epress 节点。
-
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/KSrYk-?referralCode=ArMZjP&utm_medium=integration&utm_source=template&utm_campaign=generic)
-
 ### 👨‍💻 开发者指南
 
 如果您想参与 epress 的开发或基于 epress 进行二次开发：

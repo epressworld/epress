@@ -154,12 +154,6 @@ Ideal for developers who want to customize or contribute.
 
 For more details, see [**`docs/en/INSTALLATION.md`**](/docs/en/INSTALLATION.md).
 
-#### Option 3: Deploy with Railway (Easiest)
-
-For the simplest trial experience, you can deploy your own epress node with a single click using Railway.
-
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/KSrYk-?referralCode=ArMZjP&utm_medium=integration&utm_source=template&utm_campaign=generic)
-
 ### 👨‍💻 Developer Guide
 
 To contribute to epress or build on top of it:
