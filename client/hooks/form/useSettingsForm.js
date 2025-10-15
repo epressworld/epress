@@ -12,6 +12,8 @@ export function useSettingsForm() {
 
   // 状态管理
   const [isLoading, setIsLoading] = useState(false)
+  const [mailTransportValidating, setMailTransportValidating] = useState(false)
+  const [mailTransportValid, setMailTransportValid] = useState(null)
 
   // React Hook Form 配置
   const form = useForm({
@@ -25,6 +27,7 @@ export function useSettingsForm() {
       mailTransport: "",
       mailFrom: "",
     },
+    mode: "onChange",
   })
 
   // GraphQL变更
@@ -45,6 +48,42 @@ export function useSettingsForm() {
       })
     }
   }, [settings, form])
+
+  // SMTP validation function
+  const validateMailTransport = async (value) => {
+    if (!value || value.trim() === "") {
+      setMailTransportValid(null)
+      return true // Optional field
+    }
+
+    setMailTransportValidating(true)
+    setMailTransportValid(null)
+
+    try {
+      const response = await fetch("/api/smtp_check", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ mailTransport: value }),
+      })
+
+      const data = await response.json()
+
+      if (data.valid) {
+        setMailTransportValid(true)
+        return true
+      } else {
+        setMailTransportValid(false)
+        return data.error || t("settings")("mailTransportInvalid")
+      }
+    } catch (error) {
+      setMailTransportValid(false)
+      return t("settings")("mailTransportInvalid")
+    } finally {
+      setMailTransportValidating(false)
+    }
+  }
 
   // 表单提交处理函数
   const onSubmit = async (data) => {
@@ -92,5 +131,8 @@ export function useSettingsForm() {
     isLoading,
     settingsLoading,
     onSubmit,
+    validateMailTransport,
+    mailTransportValidating,
+    mailTransportValid,
   }
 }

@@ -170,8 +170,31 @@ const commentMutations = {
 
       // 5. 创建阶段不更新 comment_count（待确认阶段更新）
 
-      // 6. 如果是 EMAIL 认证，发送确认邮件并存储 token
+      // 6. 如果是 EMAIL 认证，检查邮件配置并发送确认邮件
       if (auth_type === "EMAIL") {
+        // Check if mail is configured
+        const mailTransport = await Setting.query().findOne({
+          key: "mail_transport",
+        })
+        const mailFrom = await Setting.query().findOne({
+          key: "mail_from",
+        })
+
+        const isMailConfigured = mailTransport?.value && mailFrom?.value
+
+        if (!isMailConfigured) {
+          // Mail is not configured, cannot use EMAIL authentication
+          request.log.warn(
+            "Email authentication attempted but mail is not configured",
+          )
+          throw new ErrorWithProps(
+            "Email authentication is not available. Mail server is not configured. Please use Ethereum authentication instead.",
+            {
+              code: "MAIL_NOT_CONFIGURED",
+            },
+          )
+        }
+
         const token = await app.jwt.sign(
           {
             aud: "comment",

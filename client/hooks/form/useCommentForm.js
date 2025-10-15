@@ -16,13 +16,16 @@ export function useCommentForm(
   onCommentCreated,
   onPendingChange,
 ) {
-  const { profile } = usePage()
+  const { profile, settings } = usePage()
   const { signEIP712Data } = useWallet()
   const { t } = useIntl()
   const { openConnectModal } = useConnectModal()
 
   // 直接使用wagmi的hooks获取最新状态
   const { address, isConnected } = useAccount()
+
+  // Check if mail is enabled
+  const isMailEnabled = settings?.mail?.enabled || false
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isWaitingForWallet, setIsWaitingForWallet] = useState(false)
@@ -50,11 +53,17 @@ export function useCommentForm(
     if (isConnected) {
       setAuthType("ETHEREUM")
       commentForm.setValue("authType", "ETHEREUM")
-    } else {
+    } else if (isMailEnabled) {
+      // Only use EMAIL if mail is enabled
       setAuthType("EMAIL")
       commentForm.setValue("authType", "EMAIL")
+    } else {
+      // If mail is not enabled and wallet is not connected, default to ETHEREUM
+      // User will need to connect wallet to comment
+      setAuthType("ETHEREUM")
+      commentForm.setValue("authType", "ETHEREUM")
     }
-  }, [isConnected]) // 监听 isConnected 变化
+  }, [isConnected, isMailEnabled]) // 监听 isConnected 和 isMailEnabled 变化
 
   // 监听钱包连接状态，清除等待状态
   useEffect(() => {
@@ -295,6 +304,7 @@ export function useCommentForm(
     isConfirming,
     authType,
     isConnected,
+    isMailEnabled,
     handleAuthTypeChange,
     handleSubmit,
     pendingComment,

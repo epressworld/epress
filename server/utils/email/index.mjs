@@ -7,18 +7,25 @@ import nodemailer from "nodemailer"
 import { Setting } from "../../models/index.mjs"
 
 let transporter = null
-const testAccount = await nodemailer.createTestAccount()
+
+/**
+ * Get email transporter
+ * @param {string} config - Optional SMTP configuration string
+ * @returns {Promise<nodemailer.Transporter|null>} Transporter instance or null if not configured
+ * @throws {Error} If mail transport is not configured in production
+ */
 export async function getTransporter(config) {
   if (!transporter) {
-    let mailTransport = config
-    if (!mailTransport && process.env.NODE_ENV !== "test") {
-      mailTransport = await Setting.get("mail_transport")
-    } else {
-      mailTransport = `smtp://${testAccount.user}:${testAccount.pass}@smtp.ethereal.email:587`
+    const mailTransport = config || (await Setting.get("mail_transport"))
+
+    // Check if mail transport is configured
+    if (!mailTransport) {
+      throw new Error(
+        "Mail transport is not configured. Please configure mail settings in the admin panel.",
+      )
     }
-    if (mailTransport) {
-      transporter = nodemailer.createTransport(mailTransport)
-    }
+
+    transporter = nodemailer.createTransport(mailTransport)
   }
   return transporter
 }
@@ -30,15 +37,35 @@ export async function renderEmail(template, variables) {
   return mjml2html(ejs.render(content.toString(), variables)).html
 }
 
+/**
+ * Send email
+ * @param {string} toEmail - Recipient email address
+ * @param {string} subject - Email subject
+ * @param {string} html - Email HTML content
+ * @returns {Promise<object>} Send result
+ * @throws {Error} If mail transport or mail from is not configured
+ */
 export async function sendEmail(toEmail, subject, html) {
-  const transporter = await getTransporter()
+  // Check if mail transport is configured
+  const mailTransport = await Setting.get("mail_transport")
+  if (!mailTransport && process.env.NODE_ENV !== "test") {
+    throw new Error(
+      "Mail transport is not configured. Please configure mail settings in the admin panel.",
+    )
+  }
 
   // Get mail from address from database
-  const { Setting } = await import("../../models/setting.mjs")
-  const mailFrom = await Setting.get("mail_from", "no-reply@epress.com")
+  const mailFrom = await Setting.get("mail_from")
+  if (!mailFrom && process.env.NODE_ENV !== "test") {
+    throw new Error(
+      "Mail from address is not configured. Please configure mail settings in the admin panel.",
+    )
+  }
+
+  const transporter = await getTransporter()
 
   const mailOptions = {
-    from: mailFrom,
+    from: mailFrom || "no-reply@epress.com",
     to: toEmail,
     subject,
     html,

@@ -9,14 +9,24 @@ import {
   Center,
   Container,
   createListCollection,
+  DialogActionTrigger,
+  DialogBody,
+  DialogCloseTrigger,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogRoot,
+  DialogTitle,
   Field,
   Group,
   Heading,
+  HStack,
   Image,
   Input,
   Link,
   Progress,
   Select,
+  Separator,
   Spinner,
   Stack,
   Steps,
@@ -29,9 +39,10 @@ import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 import { useForm } from "react-hook-form"
-import { FaGithub, FaHome } from "react-icons/fa"
+import { FaCheckCircle, FaGithub, FaHome } from "react-icons/fa"
 import { FaEthereum } from "react-icons/fa6"
 import { GrClose, GrInstall, GrNext, GrPrevious } from "react-icons/gr"
+import { LuAlertCircle } from "react-icons/lu"
 import { useAccount } from "wagmi"
 
 const getOrigin = () => {
@@ -50,6 +61,9 @@ export default function InstallPage() {
   const [installResult, setInstallResult] = useState(null)
   const { address } = useAccount()
   const fileInputRef = useRef(null)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [mailTransportValidating, setMailTransportValidating] = useState(false)
+  const [mailTransportValid, setMailTransportValid] = useState(null)
 
   // Define install steps with translations
   const installSteps = [
@@ -84,7 +98,10 @@ export default function InstallPage() {
     },
   }
 
-  const form = useForm({ defaultValues })
+  const form = useForm({
+    defaultValues,
+    mode: "onChange",
+  })
 
   useEffect(() => {
     form.setValue("node.url", getOrigin())
@@ -140,6 +157,42 @@ export default function InstallPage() {
     reader.readAsDataURL(file)
   }
 
+  // SMTP validation function
+  const validateMailTransport = async (value) => {
+    if (!value || value.trim() === "") {
+      setMailTransportValid(null)
+      return true // Optional field
+    }
+
+    setMailTransportValidating(true)
+    setMailTransportValid(null)
+
+    try {
+      const response = await fetch("/api/smtp_check", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ mailTransport: value }),
+      })
+
+      const data = await response.json()
+
+      if (data.valid) {
+        setMailTransportValid(true)
+        return true
+      } else {
+        setMailTransportValid(false)
+        return data.error || t("mailTransportInvalid")
+      }
+    } catch (error) {
+      setMailTransportValid(false)
+      return t("mailTransportInvalid")
+    } finally {
+      setMailTransportValidating(false)
+    }
+  }
+
   const handleStepChange = async (e) => {
     // Validate current step
     const fieldsToValidate = getFieldsForStep(currentStep)
@@ -159,6 +212,19 @@ export default function InstallPage() {
     if (!isValid) {
       return
     }
+
+    // Check if mail is not configured and show confirmation dialog
+    const { settings } = form.getValues()
+    if (!settings.mailTransport || !settings.mailFrom) {
+      setShowConfirmDialog(true)
+      return
+    }
+
+    executeInstall()
+  }
+
+  const executeInstall = async () => {
+    setShowConfirmDialog(false)
     setIsInstalling(true)
 
     try {
@@ -563,26 +629,105 @@ export default function InstallPage() {
                       </Field.HelperText>
                       <Field.ErrorText />
                     </Field.Root>
-                    <Field.Root>
-                      <Field.Label>{t("mailTransportOptional")}</Field.Label>
-                      <Input
-                        {...form.register("settings.mailTransport")}
-                        placeholder={t("mailTransportPlaceholder")}
-                      />
-                      <Field.HelperText>
-                        {t("mailTransportHelper")}
-                      </Field.HelperText>
-                    </Field.Root>
-                    <Field.Root>
-                      <Field.Label>{t("mailFromOptional")}</Field.Label>
-                      <Input
-                        {...form.register("settings.mailFrom")}
-                        placeholder={t("mailFromPlaceholder")}
-                        type="email"
-                      />
-                      <Field.HelperText>{t("mailFromHelper")}</Field.HelperText>
-                      <Field.ErrorText />
-                    </Field.Root>
+
+                    <Separator my={4} />
+
+                    {/* Mail Server Settings Group */}
+                    <VStack align="stretch" gap={4}>
+                      <Text fontWeight="semibold" fontSize="md">
+                        {t("mailServerSettings")}
+                      </Text>
+
+                      <Field.Root
+                        invalid={
+                          !!form.formState.errors.settings?.mailTransport
+                        }
+                      >
+                        <Field.Label>{t("mailTransportOptional")}</Field.Label>
+                        <HStack align="start">
+                          <Input
+                            {...form.register("settings.mailTransport", {
+                              validate: validateMailTransport,
+                              onChange: (e) => {
+                                const mailFrom = form.watch("settings.mailFrom")
+                                if (mailFrom && !e.target.value) {
+                                  form.setError("settings.mailTransport", {
+                                    type: "manual",
+                                    message: t("mailTransportRequired"),
+                                  })
+                                } else {
+                                  form.clearErrors("settings.mailTransport")
+                                }
+                              },
+                            })}
+                            placeholder={t("mailTransportPlaceholder")}
+                          />
+                          {mailTransportValidating && (
+                            <Spinner size="sm" color="orange.500" mt={2} />
+                          )}
+                          {!mailTransportValidating &&
+                            mailTransportValid === true && (
+                              <FaCheckCircle
+                                color="green"
+                                size={20}
+                                style={{ marginTop: "8px" }}
+                              />
+                            )}
+                          {!mailTransportValidating &&
+                            mailTransportValid === false && (
+                              <LuAlertCircle
+                                color="red"
+                                size={20}
+                                style={{ marginTop: "8px" }}
+                              />
+                            )}
+                        </HStack>
+                        <Field.HelperText>
+                          {t("mailTransportHelper")}
+                        </Field.HelperText>
+                        <Field.ErrorText>
+                          {
+                            form.formState.errors.settings?.mailTransport
+                              ?.message
+                          }
+                        </Field.ErrorText>
+                      </Field.Root>
+
+                      <Field.Root
+                        invalid={!!form.formState.errors.settings?.mailFrom}
+                      >
+                        <Field.Label>{t("mailFromOptional")}</Field.Label>
+                        <Input
+                          {...form.register("settings.mailFrom", {
+                            pattern: {
+                              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                              message: t("invalidEmailFormat"),
+                            },
+                            onChange: (e) => {
+                              const mailTransport = form.watch(
+                                "settings.mailTransport",
+                              )
+                              if (mailTransport && !e.target.value) {
+                                form.setError("settings.mailFrom", {
+                                  type: "manual",
+                                  message: t("mailFromRequired"),
+                                })
+                              } else {
+                                form.clearErrors("settings.mailFrom")
+                              }
+                            },
+                          })}
+                          placeholder={t("mailFromPlaceholder")}
+                          type="email"
+                        />
+                        <Field.HelperText>
+                          {t("mailFromHelper")}
+                        </Field.HelperText>
+                        <Field.ErrorText>
+                          {form.formState.errors.settings?.mailFrom?.message}
+                        </Field.ErrorText>
+                      </Field.Root>
+                    </VStack>
                   </Stack>
                 </Card.Body>
               </Card.Root>
@@ -781,6 +926,41 @@ export default function InstallPage() {
             </Center>
           </Box>
         )}
+
+        {/* Confirmation Dialog for Installation without Mail */}
+        <DialogRoot
+          open={showConfirmDialog}
+          onOpenChange={(e) => setShowConfirmDialog(e.open)}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t("confirmInstallWithoutMail")}</DialogTitle>
+            </DialogHeader>
+            <DialogCloseTrigger />
+            <DialogBody>
+              <VStack align="stretch" gap={3}>
+                <Alert.Root status="warning">
+                  <Alert.Indicator />
+                  <Alert.Content>
+                    <Alert.Description>
+                      {t("confirmInstallWithoutMailMessage")}
+                    </Alert.Description>
+                  </Alert.Content>
+                </Alert.Root>
+              </VStack>
+            </DialogBody>
+            <DialogFooter>
+              <DialogActionTrigger asChild>
+                <Button variant="outline" onClick={() => setCurrentStep(1)}>
+                  {t("goBackToConfig")}
+                </Button>
+              </DialogActionTrigger>
+              <Button colorPalette="orange" onClick={executeInstall}>
+                {t("continueInstall")}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </DialogRoot>
       </Container>
     </Box>
   )

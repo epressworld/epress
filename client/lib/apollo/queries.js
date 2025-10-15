@@ -291,6 +291,12 @@ export const PAGE_DATA = gql`
       defaultLanguage
       defaultTheme
       walletConnectProjectId
+      mail {
+        enabled
+        mailTransport
+        mailFrom
+      }
+      # 保留旧字段以保持向后兼容性
       mailTransport
       mailFrom
     }

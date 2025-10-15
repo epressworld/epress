@@ -10,6 +10,8 @@ import {
   VStack,
 } from "@chakra-ui/react"
 import { FiMessageCircle } from "react-icons/fi"
+import { LuAlertCircle } from "react-icons/lu"
+import { Alert } from "@/components/ui/alert"
 import { useCommentForm } from "@/hooks/form"
 import { useIntl } from "@/hooks/utils"
 
@@ -26,6 +28,8 @@ export const CommentForm = ({
     isWaitingForWallet,
     isConfirming,
     authType,
+    isConnected,
+    isMailEnabled,
     pendingComment,
     handleAuthTypeChange,
     handleSubmit,
@@ -39,6 +43,18 @@ export const CommentForm = ({
       <Text fontSize="lg" fontWeight="semibold" mb={4}>
         {t("comment")("publishComment")}
       </Text>
+
+      {/* Show warning if mail is not enabled and wallet is not connected */}
+      {!isMailEnabled && !isConnected && (
+        <Alert.Root status="warning" mb={4}>
+          <LuAlertCircle />
+          <Alert.Content>
+            <Alert.Description>
+              {t("comment")("mailNotConfiguredWarning")}
+            </Alert.Description>
+          </Alert.Content>
+        </Alert.Root>
+      )}
 
       <form onSubmit={commentForm.handleSubmit(handleSubmit)}>
         <VStack gap={4} align="stretch">

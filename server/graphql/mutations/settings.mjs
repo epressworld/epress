@@ -131,7 +131,22 @@ const updateSettingsMutation = {
           })
 
           // 合并默认值，确保所有必需字段都有值
-          return { ...defaults, ...settingsToReturn }
+          const mergedSettings = { ...defaults, ...settingsToReturn }
+
+          // 检查邮件是否已配置
+          const mailEnabled = !!(
+            mergedSettings.mailTransport && mergedSettings.mailFrom
+          )
+
+          // 添加新的 mail 对象结构
+          return {
+            ...mergedSettings,
+            mail: {
+              enabled: mailEnabled,
+              mailTransport: mergedSettings.mailTransport,
+              mailFrom: mergedSettings.mailFrom,
+            },
+          }
         },
       )
 
