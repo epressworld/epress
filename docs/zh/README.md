@@ -3,7 +3,6 @@
   <h1><strong>epress: 一个去中心化的内容与社交网络</strong></h1>
   <p text-align="center">构建一个人人自托管的完全去中心化内容和社交网络</p>
   <p>
-    <a href="https://railway.app/new/template/https://github.com/epressworld/epress"><img src="https://railway.app/button.svg" alt="Deploy on Railway"></a>
     <a href="https://github.com/epressworld/epress/actions/workflows/main.yml"><img src="https://github.com/epressworld/epress/actions/workflows/main.yml/badge.svg" alt="GitHub Actions Main"></a>
     <a href="https://codecov.io/gh/epressworld/epress"><img src="https://codecov.io/gh/epressworld/epress/graph/badge.svg" /></a>
     <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
@@ -155,6 +154,12 @@ epress 通过几个关键的原创设计来实现彻底的去中心化，详情�
     **注意**：项目现在包含一个默认的 `.env` 文件用于标准配置。如果您需要自定义基础设施设置（例如端口、数据库路径），请创建一个 `.env.local` 文件来覆盖默认值。如果您计划拉取未来的更新，请不要直接编辑 `.env` 文件。
 
 更多详情请查阅 [**`docs/zh/INSTALLATION.md`**](/docs/zh/INSTALLATION.md)。
+
+#### 方式三: 使用 Railway 一键部署 (最简单)
+
+为了最简单的试用体验，您可以使用 Railway 一键部署您自己的 epress 节点。
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/KSrYk-?referralCode=ArMZjP&utm_medium=integration&utm_source=template&utm_campaign=generic)
 
 ### 👨‍💻 开发者指南
 

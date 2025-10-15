@@ -3,7 +3,6 @@
   <h1><strong>epress: A Decentralized Content and Social Network</strong></h1>
   <p align="center">Building a fully decentralized content and social network, self-hosted by everyone.</p>
   <p>
-    <a href="https://railway.app/new/template/https://github.com/epressworld/epress"><img src="https://railway.app/button.svg" alt="Deploy on Railway"></a>
     <a href="https://github.com/epressworld/epress/actions/workflows/main.yml"><img src="https://github.com/epressworld/epress/actions/workflows/main.yml/badge.svg" alt="GitHub Actions Main"></a>
     <a href="https://codecov.io/gh/epressworld/epress"><img src="https://codecov.io/gh/epressworld/epress/graph/badge.svg" /></a>
     <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
@@ -154,6 +153,12 @@ Ideal for developers who want to customize or contribute.
     **Note**: The project now includes a default `.env` file for standard configuration. If you need to customize infrastructure settings (e.g., ports, database path), create a `.env.local` file to override the defaults. Do not edit the `.env` file directly if you plan to pull future updates.
 
 For more details, see [**`docs/en/INSTALLATION.md`**](/docs/en/INSTALLATION.md).
+
+#### Option 3: Deploy with Railway (Easiest)
+
+For the simplest trial experience, you can deploy your own epress node with a single click using Railway.
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/KSrYk-?referralCode=ArMZjP&utm_medium=integration&utm_source=template&utm_campaign=generic)
 
 ### 👨‍💻 Developer Guide
 
