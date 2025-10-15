@@ -50,7 +50,7 @@ export function usePublicationList({ variables, keyword: _keyword }) {
   const handleSubmit = async (formData) => {
     if (authStatus !== AUTH_STATUS.AUTHENTICATED || !isNodeOwner) {
       toaster.create({
-        description: t("common")("onlyNodeOwnerCanPublish"),
+        description: t("common.onlyNodeOwnerCanPublish"),
         type: "error",
       })
       return
@@ -161,7 +161,7 @@ export function usePublicationList({ variables, keyword: _keyword }) {
       }
 
       toaster.create({
-        description: t("common")("publishSuccess"),
+        description: t("common.publishSuccess"),
         type: "success",
       })
 
@@ -170,7 +170,7 @@ export function usePublicationList({ variables, keyword: _keyword }) {
     } catch (error) {
       console.error("发布失败:", error)
       toaster.create({
-        description: error.message || t("common")("pleaseRetry"),
+        description: error.message || t("common.pleaseRetry"),
         type: "error",
       })
     } finally {

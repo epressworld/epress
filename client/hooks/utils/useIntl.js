@@ -6,7 +6,6 @@ import {
   useNow,
   useTranslations,
 } from "next-intl"
-import { useMemo } from "react"
 
 /**
  * Unified i18n hook for epress
@@ -25,68 +24,14 @@ import { useMemo } from "react"
 export function useIntl() {
   const format = useNextIntlFormatter()
   const locale = useLocale()
+  const t = useTranslations()
   const now = useNow()
-
-  // Pre-load all namespaces at the top level (following React Hook rules)
-  const tCommon = useTranslations("common")
-  const tNavigation = useTranslations("navigation")
-  const tAuth = useTranslations("auth")
-  const tPublication = useTranslations("publication")
-  const tComment = useTranslations("comment")
-  const tConnection = useTranslations("connection")
-  const tSettings = useTranslations("settings")
-  const tError = useTranslations("error")
-  const tForm = useTranslations("form")
-  const tStatus = useTranslations("status")
-  const tNode = useTranslations("node")
-  const tTime = useTranslations("time")
-  const tDialog = useTranslations("dialog")
 
   /**
    * Translation function with namespace support
    * Returns the next-intl translation function for the specified namespace
    * This preserves all next-intl functionality including rich text, plurals, etc.
    */
-  const t = useMemo(() => {
-    const namespaceMap = {
-      common: tCommon,
-      navigation: tNavigation,
-      auth: tAuth,
-      publication: tPublication,
-      comment: tComment,
-      connection: tConnection,
-      settings: tSettings,
-      error: tError,
-      form: tForm,
-      status: tStatus,
-      node: tNode,
-      time: tTime,
-      dialog: tDialog,
-    }
-
-    return (namespace) => {
-      const translationFn = namespaceMap[namespace]
-      if (!translationFn) {
-        console.error(`Unknown namespace: "${namespace}"`)
-        return (key) => key
-      }
-      return translationFn
-    }
-  }, [
-    tCommon,
-    tNavigation,
-    tAuth,
-    tPublication,
-    tComment,
-    tConnection,
-    tSettings,
-    tError,
-    tForm,
-    tStatus,
-    tNode,
-    tTime,
-    tDialog,
-  ])
 
   return {
     // Translation function

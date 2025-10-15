@@ -46,7 +46,7 @@ export function PublicationItemPage({ variables }) {
 
   // Generate page title
   const getPageTitle = () => {
-    if (!publication) return t("common")("pageTitle.contentDetail")
+    if (!publication) return t("common.pageTitle.contentDetail")
 
     let textToTruncate = ""
     if (publication.content?.type === "FILE") {
@@ -55,7 +55,7 @@ export function PublicationItemPage({ variables }) {
       textToTruncate = publication.content?.body || ""
     }
 
-    if (!textToTruncate) return t("common")("pageTitle.contentDetail")
+    if (!textToTruncate) return t("common.pageTitle.contentDetail")
 
     const plainText = stripMarkdown(textToTruncate)
     const truncatedText = truncateText(plainText, 30)
@@ -74,7 +74,7 @@ export function PublicationItemPage({ variables }) {
       <Alert.Root status="error">
         <Alert.Indicator />
         <Alert.Title>
-          {t("common")("loadFailed")} {publicationError.message}
+          {t("common.loadFailed")} {publicationError.message}
         </Alert.Title>
       </Alert.Root>
     )
@@ -83,7 +83,7 @@ export function PublicationItemPage({ variables }) {
   if (!publication) {
     return (
       <VStack gap={4} align="center" py={8}>
-        <Text color="gray.500">{t("common")("contentNotExists")}</Text>
+        <Text color="gray.500">{t("common.contentNotExists")}</Text>
       </VStack>
     )
   }
@@ -118,7 +118,7 @@ export function PublicationItemPage({ variables }) {
           <UnifiedCard.Root>
             <UnifiedCard.Header>
               <Text fontSize="xl" fontWeight="semibold">
-                {t("common")("comments")} ({publication?.comment_count || 0})
+                {t("common.comments")} ({publication?.comment_count || 0})
               </Text>
             </UnifiedCard.Header>
 
@@ -166,10 +166,10 @@ export function PublicationItemPage({ variables }) {
         isOpen={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={handleConfirmDelete}
-        title={t("common")("confirmDelete")}
-        message={t("common")("confirmDeleteMessage")}
-        confirmText={t("common")("confirmDeleteText")}
-        cancelText={t("common")("cancel")}
+        title={t("common.confirmDelete")}
+        message={t("common.confirmDeleteMessage")}
+        confirmText={t("common.confirmDeleteText")}
+        cancelText={t("common.cancel")}
         confirmColorPalette="red"
         isLoading={isDeleting}
       />

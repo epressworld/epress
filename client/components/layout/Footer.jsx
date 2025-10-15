@@ -8,7 +8,6 @@ import {
   Container,
   HStack,
   Image,
-  Link,
   Popover,
   Separator,
   Text,
@@ -20,6 +19,7 @@ import { LuCalendar, LuClock } from "react-icons/lu"
 import { SiEthereum } from "react-icons/si"
 import { usePage } from "@/contexts/PageContext"
 import { useIntl } from "@/hooks/utils"
+import { Link } from "../ui"
 import { Toaster } from "../ui/toaster"
 
 export const Footer = () => {
@@ -57,7 +57,7 @@ export const Footer = () => {
 
   const formattedInstallDate = profile.created_at
     ? formatDate(profile.created_at)
-    : t("common")("unknown")
+    : t("common.unknown")
 
   return (
     <>
@@ -106,7 +106,7 @@ export const Footer = () => {
                       color="gray.500"
                       _dark={{ color: "gray.400" }}
                     >
-                      {t("common")("onlineDays", { days: runningDays })}
+                      {t("common.onlineDays", { days: runningDays })}
                     </Text>
                     <Box
                       w={3}
@@ -128,7 +128,7 @@ export const Footer = () => {
                         <HStack gap={2}>
                           <FaCodeBranch size={16} />
                           <Text fontWeight="semibold">
-                            {t("common")("version")}
+                            {t("common.version")}
                           </Text>
                         </HStack>
                         <Text
@@ -150,7 +150,7 @@ export const Footer = () => {
                         <HStack gap={2}>
                           <SiEthereum size={16} />
                           <Text fontWeight="semibold">
-                            {t("common")("ethereumAddress")}
+                            {t("common.ethereumAddress")}
                           </Text>
                         </HStack>
                         <Text
@@ -171,7 +171,7 @@ export const Footer = () => {
                         <HStack gap={2}>
                           <LuCalendar size={16} />
                           <Text fontWeight="semibold">
-                            {t("common")("installTime")}
+                            {t("common.installTime")}
                           </Text>
                         </HStack>
                         <Text
@@ -190,12 +190,12 @@ export const Footer = () => {
                         <HStack gap={2}>
                           <LuClock size={16} />
                           <Text fontWeight="semibold">
-                            {t("common")("runningDays")}
+                            {t("common.runningDays")}
                           </Text>
                         </HStack>
                         <HStack gap={2}>
                           <Badge colorPalette="green" variant="solid">
-                            {t("common")("daysWithCount", {
+                            {t("common.daysWithCount", {
                               count: runningDays,
                             })}
                           </Badge>
@@ -204,9 +204,7 @@ export const Footer = () => {
                             color="gray.600"
                             _dark={{ color: "gray.300" }}
                           >
-                            (
-                            {t("common")("sinceWithTime", { time: uptimeText })}
-                            )
+                            ({t("common.sinceWithTime", { time: uptimeText })})
                           </Text>
                         </HStack>
                       </VStack>

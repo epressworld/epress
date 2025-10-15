@@ -22,8 +22,8 @@ export const InfoDialog = ({
   const { t } = useIntl()
 
   // 使用翻译的默认值
-  const dialogTitle = title || t("common")("info")
-  const dialogCloseText = closeText || t("common")("close")
+  const dialogTitle = title || t("common.info")
+  const dialogCloseText = closeText || t("common.close")
   return (
     <Dialog.Root
       open={isOpen}

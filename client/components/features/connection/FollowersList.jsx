@@ -48,7 +48,7 @@ export function FollowersList({ onRefetch }) {
         .catch((error) => {
           console.error("加载更多失败:", error)
           toaster.create({
-            description: t("common")("loadMoreFailed"),
+            description: t("common.loadMoreFailed"),
             type: "error",
           })
         })
@@ -69,7 +69,7 @@ export function FollowersList({ onRefetch }) {
   // 加载状态
   if (loading && !data) {
     return (
-      <ConnectionList title={t("connection")("followers")} total={total}>
+      <ConnectionList title={t("connection.followers")} total={total}>
         <VStack colorPalette="orange">
           <Spinner color="colorPalette.600" />
           <Text color="colorPalette.600">Loading...</Text>
@@ -81,17 +81,17 @@ export function FollowersList({ onRefetch }) {
   // 错误状态
   if (error) {
     return (
-      <ConnectionList title={t("connection")("followers")} total={total}>
+      <ConnectionList title={t("connection.followers")} total={total}>
         <Box textAlign="center" py={12}>
           <Icon as={LuUsers} boxSize={12} color="red.500" mb={4} />
           <Text color="red.500" fontSize="lg" mb={2}>
-            {t("common")("loadFailed")}
+            {t("common.loadFailed")}
           </Text>
           <Text color="gray.500" _dark={{ color: "gray.400" }} mb={4}>
-            {error.message || t("common")("loadFailed")}
+            {error.message || t("common.loadFailed")}
           </Text>
           <Button onClick={handleRefresh} colorPalette="orange" size="sm">
-            {t("common")("retry")}
+            {t("common.retry")}
           </Button>
         </Box>
       </ConnectionList>
@@ -101,10 +101,10 @@ export function FollowersList({ onRefetch }) {
   // 空状态
   if (followers.length === 0 && !loading) {
     return (
-      <ConnectionList title={t("connection")("followers")} total={0}>
+      <ConnectionList title={t("connection.followers")} total={0}>
         <EmptyState
-          title={t("connection")("noFollowers")}
-          description={t("connection")("noFollowersDescription")}
+          title={t("connection.noFollowers")}
+          description={t("connection.noFollowersDescription")}
           icon={<Icon as={LuUsers} />}
         />
       </ConnectionList>
@@ -112,7 +112,7 @@ export function FollowersList({ onRefetch }) {
   }
 
   return (
-    <ConnectionList title={t("connection")("followers")} total={total}>
+    <ConnectionList title={t("connection.followers")} total={total}>
       <VStack gap={2} align="stretch">
         {followers.map(({ node }) => (
           <ConnectionItem key={`follower-${node.address}`} node={node} />

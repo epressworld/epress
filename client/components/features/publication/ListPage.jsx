@@ -26,7 +26,7 @@ export function PublicationListPage({ variables, keyword }) {
   } = usePublicationList({ variables, keyword })
 
   // Set page title
-  usePageTitle(t("common")("pageTitle.home"))
+  usePageTitle(t("common.pageTitle.home"))
 
   return (
     <>

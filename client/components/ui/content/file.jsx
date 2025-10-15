@@ -212,7 +212,7 @@ function FileInfo({
         >
           <HStack gap={1}>
             <LuDownload />
-            <Text fontSize="sm">{t("common")("download")}</Text>
+            <Text fontSize="sm">{t("common.download")}</Text>
           </HStack>
         </Link>
       </HStack>

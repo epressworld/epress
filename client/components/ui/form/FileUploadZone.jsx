@@ -57,7 +57,7 @@ const UploadOrPreview = ({ maxSize, onFileRemove }) => {
                       color="gray.800"
                       _dark={{ color: "gray.200" }}
                     >
-                      {file.name || t("publication")("unknownFile")}
+                      {file.name || t("publication.unknownFile")}
                     </Text>
                     {file.size != null && <FormatByte value={file.size} />}
                   </HStack>
@@ -68,7 +68,7 @@ const UploadOrPreview = ({ maxSize, onFileRemove }) => {
                   textAlign={"left"}
                   _dark={{ color: "gray.400" }}
                 >
-                  {file.type || t("publication")("unknownType")}
+                  {file.type || t("publication.unknownType")}
                 </Text>
               </VStack>
             </Box>
@@ -91,9 +91,9 @@ const UploadOrPreview = ({ maxSize, onFileRemove }) => {
         <FiUpload />
       </Icon>
       <FileUpload.DropzoneContent>
-        <Box>{t("common")("clickToSelectFile")}</Box>
+        <Box>{t("common.clickToSelectFile")}</Box>
         <Box color="fg.muted">
-          {t("common")("supportAllFormats")} {maxSize / 1024 / 1024}MB
+          {t("common.supportAllFormats")} {maxSize / 1024 / 1024}MB
         </Box>
       </FileUpload.DropzoneContent>
     </>

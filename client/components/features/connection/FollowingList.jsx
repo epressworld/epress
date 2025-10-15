@@ -64,7 +64,7 @@ export const FollowingList = () => {
         .catch((error) => {
           console.error("加载更多失败:", error)
           toaster.create({
-            description: t("common")("loadMoreFailed"),
+            description: t("common.loadMoreFailed"),
             type: "error",
           })
         })
@@ -77,7 +77,7 @@ export const FollowingList = () => {
   const handleUnfollow = async (node) => {
     if (!isNodeOwner || !address) {
       toaster.create({
-        description: t("connection")("onlyNodeOwnerCanUnfollow"),
+        description: t("connection.onlyNodeOwnerCanUnfollow"),
         type: "error",
       })
       return
@@ -102,7 +102,7 @@ export const FollowingList = () => {
 
       if (!signature) {
         toaster.create({
-          description: t("connection")("signatureFailed"),
+          description: t("connection.signatureFailed"),
           type: "error",
         })
         return
@@ -127,7 +127,7 @@ export const FollowingList = () => {
       })
 
       toaster.create({
-        description: t("connection")("unfollowSuccess"),
+        description: t("connection.unfollowSuccess"),
         type: "success",
       })
 
@@ -136,7 +136,7 @@ export const FollowingList = () => {
     } catch (error) {
       console.error("取消关注失败:", error)
       toaster.create({
-        description: error.message || t("connection")("unfollowFailed"),
+        description: error.message || t("connection.unfollowFailed"),
         type: "error",
       })
     }
@@ -145,7 +145,7 @@ export const FollowingList = () => {
   // 加载状态
   if (loading && !data) {
     return (
-      <ConnectionList title={t("connection")("following")} total={total}>
+      <ConnectionList title={t("connection.following")} total={total}>
         <VStack colorPalette="orange">
           <Spinner color="colorPalette.600" />
           <Text color="colorPalette.600">Loading...</Text>
@@ -157,10 +157,10 @@ export const FollowingList = () => {
   // 错误状态
   if (error) {
     return (
-      <ConnectionList title={t("connection")("following")} total={total}>
+      <ConnectionList title={t("connection.following")} total={total}>
         <Box p={4}>
           <Text color="red.500">
-            {t("common")("loadFailed")}: {error.message}
+            {t("common.loadFailed")}: {error.message}
           </Text>
         </Box>
       </ConnectionList>
@@ -170,10 +170,10 @@ export const FollowingList = () => {
   // 空状态
   if (following.length === 0 && !loading) {
     return (
-      <ConnectionList title={t("connection")("following")} total={0}>
+      <ConnectionList title={t("connection.following")} total={0}>
         <EmptyState
-          title={t("connection")("noFollowing")}
-          description={t("connection")("noFollowingDescription")}
+          title={t("connection.noFollowing")}
+          description={t("connection.noFollowingDescription")}
           icon={<Icon as={LuUsers} />}
         />
       </ConnectionList>
@@ -181,7 +181,7 @@ export const FollowingList = () => {
   }
 
   return (
-    <ConnectionList title={t("connection")("following")} total={total}>
+    <ConnectionList title={t("connection.following")} total={total}>
       <VStack gap={4} align="stretch">
         {following.map((node) => (
           <ConnectionItem
@@ -196,7 +196,7 @@ export const FollowingList = () => {
                   onClick={() => handleUnfollow(node)}
                   loading={isDestroying}
                 >
-                  {t("connection")("unfollow")}
+                  {t("connection.unfollow")}
                 </Button>
               )
             }
@@ -218,12 +218,12 @@ export const FollowingList = () => {
           setSelectedNode(null)
         }}
         onConfirm={handleConfirmUnfollow}
-        title={t("connection")("confirmUnfollow")}
-        description={t("connection")("confirmUnfollowMessage", {
+        title={t("connection.confirmUnfollow")}
+        description={t("connection.confirmUnfollowMessage", {
           title: selectedNode?.title || "",
         })}
-        confirmText={t("connection")("unfollow")}
-        cancelText={t("common")("cancel")}
+        confirmText={t("connection.unfollow")}
+        cancelText={t("common.cancel")}
         isLoading={isDestroying}
         colorPalette="red"
       />

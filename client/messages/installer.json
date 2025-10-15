@@ -24,13 +24,23 @@
       "nodeDescriptionHelper": "Brief description of your node",
       "avatar": "Avatar",
       "avatarHelper": "Upload an avatar image for your node",
+      "mailServerSettings": "Mail Server Settings",
       "mailTransport": "Mail Transport",
       "mailTransportPlaceholder": "smtp://user:pass@smtp.example.com:587",
       "mailTransportHelper": "SMTP connection string for sending emails (optional)",
       "mailTransportEmptyWarning": "Warning: Email sending functionality will be unavailable if not configured.",
+      "mailTransportValidating": "Validating SMTP configuration...",
+      "mailTransportValid": "SMTP configuration is valid",
+      "mailTransportInvalid": "SMTP configuration is invalid",
+      "mailTransportRequired": "Mail transport is required when mail from is provided",
       "mailFrom": "Mail From",
       "mailFromPlaceholder": "noreply@example.com",
       "mailFromHelper": "Email address to send from (optional)",
+      "mailFromRequired": "Mail from address is required when mail transport is provided",
+      "confirmInstallWithoutMail": "Confirm Installation Without Email",
+      "confirmInstallWithoutMailMessage": "You have not configured email settings. Email-related features (including email-authenticated comments) will be unavailable. Do you want to continue with the installation?",
+      "continueInstall": "Continue Installation",
+      "goBackToConfig": "Go Back to Configure",
       "defaultLanguage": "Default Language",
       "defaultLanguageHelper": "Default interface language for all users",
       "defaultTheme": "Default Theme",
@@ -71,7 +81,8 @@
       "nodeTitleRequired": "Node title is required",
       "nodeDescriptionRequired": "Node description is required",
       "invalidUrl": "Please enter a valid URL",
-      "invalidEthereumAddress": "Please enter a valid Ethereum address"
+      "invalidEthereumAddress": "Please enter a valid Ethereum address",
+      "invalidEmailFormat": "Invalid email format"
     }
   },
   "zh": {
@@ -99,13 +110,23 @@
       "nodeDescriptionHelper": "简要描述您的节点",
       "avatar": "头像",
       "avatarHelper": "为您的节点上传头像图片",
+      "mailServerSettings": "邮件服务器设置",
       "mailTransport": "邮件传输",
       "mailTransportPlaceholder": "smtp://user:pass@smtp.example.com:587",
       "mailTransportHelper": "用于发送邮件的 SMTP 连接字符串(可选)",
-      "mailTransportEmptyWarning": "警告：如果未配置，电子邮件发送功能将不可用。",
+      "mailTransportEmptyWarning": "警告:如果未配置,电子邮件发送功能将不可用。",
+      "mailTransportValidating": "正在验证 SMTP 配置...",
+      "mailTransportValid": "SMTP 配置有效",
+      "mailTransportInvalid": "SMTP 配置无效",
+      "mailTransportRequired": "当提供发件人地址时,邮件传输为必填项",
       "mailFrom": "发件人地址",
       "mailFromPlaceholder": "noreply@example.com",
       "mailFromHelper": "发送邮件的地址(可选)",
+      "mailFromRequired": "当提供邮件传输时,发件人地址为必填项",
+      "confirmInstallWithoutMail": "确认在没有邮件配置的情况下安装",
+      "confirmInstallWithoutMailMessage": "您尚未配置邮件设置。与邮件相关的功能(包括邮件认证评论)将不可用。您要继续安装吗?",
+      "continueInstall": "继续安装",
+      "goBackToConfig": "返回配置",
       "defaultLanguage": "默认语言",
       "defaultLanguageHelper": "所有用户的默认界面语言",
       "defaultTheme": "默认主题",
@@ -145,7 +166,8 @@
       "nodeTitleRequired": "节点标题为必填项",
       "nodeDescriptionRequired": "节点描述为必填项",
       "invalidUrl": "请输入有效的 URL",
-      "invalidEthereumAddress": "请输入有效的以太坊地址"
+      "invalidEthereumAddress": "请输入有效的以太坊地址",
+      "invalidEmailFormat": "邮箱格式无效"
     }
   }
 }

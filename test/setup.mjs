@@ -3,6 +3,7 @@ import test from "ava"
 import FormData from "form-data"
 import { createMercuriusTestClient } from "mercurius-integration-testing"
 import nock from "nock"
+import nodemailer from "nodemailer"
 import { knexMigration, Model } from "swiftify"
 import { generateTestAccount, TEST_ETHEREUM_ADDRESS_NODE_A } from "./env.mjs"
 
@@ -37,6 +38,8 @@ test.before(async (t) => {
     is_self: true,
     profile_version: 0,
   })
+
+  const testAccount = await nodemailer.createTestAccount()
   // Define the settings to insert
   const settings = [
     { key: "enable_rss", value: "true" },
@@ -51,8 +54,11 @@ test.before(async (t) => {
     { key: "jwt_expires_in", value: "24h" },
     { key: "default_language", value: "en" },
     { key: "default_theme", value: "light" },
-    { key: "mail_transport", value: "" },
-    { key: "mail_from", value: "" },
+    {
+      key: "mail_transport",
+      value: `smtp://${testAccount.user}:${testAccount.pass}@smtp.ethereal.email:587`,
+    },
+    { key: "mail_from", value: "no-reply@epress.world" },
     { key: "walletconnect_projectid", value: "" },
   ]
 

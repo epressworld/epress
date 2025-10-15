@@ -1,6 +1,7 @@
 "use client"
 
-import { Box, HStack, Link, Text, VStack } from "@chakra-ui/react"
+import { Box, HStack, Text, VStack } from "@chakra-ui/react"
+import { Link } from "@/components/ui"
 import { NodeAvatar } from "./avatar"
 
 /**

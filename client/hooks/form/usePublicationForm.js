@@ -43,7 +43,7 @@ export function usePublicationForm({
         lowlight,
       }),
       Placeholder.configure({
-        placeholder: t("publication")("writeSomething"),
+        placeholder: t("publication.writeSomething"),
       }),
       Markdown.configure({
         html: false,

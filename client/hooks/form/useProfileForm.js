@@ -59,7 +59,7 @@ export function useProfileForm() {
   const onSubmit = async (data) => {
     if (authStatus !== AUTH_STATUS.AUTHENTICATED) {
       toaster.create({
-        description: t("settings")("pleaseLoginFirst"),
+        description: t("settings.pleaseLoginFirst"),
         type: "error",
       })
       return
@@ -143,7 +143,7 @@ export function useProfileForm() {
       await refetchPageData()
 
       toaster.create({
-        description: t("settings")("nodeInfoSaved"),
+        description: t("settings.nodeInfoSaved"),
         type: "success",
       })
 
@@ -151,7 +151,7 @@ export function useProfileForm() {
     } catch (error) {
       console.error("保存节点信息失败:", error)
       toaster.create({
-        description: error.message || t("settings")("saveFailed"),
+        description: error.message || t("settings.saveFailed"),
         type: "error",
       })
       return { success: false, error }

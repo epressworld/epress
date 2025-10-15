@@ -9,15 +9,15 @@ export function LanguageSelect({ value, onChange }) {
   // 动态创建语言选项，使用翻译
   const languageCollection = createListCollection({
     items: [
-      { label: t("settings")("languageEnglish"), value: "en" },
-      { label: t("settings")("languageChinese"), value: "zh" },
+      { label: t("settings.languageEnglish"), value: "en" },
+      { label: t("settings.languageChinese"), value: "zh" },
     ],
   })
 
   return (
     <VStack align="stretch" gap={2}>
       <Text fontSize="sm" fontWeight="medium">
-        {t("settings")("languageSelect")}
+        {t("settings.languageSelect")}
       </Text>
       <Select.Root
         collection={languageCollection}
@@ -27,7 +27,7 @@ export function LanguageSelect({ value, onChange }) {
         <Select.HiddenSelect />
         <Select.Control>
           <Select.Trigger>
-            <Select.ValueText placeholder={t("settings")("languageSelect")} />
+            <Select.ValueText placeholder={t("settings.languageSelect")} />
           </Select.Trigger>
           <Select.IndicatorGroup>
             <Select.Indicator />

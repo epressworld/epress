@@ -2,6 +2,16 @@
 import { graphql } from "swiftify"
 import { Setting } from "../../models/setting.mjs"
 
+// 定义 Mail 配置对象类型
+const MailType = graphql.type("ObjectType", {
+  name: "Mail",
+  fields: {
+    enabled: { type: graphql.type("NonNull", graphql.type("Boolean")) },
+    mailTransport: { type: graphql.type("String") },
+    mailFrom: { type: graphql.type("String") },
+  },
+})
+
 // 定义 GraphQL Settings 对象类型
 const SettingsType = graphql.type("ObjectType", {
   name: "Settings",
@@ -12,8 +22,16 @@ const SettingsType = graphql.type("ObjectType", {
     defaultLanguage: { type: graphql.type("NonNull", graphql.type("String")) },
     defaultTheme: { type: graphql.type("NonNull", graphql.type("String")) },
     walletConnectProjectId: { type: graphql.type("String") },
-    mailTransport: { type: graphql.type("String") },
-    mailFrom: { type: graphql.type("String") },
+    mail: { type: graphql.type("NonNull", MailType) },
+    // 保留旧字段以保持向后兼容性,但标记为已弃用
+    mailTransport: {
+      type: graphql.type("String"),
+      deprecationReason: "Use mail.mailTransport instead",
+    },
+    mailFrom: {
+      type: graphql.type("String"),
+      deprecationReason: "Use mail.mailFrom instead",
+    },
   },
 })
 
@@ -40,6 +58,11 @@ const settingsQuery = {
         mailFrom: "",
       }
 
+      // 检查邮件是否已配置
+      const mailTransport = allSettings.mail_transport || defaults.mailTransport
+      const mailFrom = allSettings.mail_from || defaults.mailFrom
+      const mailEnabled = !!(mailTransport && mailFrom)
+
       // 映射数据库字段到 GraphQL 字段
       const result = {
         enableRSS: allSettings.enable_rss === "true" || defaults.enableRSS,
@@ -53,12 +76,15 @@ const settingsQuery = {
         walletConnectProjectId:
           allSettings.walletconnect_projectid ||
           defaults.walletConnectProjectId,
-        mailTransport: context.user
-          ? allSettings.mail_transport || defaults.mailTransport
-          : "",
-        mailFrom: context.user
-          ? allSettings.mail_from || defaults.mailFrom
-          : "",
+        // 新的 mail 对象结构
+        mail: {
+          enabled: mailEnabled,
+          mailTransport: context.user ? mailTransport : null,
+          mailFrom: context.user ? mailFrom : null,
+        },
+        // 保留旧字段以保持向后兼容性
+        mailTransport: context.user ? mailTransport : "",
+        mailFrom: context.user ? mailFrom : "",
       }
 
       request.log.debug(

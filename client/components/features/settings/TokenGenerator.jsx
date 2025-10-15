@@ -26,28 +26,28 @@ export function TokenGenerator() {
   const PERMISSIONS = createListCollection({
     items: [
       {
-        label: t("settings")("searchPublications"),
+        label: t("settings.searchPublications"),
         value: "search:publications",
       },
       {
-        label: t("settings")("fetchPublications"),
+        label: t("settings.fetchPublications"),
         value: "fetch:publications",
       },
       {
-        label: t("settings")("createPublications"),
+        label: t("settings.createPublications"),
         value: "create:publications",
       },
       {
-        label: t("settings")("updatePublications"),
+        label: t("settings.updatePublications"),
         value: "update:publications",
       },
       {
-        label: t("settings")("deletePublications"),
+        label: t("settings.deletePublications"),
         value: "delete:publications",
       },
-      { label: t("settings")("searchComments"), value: "search:comments" },
-      { label: t("settings")("fetchComments"), value: "fetch:comments" },
-      { label: t("settings")("deleteComments"), value: "delete:comments" },
+      { label: t("settings.searchComments"), value: "search:comments" },
+      { label: t("settings.fetchComments"), value: "fetch:comments" },
+      { label: t("settings.deleteComments"), value: "delete:comments" },
     ],
   })
   const [generateToken, { loading }] = useMutation(GENERATE_INTEGRATION_TOKEN)
@@ -61,7 +61,7 @@ export function TokenGenerator() {
     console.log("Selected permissions:", selectedPermissions)
     if (!selectedPermissions || selectedPermissions.length === 0) {
       toaster.create({
-        description: t("settings")("selectAtLeastOnePermission"),
+        description: t("settings.selectAtLeastOnePermission"),
         type: "error",
       })
       return
@@ -78,13 +78,13 @@ export function TokenGenerator() {
       setGeneratedToken(data.generateIntegrationToken)
 
       toaster.create({
-        description: t("settings")("tokenGenerated"),
+        description: t("settings.tokenGenerated"),
         type: "success",
       })
     } catch (error) {
       console.error("Token generation failed:", error)
       toaster.create({
-        description: error.message || t("settings")("generateFailed"),
+        description: error.message || t("settings.generateFailed"),
         type: "error",
       })
     }
@@ -94,13 +94,13 @@ export function TokenGenerator() {
     try {
       await copyToClipboard(generatedToken)
       toaster.create({
-        description: t("settings")("tokenCopied"),
+        description: t("settings.tokenCopied"),
         type: "success",
       })
     } catch (error) {
       console.error("Copy failed:", error)
       toaster.create({
-        description: t("settings")("copyFailed"),
+        description: t("settings.copyFailed"),
         type: "error",
       })
     }
@@ -112,10 +112,10 @@ export function TokenGenerator() {
       <VStack align="stretch" gap={2}>
         <VStack align="start" gap={1}>
           <Text fontSize="sm" fontWeight="medium">
-            {t("settings")("selectPermissions")}
+            {t("settings.selectPermissions")}
           </Text>
           <Text fontSize="xs" color="gray.500">
-            {t("settings")("selectPermissionsHelper")}
+            {t("settings.selectPermissionsHelper")}
           </Text>
         </VStack>
 
@@ -131,9 +131,7 @@ export function TokenGenerator() {
           <Select.HiddenSelect />
           <Select.Control>
             <Select.Trigger>
-              <Select.ValueText
-                placeholder={t("settings")("selectPermissions")}
-              />
+              <Select.ValueText placeholder={t("settings.selectPermissions")} />
             </Select.Trigger>
             <Select.IndicatorGroup>
               <Select.Indicator />
@@ -156,17 +154,17 @@ export function TokenGenerator() {
       <VStack align="stretch" gap={2}>
         <VStack align="start" gap={1}>
           <Text fontSize="sm" fontWeight="medium">
-            {t("settings")("expirationTime")}
+            {t("settings.expirationTime")}
           </Text>
           <Text fontSize="xs" color="gray.500">
-            {t("settings")("expirationTimeHelper")}
+            {t("settings.expirationTimeHelper")}
           </Text>
         </VStack>
 
         <Input
           value={expirationTime}
           onChange={(e) => setExpirationTime(e.target.value)}
-          placeholder={t("settings")("expirationTimePlaceholder")}
+          placeholder={t("settings.expirationTimePlaceholder")}
         />
       </VStack>
 
@@ -174,11 +172,11 @@ export function TokenGenerator() {
       <Button
         onClick={handleGenerate}
         loading={loading}
-        loadingText={t("settings")("generating")}
+        loadingText={t("settings.generating")}
         colorPalette="orange"
         disabled={!selectedPermissions || selectedPermissions.length === 0}
       >
-        <LuKey /> {t("settings")("generateTokenButton")}
+        <LuKey /> {t("settings.generateTokenButton")}
       </Button>
 
       {/* 生成的令牌 */}
@@ -186,10 +184,10 @@ export function TokenGenerator() {
         <VStack align="stretch" gap={2}>
           <VStack align="start" gap={1}>
             <Text fontSize="sm" fontWeight="medium">
-              {t("settings")("tokenGenerated")}
+              {t("settings.tokenGenerated")}
             </Text>
             <Text fontSize="xs" color="gray.500">
-              {t("settings")("tokenGeneratedHelper")}
+              {t("settings.tokenGeneratedHelper")}
             </Text>
           </VStack>
 
@@ -216,9 +214,7 @@ export function TokenGenerator() {
           </Box>
 
           <Text fontSize="xs" color="gray.500">
-            {copiedText
-              ? t("settings")("tokenCopied")
-              : t("settings")("copyToken")}
+            {copiedText ? t("settings.tokenCopied") : t("settings.copyToken")}
           </Text>
         </VStack>
       )}

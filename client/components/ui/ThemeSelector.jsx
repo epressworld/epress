@@ -11,15 +11,15 @@ export function ThemeSelector({ value, onChange }) {
   // 动态创建主题选项，使用翻译
   const themeCollection = createListCollection({
     items: [
-      { label: t("settings")("themeLight"), value: "light" },
-      { label: t("settings")("themeDark"), value: "dark" },
+      { label: t("settings.themeLight"), value: "light" },
+      { label: t("settings.themeDark"), value: "dark" },
     ],
   })
 
   return (
     <VStack align="stretch" gap={2}>
       <Text fontSize="sm" fontWeight="medium">
-        {t("settings")("themeSelect")}
+        {t("settings.themeSelect")}
       </Text>
       <Select.Root
         collection={themeCollection}
@@ -29,7 +29,7 @@ export function ThemeSelector({ value, onChange }) {
         <Select.HiddenSelect />
         <Select.Control>
           <Select.Trigger>
-            <Select.ValueText placeholder={t("settings")("themeSelect")} />
+            <Select.ValueText placeholder={t("settings.themeSelect")} />
           </Select.Trigger>
           <Select.IndicatorGroup>
             <Select.Indicator />

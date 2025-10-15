@@ -16,12 +16,12 @@ export function UnfollowAction({
     <Button
       onClick={onClick}
       loading={isLoading}
-      loadingText={t("connection")("unfollowing")}
+      loadingText={t("connection.unfollowing")}
       disabled={disabled}
       {...props}
     >
       <FaMinus />
-      {t("connection")("unfollow")}
+      {t("connection.unfollow")}
     </Button>
   )
 }
