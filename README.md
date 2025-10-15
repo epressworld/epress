@@ -3,6 +3,7 @@
   <h1><strong>epress: A Decentralized Content and Social Network</strong></h1>
   <p align="center">Building a fully decentralized content and social network, self-hosted by everyone.</p>
   <p>
+    <a href="https://railway.app/new/template/https://github.com/epressworld/epress"><img src="https://railway.app/button.svg" alt="Deploy on Railway"></a>
     <a href="https://github.com/epressworld/epress/actions/workflows/main.yml"><img src="https://github.com/epressworld/epress/actions/workflows/main.yml/badge.svg" alt="GitHub Actions Main"></a>
     <a href="https://codecov.io/gh/epressworld/epress"><img src="https://codecov.io/gh/epressworld/epress/graph/badge.svg" /></a>
     <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
