@@ -85,7 +85,7 @@ export function usePublicationItem(options = {}) {
         // 这里需要调用文件上传API
         toaster.create({
           title: "功能限制",
-          description: t("common")("fileUploadNotImplemented"),
+          description: t("common.fileUploadNotImplemented"),
           type: "warning",
         })
         return
@@ -96,7 +96,7 @@ export function usePublicationItem(options = {}) {
         onCompleted: () => {
           toaster.create({
             title: "保存成功",
-            description: t("common")("contentUpdateSuccess"),
+            description: t("common.contentUpdateSuccess"),
             type: "success",
           })
           // 刷新数据
@@ -109,7 +109,7 @@ export function usePublicationItem(options = {}) {
           console.error("更新失败:", error)
           toaster.create({
             title: "保存失败",
-            description: error.message || t("common")("contentUpdateError"),
+            description: error.message || t("common.contentUpdateError"),
             type: "error",
           })
         },
@@ -118,7 +118,7 @@ export function usePublicationItem(options = {}) {
       console.error("保存编辑时发生错误:", error)
       toaster.create({
         title: "保存失败",
-        description: t("common")("saveEditError"),
+        description: t("common.saveEditError"),
         type: "error",
       })
     }
@@ -128,7 +128,7 @@ export function usePublicationItem(options = {}) {
   const handleSignPublication = async (publication) => {
     if (authStatus !== AUTH_STATUS.AUTHENTICATED || !isNodeOwner) {
       toaster.create({
-        description: t("common")("onlyNodeOwnerCanSign"),
+        description: t("common.onlyNodeOwnerCanSign"),
         type: "error",
       })
       return
@@ -157,7 +157,7 @@ export function usePublicationItem(options = {}) {
       })
 
       toaster.update(toasterId, {
-        description: t("common")("signSuccess"),
+        description: t("common.signSuccess"),
         type: "success",
       })
 
@@ -167,7 +167,7 @@ export function usePublicationItem(options = {}) {
     } catch (error) {
       console.error("签名失败:", error)
       toaster.update(toasterId, {
-        description: error.message || t("common")("pleaseRetry"),
+        description: error.message || t("common.pleaseRetry"),
         type: "error",
       })
     }
@@ -177,7 +177,7 @@ export function usePublicationItem(options = {}) {
   const handleDeleteClick = () => {
     if (authStatus !== AUTH_STATUS.AUTHENTICATED || !isNodeOwner) {
       toaster.create({
-        description: t("common")("onlyNodeOwnerCanDelete"),
+        description: t("common.onlyNodeOwnerCanDelete"),
         type: "error",
       })
       return
@@ -199,7 +199,7 @@ export function usePublicationItem(options = {}) {
       })
 
       toaster.create({
-        description: t("common")("deleteSuccess"),
+        description: t("common.deleteSuccess"),
         type: "success",
       })
 
@@ -210,7 +210,7 @@ export function usePublicationItem(options = {}) {
     } catch (error) {
       console.error("删除失败:", error)
       toaster.create({
-        description: error.message || t("common")("pleaseRetry"),
+        description: error.message || t("common.pleaseRetry"),
         type: "error",
       })
     } finally {
@@ -238,7 +238,7 @@ export function usePublicationItem(options = {}) {
   const handlePublish = async (formData) => {
     if (authStatus !== AUTH_STATUS.AUTHENTICATED || !isNodeOwner) {
       toaster.create({
-        description: t("common")("onlyNodeOwnerCanPublish"),
+        description: t("common.onlyNodeOwnerCanPublish"),
         type: "error",
       })
       return
@@ -262,7 +262,7 @@ export function usePublicationItem(options = {}) {
 
       const newId = data?.createPublication?.id
       toaster.create({
-        description: t("common")("publishSuccess"),
+        description: t("common.publishSuccess"),
         type: "success",
       })
 
@@ -272,7 +272,7 @@ export function usePublicationItem(options = {}) {
     } catch (error) {
       console.error("发布失败:", error)
       toaster.create({
-        description: error.message || t("common")("pleaseRetry"),
+        description: error.message || t("common.pleaseRetry"),
         type: "error",
       })
     }

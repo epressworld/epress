@@ -10,7 +10,7 @@ import { useIntl, usePageTitle } from "@/hooks/utils"
 export function ConnectionPage() {
   const { t } = useIntl()
 
-  usePageTitle(t("common")("pageTitle.connections"))
+  usePageTitle(t("common.pageTitle.connections"))
 
   return (
     <VStack spacing={6} align="stretch">

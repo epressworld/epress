@@ -1,5 +1,6 @@
 import test from "ava"
 import nodemailer from "nodemailer"
+import { validateSMTPTransport } from "../../../client/app/api/smtp_check/validate.js"
 
 /**
  * SMTP Check API Tests
@@ -10,36 +11,6 @@ import nodemailer from "nodemailer"
  */
 
 // Mock the SMTP validation logic from the API route
-async function validateSMTPTransport(mailTransport) {
-  if (!mailTransport || typeof mailTransport !== "string") {
-    return {
-      valid: false,
-      error: "Mail transport configuration is required",
-    }
-  }
-
-  const trimmedTransport = mailTransport.trim()
-  if (!trimmedTransport) {
-    return {
-      valid: false,
-      error: "Mail transport configuration cannot be empty",
-    }
-  }
-
-  try {
-    const transporter = nodemailer.createTransport(trimmedTransport)
-    await transporter.verify()
-    return {
-      valid: true,
-      message: "SMTP configuration is valid",
-    }
-  } catch (error) {
-    return {
-      valid: false,
-      error: error.message || "SMTP configuration validation failed",
-    }
-  }
-}
 
 test("SMTP validation should reject empty mail transport", async (t) => {
   const result = await validateSMTPTransport("")

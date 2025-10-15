@@ -58,7 +58,7 @@ test.before(async (t) => {
       key: "mail_transport",
       value: `smtp://${testAccount.user}:${testAccount.pass}@smtp.ethereal.email:587`,
     },
-    { key: "mail_from", value: `${testAccount.user}@ethereal.email` },
+    { key: "mail_from", value: "no-reply@epress.world" },
     { key: "walletconnect_projectid", value: "" },
   ]
 

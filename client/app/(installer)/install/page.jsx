@@ -9,21 +9,12 @@ import {
   Center,
   Container,
   createListCollection,
-  DialogActionTrigger,
-  DialogBody,
-  DialogCloseTrigger,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogRoot,
-  DialogTitle,
   Field,
   Group,
   Heading,
-  HStack,
   Image,
   Input,
-  Link,
+  InputGroup,
   Progress,
   Select,
   Separator,
@@ -42,8 +33,10 @@ import { useForm } from "react-hook-form"
 import { FaCheckCircle, FaGithub, FaHome } from "react-icons/fa"
 import { FaEthereum } from "react-icons/fa6"
 import { GrClose, GrInstall, GrNext, GrPrevious } from "react-icons/gr"
-import { LuAlertCircle } from "react-icons/lu"
+import { LuCircleAlert } from "react-icons/lu"
 import { useAccount } from "wagmi"
+import { Link } from "@/components/ui"
+import { ConfirmDialog } from "@/components/ui/dialog/ConfirmDialog"
 
 const getOrigin = () => {
   if (typeof window !== "undefined") {
@@ -53,7 +46,7 @@ const getOrigin = () => {
 }
 
 export default function InstallPage() {
-  const t = useTranslations("installer")
+  const t = useTranslations()
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(0)
   const [isCheckingStatus, setIsCheckingStatus] = useState(true)
@@ -68,16 +61,16 @@ export default function InstallPage() {
   // Define install steps with translations
   const installSteps = [
     {
-      title: t("nodeConfiguration"),
-      description: t("nodeConfigurationDescription"),
+      title: t("installer.nodeConfiguration"),
+      description: t("installer.nodeConfigurationDescription"),
     },
     {
-      title: t("advancedSettings"),
-      description: t("advancedSettingsDescription"),
+      title: t("installer.advancedSettings"),
+      description: t("installer.advancedSettingsDescription"),
     },
     {
-      title: t("reviewAndInstall"),
-      description: t("reviewAndInstallDescription"),
+      title: t("installer.reviewAndInstall"),
+      description: t("installer.reviewAndInstallDescription"),
     },
   ]
 
@@ -85,8 +78,8 @@ export default function InstallPage() {
     node: {
       address: "",
       url: "",
-      title: t("nodeTitlePlaceholder"),
-      description: t("nodeDescriptionPlaceholder"),
+      title: t("installer.nodeTitlePlaceholder"),
+      description: t("installer.nodeDescriptionPlaceholder"),
       avatar: "",
     },
     settings: {
@@ -138,13 +131,13 @@ export default function InstallPage() {
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      alert("Please select an image file")
+      alert("installer.Please select an image file")
       return
     }
 
     // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      alert("Image size should be less than 2MB")
+      alert("installer.Image size should be less than 2MB")
       return
     }
 
@@ -183,11 +176,11 @@ export default function InstallPage() {
         return true
       } else {
         setMailTransportValid(false)
-        return data.error || t("mailTransportInvalid")
+        return data.error || t("installer.mailTransportInvalid")
       }
-    } catch (error) {
+    } catch (_error) {
       setMailTransportValid(false)
-      return t("mailTransportInvalid")
+      return t("installer.mailTransportInvalid")
     } finally {
       setMailTransportValidating(false)
     }
@@ -203,29 +196,23 @@ export default function InstallPage() {
     }
     setCurrentStep(e.step)
     if (e.step === installSteps.length) {
-      performInstall()
+      await performInstall()
     }
   }
 
   const performInstall = async () => {
+    setIsInstalling(true)
     const isValid = await form.trigger()
     if (!isValid) {
       return
     }
 
-    // Check if mail is not configured and show confirmation dialog
-    const { settings } = form.getValues()
-    if (!settings.mailTransport || !settings.mailFrom) {
-      setShowConfirmDialog(true)
-      return
-    }
-
-    executeInstall()
+    await executeInstall()
+    setIsInstalling(false)
   }
 
   const executeInstall = async () => {
     setShowConfirmDialog(false)
-    setIsInstalling(true)
 
     try {
       const { node, settings } = form.getValues()
@@ -250,13 +237,13 @@ export default function InstallPage() {
         throw new Error(data.message || "Installation failed")
       }
       setInstallResult({
-        title: t("installationSuccessful"),
-        description: t("installationSuccessfulDescription"),
+        title: t("installer.installationSuccessful"),
+        description: t("installer.installationSuccessfulDescription"),
         type: "success",
       })
     } catch (error) {
       setInstallResult({
-        title: t("installationFailed"),
+        title: t("installer.installationFailed"),
         description: error.message,
         type: "error",
       })
@@ -276,7 +263,13 @@ export default function InstallPage() {
           "node.avatar",
         ]
       case 1:
-        return []
+        return [
+          "settings.defaultLanguage",
+          "settings.defaultTheme",
+          "settings.walletConnectProjectId",
+          "settings.mailTransport",
+          "settings.mailFrom",
+        ]
       case 2:
         return []
       default:
@@ -286,17 +279,46 @@ export default function InstallPage() {
 
   const languageCollection = createListCollection({
     items: [
-      { label: t("languageEnglish"), value: "en" },
-      { label: t("languageChinese"), value: "zh" },
+      { label: t("installer.languageEnglish"), value: "en" },
+      { label: t("installer.languageChinese"), value: "zh" },
     ],
   })
 
   const themeCollection = createListCollection({
     items: [
-      { label: t("themeLight"), value: "light" },
-      { label: t("themeDark"), value: "dark" },
+      { label: t("installer.themeLight"), value: "light" },
+      { label: t("installer.themeDark"), value: "dark" },
     ],
   })
+  const handleInstallClick = (e) => {
+    // Check if mail is not configured and show confirmation dialog
+    const { settings } = form.getValues()
+    if (!settings.mailTransport || !settings.mailFrom) {
+      e.preventDefault()
+      setShowConfirmDialog(true)
+      return
+    }
+  }
+  const currentStepHasErrors = () => {
+    const fieldsForCurrentStep = getFieldsForStep(currentStep)
+    return fieldsForCurrentStep.some((field) => {
+      const fieldError = field
+        .split(".")
+        .reduce((obj, key) => obj?.[key], form.formState.errors)
+      return !!fieldError
+    })
+  }
+  const handleNextClick = (e) => {
+    if (currentStepHasErrors()) {
+      e.preventDefault()
+      return
+    }
+  }
+  useEffect(() => {
+    document.title = "Installer - epress"
+  }, [])
+  const mailFromRequired =
+    mailTransportValid || !!form.watch("settings.mailTransport")
 
   return (
     <Box>
@@ -319,9 +341,9 @@ export default function InstallPage() {
                   />
                 </Link>
               </Box>
-              <Heading size="2xl">{t("welcome")}</Heading>
+              <Heading size="2xl">{t("installer.welcome")}</Heading>
               <Text color="gray.600" fontSize="lg">
-                {t("welcomeDescription")}
+                {t("installer.welcomeDescription")}
               </Text>
             </VStack>
           </Box>
@@ -354,7 +376,7 @@ export default function InstallPage() {
                 <Card.Body>
                   <Stack gap={4}>
                     <Field.Root>
-                      <Field.Label>{t("nodeAvatar")}</Field.Label>
+                      <Field.Label>{t("installer.nodeAvatar")}</Field.Label>
                       <Box>
                         <input
                           ref={fileInputRef}
@@ -376,7 +398,7 @@ export default function InstallPage() {
                         </Avatar.Root>
                       </Box>
                       <Field.HelperText>
-                        {t("nodeAvatarHelper")}
+                        {t("installer.nodeAvatarHelper")}
                       </Field.HelperText>
                     </Field.Root>
 
@@ -385,19 +407,19 @@ export default function InstallPage() {
                       invalid={!!form.formState.errors.node?.address}
                     >
                       <Field.Label>
-                        {t("nodeAddress")}
+                        {t("installer.nodeAddress")}
                         <Field.RequiredIndicator />
                       </Field.Label>
                       <Group attached w="full">
                         <Input
                           {...form.register("node.address", {
-                            required: t("nodeAddressRequired"),
+                            required: t("installer.nodeAddressRequired"),
                             pattern: {
                               value: /^0x[a-fA-F0-9]{40}$/,
-                              message: t("invalidEthereumAddress"),
+                              message: t("installer.invalidEthereumAddress"),
                             },
                           })}
-                          placeholder={t("nodeAddressPlaceholder")}
+                          placeholder={t("installer.nodeAddressPlaceholder")}
                         />
                         <ConnectButton.Custom>
                           {({
@@ -479,18 +501,18 @@ export default function InstallPage() {
                       invalid={!!form.formState.errors.node?.url}
                     >
                       <Field.Label>
-                        {t("nodeUrl")}
+                        {t("installer.nodeUrl")}
                         <Field.RequiredIndicator />
                       </Field.Label>
                       <Input
                         {...form.register("node.url", {
-                          required: t("nodeUrlRequired"),
+                          required: t("installer.nodeUrlRequired"),
                           pattern: {
                             value: /^https?:\/\/.+/,
-                            message: t("invalidUrl"),
+                            message: t("installer.invalidUrl"),
                           },
                         })}
-                        placeholder={t("nodeUrlPlaceholder")}
+                        placeholder={t("installer.nodeUrlPlaceholder")}
                       />
                       <Field.ErrorText>
                         {form.formState.errors.node?.url?.message}
@@ -502,14 +524,14 @@ export default function InstallPage() {
                       invalid={!!form.formState.errors.node?.title}
                     >
                       <Field.Label>
-                        {t("nodeTitle")}
+                        {t("installer.nodeTitle")}
                         <Field.RequiredIndicator />
                       </Field.Label>
                       <Input
                         {...form.register("node.title", {
-                          required: t("nodeTitleRequired"),
+                          required: t("installer.nodeTitleRequired"),
                         })}
-                        placeholder={t("nodeTitlePlaceholder")}
+                        placeholder={t("installer.nodeTitlePlaceholder")}
                       />
                       <Field.ErrorText>
                         {form.formState.errors.node?.title?.message}
@@ -521,12 +543,12 @@ export default function InstallPage() {
                       invalid={!!form.formState.errors.node?.description}
                     >
                       <Field.Label>
-                        {t("nodeDescription")}
+                        {t("installer.nodeDescription")}
                         <Field.RequiredIndicator />
                       </Field.Label>
                       <Textarea
                         {...form.register("node.description")}
-                        placeholder={t("nodeDescriptionPlaceholder")}
+                        placeholder={t("installer.nodeDescriptionPlaceholder")}
                         rows={3}
                       />
                       <Field.ErrorText>
@@ -548,7 +570,9 @@ export default function InstallPage() {
                 <Card.Body>
                   <Stack gap={4}>
                     <Field.Root>
-                      <Field.Label>{t("defaultLanguage")}</Field.Label>
+                      <Field.Label>
+                        {t("installer.defaultLanguage")}
+                      </Field.Label>
                       <Select.Root
                         defaultValue={[defaultValues.settings.defaultLanguage]}
                         collection={languageCollection}
@@ -563,7 +587,7 @@ export default function InstallPage() {
                         <Select.Control>
                           <Select.Trigger>
                             <Select.ValueText
-                              placeholder={t("defaultLanguage")}
+                              placeholder={t("installer.defaultLanguage")}
                             />
                           </Select.Trigger>
                           <Select.IndicatorGroup>
@@ -583,7 +607,7 @@ export default function InstallPage() {
                       </Select.Root>
                     </Field.Root>
                     <Field.Root>
-                      <Field.Label>{t("defaultTheme")}</Field.Label>
+                      <Field.Label>{t("installer.defaultTheme")}</Field.Label>
                       <Select.Root
                         defaultValue={[defaultValues.settings.defaultTheme]}
                         collection={themeCollection}
@@ -597,7 +621,9 @@ export default function InstallPage() {
                         <Select.HiddenSelect />
                         <Select.Control>
                           <Select.Trigger>
-                            <Select.ValueText placeholder={t("defaultTheme")} />
+                            <Select.ValueText
+                              placeholder={t("installer.defaultTheme")}
+                            />
                           </Select.Trigger>
                           <Select.IndicatorGroup>
                             <Select.Indicator />
@@ -616,13 +642,17 @@ export default function InstallPage() {
                       </Select.Root>
                     </Field.Root>
                     <Field.Root>
-                      <Field.Label>{t("walletConnectOptional")}</Field.Label>
+                      <Field.Label>
+                        {t("installer.walletConnectOptional")}
+                      </Field.Label>
                       <Input
                         {...form.register("settings.walletConnectProjectId")}
-                        placeholder={t("walletConnectProjectIdPlaceholder")}
+                        placeholder={t(
+                          "installer.walletConnectProjectIdPlaceholder",
+                        )}
                       />
                       <Field.HelperText>
-                        {t("walletConnectHelper")}{" "}
+                        {t("installer.walletConnectHelper")}{" "}
                         <Link target="_blank" href="https://reown.com">
                           Reown.com
                         </Link>
@@ -630,12 +660,12 @@ export default function InstallPage() {
                       <Field.ErrorText />
                     </Field.Root>
 
-                    <Separator my={4} />
+                    <Separator my={2} />
 
                     {/* Mail Server Settings Group */}
                     <VStack align="stretch" gap={4}>
                       <Text fontWeight="semibold" fontSize="md">
-                        {t("mailServerSettings")}
+                        {t("installer.mailServerSettings")}
                       </Text>
 
                       <Field.Root
@@ -643,47 +673,31 @@ export default function InstallPage() {
                           !!form.formState.errors.settings?.mailTransport
                         }
                       >
-                        <Field.Label>{t("mailTransportOptional")}</Field.Label>
-                        <HStack align="start">
+                        <Field.Label>
+                          {t("installer.mailTransportOptional")}
+                        </Field.Label>
+                        <InputGroup
+                          endElement={
+                            mailTransportValidating ? (
+                              <Spinner size="sm" />
+                            ) : mailTransportValid === true ? (
+                              <FaCheckCircle color="green" size={20} />
+                            ) : mailTransportValid === false ? (
+                              <LuCircleAlert color="red" size={20} />
+                            ) : null
+                          }
+                        >
                           <Input
                             {...form.register("settings.mailTransport", {
                               validate: validateMailTransport,
-                              onChange: (e) => {
-                                const mailFrom = form.watch("settings.mailFrom")
-                                if (mailFrom && !e.target.value) {
-                                  form.setError("settings.mailTransport", {
-                                    type: "manual",
-                                    message: t("mailTransportRequired"),
-                                  })
-                                } else {
-                                  form.clearErrors("settings.mailTransport")
-                                }
-                              },
                             })}
-                            placeholder={t("mailTransportPlaceholder")}
+                            placeholder={t(
+                              "installer.mailTransportPlaceholder",
+                            )}
                           />
-                          {mailTransportValidating && (
-                            <Spinner size="sm" color="orange.500" mt={2} />
-                          )}
-                          {!mailTransportValidating &&
-                            mailTransportValid === true && (
-                              <FaCheckCircle
-                                color="green"
-                                size={20}
-                                style={{ marginTop: "8px" }}
-                              />
-                            )}
-                          {!mailTransportValidating &&
-                            mailTransportValid === false && (
-                              <LuAlertCircle
-                                color="red"
-                                size={20}
-                                style={{ marginTop: "8px" }}
-                              />
-                            )}
-                        </HStack>
+                        </InputGroup>
                         <Field.HelperText>
-                          {t("mailTransportHelper")}
+                          {t("installer.mailTransportHelper")}
                         </Field.HelperText>
                         <Field.ErrorText>
                           {
@@ -696,32 +710,26 @@ export default function InstallPage() {
                       <Field.Root
                         invalid={!!form.formState.errors.settings?.mailFrom}
                       >
-                        <Field.Label>{t("mailFromOptional")}</Field.Label>
+                        <Field.Label>
+                          {t("installer.mailFromOptional")}
+                          <Field.RequiredIndicator />
+                        </Field.Label>
                         <Input
                           {...form.register("settings.mailFrom", {
+                            required: {
+                              value: mailFromRequired,
+                              message: t("installer.mailFromRequired"),
+                            },
                             pattern: {
                               value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                              message: t("invalidEmailFormat"),
-                            },
-                            onChange: (e) => {
-                              const mailTransport = form.watch(
-                                "settings.mailTransport",
-                              )
-                              if (mailTransport && !e.target.value) {
-                                form.setError("settings.mailFrom", {
-                                  type: "manual",
-                                  message: t("mailFromRequired"),
-                                })
-                              } else {
-                                form.clearErrors("settings.mailFrom")
-                              }
+                              message: t("installer.invalidEmailFormat"),
                             },
                           })}
-                          placeholder={t("mailFromPlaceholder")}
+                          placeholder={t("installer.mailFromPlaceholder")}
                           type="email"
                         />
                         <Field.HelperText>
-                          {t("mailFromHelper")}
+                          {t("installer.mailFromHelper")}
                         </Field.HelperText>
                         <Field.ErrorText>
                           {form.formState.errors.settings?.mailFrom?.message}
@@ -743,44 +751,54 @@ export default function InstallPage() {
                 <Card.Body>
                   <Stack gap={4}>
                     <Box>
-                      <Text fontWeight="bold">{t("nodeAvatar")}:</Text>
+                      <Text fontWeight="bold">
+                        {t("installer.nodeAvatar")}:
+                      </Text>
                       <Avatar.Root size="2xl" mt={2}>
                         <Avatar.Fallback name={form.watch("node.title")} />
                         <Avatar.Image src={form.watch("node.avatar") || null} />
                       </Avatar.Root>
                       {!form.watch("node.avatar") && (
                         <Text color="gray.500" fontSize="sm" mt={1}>
-                          {t("nodeAvatarEmpty")}
+                          {t("installer.nodeAvatarEmpty")}
                         </Text>
                       )}
                     </Box>
                     <Box>
-                      <Text fontWeight="bold">{t("nodeAddress")}</Text>
+                      <Text fontWeight="bold">
+                        {t("installer.nodeAddress")}
+                      </Text>
                       <Text>{form.watch("node.address")}</Text>
                     </Box>
                     <Box>
-                      <Text fontWeight="bold">{t("nodeUrl")}:</Text>
+                      <Text fontWeight="bold">{t("installer.nodeUrl")}:</Text>
                       <Text>{form.watch("node.url")}</Text>
                     </Box>
                     <Box>
-                      <Text fontWeight="bold">{t("nodeTitle")}:</Text>
+                      <Text fontWeight="bold">{t("installer.nodeTitle")}:</Text>
                       <Text>{form.watch("node.title")}</Text>
                     </Box>
                     <Box>
-                      <Text fontWeight="bold">{t("nodeDescription")}:</Text>
+                      <Text fontWeight="bold">
+                        {t("installer.nodeDescription")}:
+                      </Text>
                       <Text>{form.watch("node.description")}</Text>
                     </Box>
                     <Box>
-                      <Text fontWeight="bold">{t("defaultLanguage")}:</Text>
+                      <Text fontWeight="bold">
+                        {t("installer.defaultLanguage")}:
+                      </Text>
                       <Text>{form.watch("settings.defaultLanguage")}</Text>
                     </Box>
                     <Box>
-                      <Text fontWeight="bold">{t("defaultTheme")}:</Text>
+                      <Text fontWeight="bold">
+                        {t("installer.defaultTheme")}:
+                      </Text>
                       <Text>{form.watch("settings.defaultTheme")}</Text>
                     </Box>
                     <Box>
                       <Text fontWeight="bold">
-                        {t("walletConnectProjectId")}
+                        {t("installer.walletConnectProjectId")}
                       </Text>
                       <Text>
                         {form.watch("settings.walletConnectProjectId") ||
@@ -788,7 +806,9 @@ export default function InstallPage() {
                       </Text>
                     </Box>
                     <Box>
-                      <Text fontWeight="bold">{t("mailTransport")}:</Text>
+                      <Text fontWeight="bold">
+                        {t("installer.mailTransport")}:
+                      </Text>
                       <Text>
                         {form.watch("settings.mailTransport") || "Not set"}
                       </Text>
@@ -796,13 +816,13 @@ export default function InstallPage() {
                         <Alert.Root mt={1} status="warning">
                           <Alert.Indicator />
                           <Alert.Content>
-                            {t("mailTransportEmptyWarning")}
+                            {t("installer.mailTransportEmptyWarning")}
                           </Alert.Content>
                         </Alert.Root>
                       )}
                     </Box>
                     <Box>
-                      <Text fontWeight="bold">{t("mailFrom")}:</Text>
+                      <Text fontWeight="bold">{t("installer.mailFrom")}:</Text>
                       <Text>
                         {form.watch("settings.mailFrom") || "Not set"}
                       </Text>
@@ -818,7 +838,9 @@ export default function InstallPage() {
                   {isInstalling && (
                     <VStack gap={4}>
                       <Center>
-                        <Heading size="3xl">{t("installing")}</Heading>
+                        <Heading size="3xl">
+                          {t("installer.installing")}
+                        </Heading>
                       </Center>
                       <Center>
                         <Progress.Root minW={"240px"} value={null}>
@@ -829,7 +851,7 @@ export default function InstallPage() {
                       </Center>
                       <Center>
                         <Box>
-                          <Text>{t("pleaseWait")}</Text>
+                          <Text>{t("installer.pleaseWait")}</Text>
                         </Box>
                       </Center>
                     </VStack>
@@ -855,7 +877,7 @@ export default function InstallPage() {
                           variant={"subtle"}
                           mr={4}
                         >
-                          <FaHome /> {t("goToHomePage")}
+                          <FaHome /> {t("installer.goToHomePage")}
                         </Button>
                         <Button
                           variant={"subtle"}
@@ -865,7 +887,7 @@ export default function InstallPage() {
                           }}
                           mr={4}
                         >
-                          <FaGithub /> {t("goToAwesomeNodes")}
+                          <FaGithub /> {t("installer.goToAwesomeNodes")}
                         </Button>
                       </Center>
                     </VStack>
@@ -905,13 +927,21 @@ export default function InstallPage() {
 
               {currentStep < installSteps.length - 1 ? (
                 <Steps.NextTrigger asChild>
-                  <Button colorPalette="orange">
+                  <Button
+                    colorPalette="orange"
+                    onClick={handleNextClick}
+                    disabled={mailTransportValidating}
+                  >
                     Next <GrNext />
                   </Button>
                 </Steps.NextTrigger>
               ) : (
                 <Steps.NextTrigger asChild>
-                  <Button loading={isInstalling} colorPalette="orange">
+                  <Button
+                    loading={isInstalling}
+                    onClick={handleInstallClick}
+                    colorPalette="orange"
+                  >
                     Install <GrInstall />
                   </Button>
                 </Steps.NextTrigger>
@@ -926,41 +956,19 @@ export default function InstallPage() {
             </Center>
           </Box>
         )}
-
-        {/* Confirmation Dialog for Installation without Mail */}
-        <DialogRoot
-          open={showConfirmDialog}
-          onOpenChange={(e) => setShowConfirmDialog(e.open)}
-        >
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{t("confirmInstallWithoutMail")}</DialogTitle>
-            </DialogHeader>
-            <DialogCloseTrigger />
-            <DialogBody>
-              <VStack align="stretch" gap={3}>
-                <Alert.Root status="warning">
-                  <Alert.Indicator />
-                  <Alert.Content>
-                    <Alert.Description>
-                      {t("confirmInstallWithoutMailMessage")}
-                    </Alert.Description>
-                  </Alert.Content>
-                </Alert.Root>
-              </VStack>
-            </DialogBody>
-            <DialogFooter>
-              <DialogActionTrigger asChild>
-                <Button variant="outline" onClick={() => setCurrentStep(1)}>
-                  {t("goBackToConfig")}
-                </Button>
-              </DialogActionTrigger>
-              <Button colorPalette="orange" onClick={executeInstall}>
-                {t("continueInstall")}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </DialogRoot>
+        <ConfirmDialog
+          isOpen={showConfirmDialog}
+          onClose={() => setShowConfirmDialog(false)}
+          onConfirm={(_e) => {
+            setCurrentStep(currentStep + 1)
+            performInstall()
+          }}
+          title={t("installer.confirmInstallWithoutMail")}
+          message={t("installer.confirmInstallWithoutMailMessage")}
+          confirmText={t("installer.continueInstall")}
+          cancelText={t("installer.goBackToConfig")}
+          confirmColorPalette="red"
+        />
       </Container>
     </Box>
   )

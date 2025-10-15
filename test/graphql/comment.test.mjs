@@ -901,6 +901,7 @@ test.serial(
       variables: input,
     })
 
+    console.log(errors)
     t.falsy(errors, "destroyComment should not have GraphQL errors")
     t.truthy(data.destroyComment, "should return the comment object")
     t.is(

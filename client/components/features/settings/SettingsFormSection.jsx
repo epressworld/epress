@@ -2,9 +2,10 @@
 
 import {
   Button,
+  Field,
   HStack,
   Input,
-  Link,
+  InputGroup,
   Separator,
   Spinner,
   Switch,
@@ -12,9 +13,8 @@ import {
   VStack,
 } from "@chakra-ui/react"
 import { FaCheckCircle } from "react-icons/fa"
-import { LuAlertCircle, LuSettings } from "react-icons/lu"
-import { FormField, LanguageSelect, ThemeSelector } from "@/components/ui"
-import { Field } from "@/components/ui/field"
+import { LuCircleAlert, LuSettings } from "react-icons/lu"
+import { FormField, LanguageSelect, Link, ThemeSelector } from "@/components/ui"
 import { useSettingsForm } from "@/hooks/form"
 import { useIntl } from "@/hooks/utils"
 import { TokenGenerator } from "./TokenGenerator"
@@ -36,6 +36,7 @@ export function SettingsFormSection({ onSuccess }) {
       onSuccess()
     }
   }
+  const mailFromRequired = mailTransportValid || !!form.watch("mailTransport")
 
   return (
     <form onSubmit={form.handleSubmit(handleSubmit)}>
@@ -49,12 +50,12 @@ export function SettingsFormSection({ onSuccess }) {
           onChange={(v) => form.setValue("defaultTheme", v)}
         />
         <FormField
-          label={t("settings")("walletConnectProjectId")}
-          placeholder={t("settings")("walletConnectProjectIdPlaceholder")}
+          label={t("settings.walletConnectProjectId")}
+          placeholder={t("settings.walletConnectProjectIdPlaceholder")}
           error={form.formState.errors.walletConnectProjectId?.message}
           helperText={
             <>
-              {t("settings")("walletConnectProjectIdHelper")}{" "}
+              {t("settings.walletConnectProjectIdHelper")}{" "}
               <Link target="_blank" href="https://reown.com">
                 Reown.com
               </Link>
@@ -63,54 +64,34 @@ export function SettingsFormSection({ onSuccess }) {
           {...form.register("walletConnectProjectId")}
         />
 
-        <Separator my={2} />
-
         {/* Mail Server Settings Group */}
         <VStack align="stretch" gap={3}>
           <Text fontWeight="semibold" fontSize="md">
-            {t("settings")("mailServerSettings")}
+            {t("settings.mailServerSettings")}
           </Text>
 
           <Field.Root invalid={!!form.formState.errors.mailTransport}>
-            <Field.Label>{t("settings")("mailTransport")}</Field.Label>
-            <HStack align="start">
+            <Field.Label>{t("settings.mailTransport")}</Field.Label>
+            <InputGroup
+              endElement={
+                mailTransportValidating ? (
+                  <Spinner size="sm" />
+                ) : mailTransportValid === true ? (
+                  <FaCheckCircle color="green" size={20} />
+                ) : mailTransportValid === false ? (
+                  <LuCircleAlert color="red" size={20} />
+                ) : null
+              }
+            >
               <Input
                 {...form.register("mailTransport", {
                   validate: validateMailTransport,
-                  onChange: (e) => {
-                    const mailFrom = form.watch("mailFrom")
-                    if (mailFrom && !e.target.value) {
-                      form.setError("mailTransport", {
-                        type: "manual",
-                        message: t("settings")("mailTransportRequired"),
-                      })
-                    } else {
-                      form.clearErrors("mailTransport")
-                    }
-                  },
                 })}
-                placeholder={t("settings")("mailTransportPlaceholder")}
+                placeholder={t("settings.mailTransportPlaceholder")}
               />
-              {mailTransportValidating && (
-                <Spinner size="sm" color="orange.500" mt={2} />
-              )}
-              {!mailTransportValidating && mailTransportValid === true && (
-                <FaCheckCircle
-                  color="green"
-                  size={20}
-                  style={{ marginTop: "8px" }}
-                />
-              )}
-              {!mailTransportValidating && mailTransportValid === false && (
-                <LuAlertCircle
-                  color="red"
-                  size={20}
-                  style={{ marginTop: "8px" }}
-                />
-              )}
-            </HStack>
+            </InputGroup>
             <Field.HelperText>
-              {t("settings")("mailTransportHelper")}
+              {t("settings.mailTransportHelper")}
             </Field.HelperText>
             <Field.ErrorText>
               {form.formState.errors.mailTransport?.message}
@@ -118,31 +99,22 @@ export function SettingsFormSection({ onSuccess }) {
           </Field.Root>
 
           <Field.Root invalid={!!form.formState.errors.mailFrom}>
-            <Field.Label>{t("settings")("mailFrom")}</Field.Label>
+            <Field.Label>{t("settings.mailFrom")}</Field.Label>
             <Input
               {...form.register("mailFrom", {
+                required: {
+                  value: mailFromRequired,
+                  message: t("settings.mailFromRequired"),
+                },
                 pattern: {
                   value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                  message: t("settings")("invalidEmailFormat"),
-                },
-                onChange: (e) => {
-                  const mailTransport = form.watch("mailTransport")
-                  if (mailTransport && !e.target.value) {
-                    form.setError("mailFrom", {
-                      type: "manual",
-                      message: t("settings")("mailFromRequired"),
-                    })
-                  } else {
-                    form.clearErrors("mailFrom")
-                  }
+                  message: t("settings.invalidEmailFormat"),
                 },
               })}
-              placeholder={t("settings")("mailFromPlaceholder")}
+              placeholder={t("settings.mailFromPlaceholder")}
               type="email"
             />
-            <Field.HelperText>
-              {t("settings")("mailFromHelper")}
-            </Field.HelperText>
+            <Field.HelperText>{t("settings.mailFromHelper")}</Field.HelperText>
             <Field.ErrorText>
               {form.formState.errors.mailFrom?.message}
             </Field.ErrorText>
@@ -155,10 +127,10 @@ export function SettingsFormSection({ onSuccess }) {
           <HStack justify="space-between">
             <VStack align="start" gap={1}>
               <Text fontSize="sm" fontWeight="medium">
-                {t("settings")("enableRSS")}
+                {t("settings.enableRSS")}
               </Text>
               <Text fontSize="xs" color="gray.500">
-                {t("settings")("enableRSSHelper")}
+                {t("settings.enableRSSHelper")}
               </Text>
             </VStack>
             <Switch.Root
@@ -179,10 +151,10 @@ export function SettingsFormSection({ onSuccess }) {
           <HStack justify="space-between">
             <VStack align="start" gap={1}>
               <Text fontSize="sm" fontWeight="medium">
-                {t("settings")("allowFollow")}
+                {t("settings.allowFollow")}
               </Text>
               <Text fontSize="xs" color="gray.500">
-                {t("settings")("allowFollowHelper")}
+                {t("settings.allowFollowHelper")}
               </Text>
             </VStack>
             <Switch.Root
@@ -203,10 +175,10 @@ export function SettingsFormSection({ onSuccess }) {
           <HStack justify="space-between">
             <VStack align="start" gap={1}>
               <Text fontSize="sm" fontWeight="medium">
-                {t("settings")("allowComment")}
+                {t("settings.allowComment")}
               </Text>
               <Text fontSize="xs" color="gray.500">
-                {t("settings")("allowCommentHelper")}
+                {t("settings.allowCommentHelper")}
               </Text>
             </VStack>
             <Switch.Root
@@ -228,10 +200,11 @@ export function SettingsFormSection({ onSuccess }) {
         <Button
           type="submit"
           loading={isLoading}
-          loadingText={t("settings")("saving")}
+          disabled={mailTransportValidating}
+          loadingText={t("settings.saving")}
           colorPalette="orange"
         >
-          <LuSettings /> {t("settings")("saveSettings")}
+          <LuSettings /> {t("settings.saveSettings")}
         </Button>
 
         <Separator />
@@ -240,10 +213,10 @@ export function SettingsFormSection({ onSuccess }) {
         <VStack align="stretch" gap={4}>
           <VStack align="start" gap={1}>
             <Text fontSize="sm" fontWeight="medium">
-              {t("settings")("generateToken")}
+              {t("settings.generateToken")}
             </Text>
             <Text fontSize="xs" color="gray.500">
-              {t("settings")("generateTokenHelper")}
+              {t("settings.generateTokenHelper")}
             </Text>
           </VStack>
 

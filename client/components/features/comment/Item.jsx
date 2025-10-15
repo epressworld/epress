@@ -10,7 +10,6 @@ import {
   HStack,
   IconButton,
   Input,
-  Link,
   Text,
   VStack,
 } from "@chakra-ui/react"
@@ -18,7 +17,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { FiTrash2 } from "react-icons/fi"
 import { TbSignature } from "react-icons/tb"
-import { ConfirmDialog, InfoDialog } from "@/components/ui"
+import { ConfirmDialog, InfoDialog, Link } from "@/components/ui"
 import { AUTH_STATUS, useAuth } from "@/contexts/AuthContext"
 import { usePage } from "@/contexts/PageContext"
 import { useWallet } from "@/hooks/data"
@@ -88,7 +87,7 @@ export const CommentItem = ({
         // 普通用户需要通过签名验证
         if (!profile?.address) {
           toaster.create({
-            description: t("common")("nodeAddressNotAvailable"),
+            description: t("common.nodeAddressNotAvailable"),
             type: "error",
           })
           return
@@ -116,7 +115,7 @@ export const CommentItem = ({
       }
 
       toaster.create({
-        description: t("comment")("commentDeleteSuccess"),
+        description: t("comment.commentDeleteSuccess"),
         type: "success",
       })
 
@@ -129,7 +128,7 @@ export const CommentItem = ({
       toaster.create({
         description:
           error.message ||
-          `${t("common")("deleteFailed")}, ${t("common")("pleaseRetry")}`,
+          `${t("common.deleteFailed")}, ${t("common.pleaseRetry")}`,
         type: "error",
       })
     } finally {
@@ -150,7 +149,7 @@ export const CommentItem = ({
         })
 
         toaster.create({
-          description: t("comment")("commentDeleteSuccess"),
+          description: t("comment.commentDeleteSuccess"),
           type: "success",
         })
       } else {
@@ -163,7 +162,7 @@ export const CommentItem = ({
         })
 
         toaster.create({
-          description: t("common")("deleteRequestSent"),
+          description: t("common.deleteRequestSent"),
           type: "success",
         })
       }
@@ -179,7 +178,7 @@ export const CommentItem = ({
       toaster.create({
         description:
           error.message ||
-          `${t("common")("deleteFailed")}, ${t("common")("pleaseRetry")}`,
+          `${t("common.deleteFailed")}, ${t("common.pleaseRetry")}`,
         type: "error",
       })
     } finally {
@@ -279,8 +278,8 @@ export const CommentItem = ({
                   size="sm"
                   variant="ghost"
                   colorPalette="orange"
-                  aria-label={t("common")("reSign")}
-                  title={t("common")("reSign")}
+                  aria-label={t("common.reSign")}
+                  title={t("common.reSign")}
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
@@ -321,8 +320,8 @@ export const CommentItem = ({
                 variant="subtle"
               >
                 {comment.status === "CONFIRMED"
-                  ? t("status")("confirmed")
-                  : t("status")("pending")}
+                  ? t("status.confirmed")
+                  : t("status.pending")}
               </Badge>
             </HStack>
           </HStack>
@@ -334,10 +333,10 @@ export const CommentItem = ({
         isOpen={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={handleConfirmDelete}
-        title={t("dialog")("confirmDelete")}
-        message={t("dialog")("deleteMessage")}
-        confirmText={t("dialog")("confirmDeleteText")}
-        cancelText={t("common")("cancel")}
+        title={t("dialog.confirmDelete")}
+        message={t("dialog.deleteMessage")}
+        confirmText={t("dialog.confirmDeleteText")}
+        cancelText={t("common.cancel")}
         confirmColorPalette="red"
         isLoading={isDeleting}
       />
@@ -349,23 +348,23 @@ export const CommentItem = ({
           setEmailDialogOpen(false)
           reset()
         }}
-        title={t("dialog")("confirmEmailDelete")}
+        title={t("dialog.confirmEmailDelete")}
         content={
           <form onSubmit={handleSubmit(handleEmailDelete)}>
             <VStack gap={4} align="stretch">
-              <Text>{t("dialog")("emailDeleteMessage")}</Text>
+              <Text>{t("dialog.emailDeleteMessage")}</Text>
               <Field.Root>
-                <Field.Label>{t("dialog")("emailAddress")}</Field.Label>
+                <Field.Label>{t("dialog.emailAddress")}</Field.Label>
                 <Input
                   type="email"
                   {...register("email", {
-                    required: t("dialog")("enterEmailAddress"),
+                    required: t("dialog.enterEmailAddress"),
                     pattern: {
                       value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                      message: t("dialog")("enterValidEmail"),
+                      message: t("dialog.enterValidEmail"),
                     },
                   })}
-                  placeholder={t("dialog")("emailPlaceholder")}
+                  placeholder={t("dialog.emailPlaceholder")}
                 />
                 {errors.email && (
                   <Field.ErrorText>{errors.email.message}</Field.ErrorText>
@@ -380,10 +379,10 @@ export const CommentItem = ({
                     reset()
                   }}
                 >
-                  {t("common")("cancel")}
+                  {t("common.cancel")}
                 </Button>
                 <Button type="submit" colorPalette="red" loading={isDeleting}>
-                  {t("dialog")("confirmDeleteText")}
+                  {t("dialog.confirmDeleteText")}
                 </Button>
               </HStack>
             </VStack>

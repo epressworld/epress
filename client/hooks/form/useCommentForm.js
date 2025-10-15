@@ -97,7 +97,7 @@ export function useCommentForm(
       setIsWaitingForWallet(true)
       openConnectModal?.()
       toaster.create({
-        description: t("common")("pleaseConnectWallet"),
+        description: t("common.pleaseConnectWallet"),
         type: "info",
       })
 
@@ -143,7 +143,7 @@ export function useCommentForm(
         // 两步流程：先创建为待确认评论，然后再触发钱包签名进行确认
         if (!address) {
           toaster.create({
-            description: t("common")("pleaseConnectWallet"),
+            description: t("common.pleaseConnectWallet"),
             type: "warning",
           })
           return { success: false, error: new Error("请先连接钱包") }
@@ -164,7 +164,7 @@ export function useCommentForm(
       // 根据认证类型显示不同的成功消息
       if (data.authType === "EMAIL") {
         toaster.create({
-          description: t("comment")("commentSubmitSuccess"),
+          description: t("comment.commentSubmitSuccess"),
           type: "success",
         })
       } else {
@@ -212,7 +212,7 @@ export function useCommentForm(
       toaster.create({
         description:
           error.message ||
-          `${t("common")("submitFailed")}, ${t("common")("pleaseRetry")}`,
+          `${t("common.submitFailed")}, ${t("common.pleaseRetry")}`,
         type: "error",
       })
       return { success: false, error }
@@ -227,14 +227,14 @@ export function useCommentForm(
     if (!ctx) return
     if (!profile?.address) {
       toaster.create({
-        description: t("connection")("cannotGetNodeInfo"),
+        description: t("connection.cannotGetNodeInfo"),
         type: "error",
       })
       return
     }
     if (!ctx.authorId) {
       toaster.create({
-        description: t("common")("pleaseConnectWallet"),
+        description: t("common.pleaseConnectWallet"),
         type: "warning",
       })
       openConnectModal?.()
@@ -258,7 +258,7 @@ export function useCommentForm(
       const signature = await signEIP712Data(typedData)
       if (!signature) {
         toaster.create({
-          description: t("common")("signFailed"),
+          description: t("common.signFailed"),
           type: "error",
         })
         return
@@ -271,7 +271,7 @@ export function useCommentForm(
 
       if (!skipToast) {
         toaster.create({
-          description: t("comment")("commentSubmitSuccess"),
+          description: t("comment.commentSubmitSuccess"),
           type: "success",
         })
       }
@@ -289,7 +289,7 @@ export function useCommentForm(
     } catch (error) {
       console.error("确认评论签名失败:", error)
       toaster.create({
-        description: error.message || t("common")("pleaseRetry"),
+        description: error.message || t("common.pleaseRetry"),
         type: "error",
       })
     } finally {

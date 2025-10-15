@@ -44,7 +44,7 @@ export function LoadMoreButton({
           block
           disabled={loading}
         >
-          {t("common")("loadMore")} <LuEllipsis />
+          {t("common.loadMore")} <LuEllipsis />
         </Button>
       </Box>
     )
@@ -54,7 +54,7 @@ export function LoadMoreButton({
     return (
       <Box textAlign="center" pt={2}>
         <Text color="gray.400" _dark={{ color: "gray.500" }} fontSize="sm">
-          {t("common")("noMore")}
+          {t("common.noMore")}
         </Text>
       </Box>
     )

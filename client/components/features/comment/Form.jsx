@@ -10,8 +10,6 @@ import {
   VStack,
 } from "@chakra-ui/react"
 import { FiMessageCircle } from "react-icons/fi"
-import { LuAlertCircle } from "react-icons/lu"
-import { Alert } from "@/components/ui/alert"
 import { useCommentForm } from "@/hooks/form"
 import { useIntl } from "@/hooks/utils"
 
@@ -28,7 +26,6 @@ export const CommentForm = ({
     isWaitingForWallet,
     isConfirming,
     authType,
-    isConnected,
     isMailEnabled,
     pendingComment,
     handleAuthTypeChange,
@@ -41,20 +38,8 @@ export const CommentForm = ({
   return (
     <Box>
       <Text fontSize="lg" fontWeight="semibold" mb={4}>
-        {t("comment")("publishComment")}
+        {t("comment.publishComment")}
       </Text>
-
-      {/* Show warning if mail is not enabled and wallet is not connected */}
-      {!isMailEnabled && !isConnected && (
-        <Alert.Root status="warning" mb={4}>
-          <LuAlertCircle />
-          <Alert.Content>
-            <Alert.Description>
-              {t("comment")("mailNotConfiguredWarning")}
-            </Alert.Description>
-          </Alert.Content>
-        </Alert.Root>
-      )}
 
       <form onSubmit={commentForm.handleSubmit(handleSubmit)}>
         <VStack gap={4} align="stretch">
@@ -80,27 +65,27 @@ export const CommentForm = ({
             <Box flex="1" minW="120px">
               <Input
                 size="md"
-                placeholder={t("common")("nicknamePlaceholder")}
+                placeholder={t("common.nicknamePlaceholder")}
                 error={commentForm.formState.errors.username?.message}
                 {...commentForm.register("username", {
-                  required: t("common")("nicknameRequired"),
+                  required: t("common.nicknameRequired"),
                 })}
               />
             </Box>
 
             {/* 邮箱输入 - 仅在邮箱认证时显示 */}
-            {authType === "EMAIL" && (
+            {authType === "EMAIL" && isMailEnabled && (
               <Box flex="1" minW="200px">
                 <Input
                   size="md"
                   type="email"
-                  placeholder={t("common")("emailAddressPlaceholder")}
+                  placeholder={t("common.emailAddressPlaceholder")}
                   error={commentForm.formState.errors.email?.message}
                   {...commentForm.register("email", {
-                    required: t("common")("emailAddressRequired"),
+                    required: t("common.emailAddressRequired"),
                     pattern: {
                       value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                      message: t("common")("emailFormatIncorrect"),
+                      message: t("common.emailFormatIncorrect"),
                     },
                   })}
                 />
@@ -110,11 +95,11 @@ export const CommentForm = ({
 
           {/* 第二行：评论内容输入 */}
           <Textarea
-            placeholder={t("comment")("commentPlaceholder")}
+            placeholder={t("comment.commentPlaceholder")}
             rows={4}
             error={commentForm.formState.errors.body?.message}
             {...commentForm.register("body", {
-              required: t("form")("commentContentRequired"),
+              required: t("form.commentContentRequired"),
             })}
           />
 
@@ -127,10 +112,10 @@ export const CommentForm = ({
             loading={isSubmitting || isWaitingForWallet || isConfirming}
             loadingText={
               isWaitingForWallet
-                ? t("common")("waitingForWallet")
+                ? t("common.waitingForWallet")
                 : isConfirming
-                  ? t("comment")("verifyingComment")
-                  : t("comment")("submitting")
+                  ? t("comment.verifyingComment")
+                  : t("comment.submitting")
             }
             onClick={(e) => {
               if (authType === "ETHEREUM" && pendingComment) {
@@ -141,8 +126,8 @@ export const CommentForm = ({
           >
             <FiMessageCircle />
             {isWaitingForWallet
-              ? t("common")("waitingForWallet")
-              : t("comment")("submitComment")}
+              ? t("common.waitingForWallet")
+              : t("comment.submitComment")}
           </Button>
         </VStack>
       </form>

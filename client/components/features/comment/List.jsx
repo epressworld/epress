@@ -90,7 +90,7 @@ export const CommentList = ({
     } catch (error) {
       console.error("Failed to load more comments:", error)
       toaster.create({
-        description: t("common")("loadMoreFailed"),
+        description: t("common.loadMoreFailed"),
         type: "error",
       })
     }
@@ -110,7 +110,7 @@ export const CommentList = ({
       <Alert.Root status="error" py={8}>
         <Alert.Indicator />
         <Alert.Content>
-          <Alert.Title>{t("common")("loadFailed")}</Alert.Title>
+          <Alert.Title>{t("common.loadFailed")}</Alert.Title>
           <Alert.Description>{error.message}</Alert.Description>
         </Alert.Content>
       </Alert.Root>
@@ -167,13 +167,13 @@ export const CommentList = ({
 
       {!hasMore && comments.length > 0 && hasAttemptedLoadMore && (
         <Text textAlign="center" color="gray.500" py={4}>
-          {t("common")("noMore")}
+          {t("common.noMore")}
         </Text>
       )}
 
       {comments.length === 0 && !loading && !localPendingComment && (
         <Text textAlign="center" color="gray.500" py={8}>
-          {t("common")("noComments")}
+          {t("common.noComments")}
         </Text>
       )}
     </VStack>

@@ -18,6 +18,7 @@ export * from "./editor"
 // Form 组件族
 export * from "./form"
 export * from "./LanguageSelect"
+export * from "./Link"
 export * from "./PwaRegistry"
 // Skeleton 组件
 export * as Skeletons from "./Skeletons"

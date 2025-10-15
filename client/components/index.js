@@ -14,4 +14,3 @@ export * from "./providers"
 // UI 组件
 export * from "./ui"
 export * from "./ui/avatar"
-export * from "./ui/card"

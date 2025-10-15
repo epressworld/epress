@@ -17,7 +17,7 @@ export function FollowAction({ onClick, disabled = false, ...props }) {
       {...props}
     >
       <FaPlus />
-      {t("connection")("follow")}
+      {t("connection.follow")}
     </Button>
   )
 }

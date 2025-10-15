@@ -1,20 +1,10 @@
 "use client"
 
-import {
-  Box,
-  Button,
-  FormatByte,
-  HStack,
-  Image,
-  Input,
-  Link,
-  Text,
-  VStack,
-} from "@chakra-ui/react"
+import { Box, Button, HStack, Input, Text, VStack } from "@chakra-ui/react"
 import { useEffect } from "react"
-import { FiArrowLeft, FiFileText, FiSave } from "react-icons/fi"
+import { FiArrowLeft, FiSave } from "react-icons/fi"
 import { PostModeForm } from "@/components/features/publication"
-import { UnifiedCard } from "@/components/ui"
+import { FileRenderer, UnifiedCard } from "@/components/ui"
 import { usePublicationForm } from "@/hooks/form"
 import { useIntl } from "@/hooks/utils"
 
@@ -70,88 +60,6 @@ export const PublicationEditForm = ({
     }
   }, [fileDescription, originalMode, setContent])
 
-  // 渲染现有文件（不可编辑）
-  const renderExistingFile = () => {
-    if (originalMode === "file" && publication?.content) {
-      const { content: fileContent } = publication
-
-      if (fileContent.mimetype?.startsWith("image/")) {
-        return (
-          <Box w="full">
-            <Image
-              src={
-                publication.author.url
-                  ? `${publication.author.url}/ewp/contents/${fileContent.content_hash}`
-                  : undefined
-              }
-              alt={fileContent.filename || "图片"}
-              display="block"
-              w="100%"
-              maxH={"400px"}
-              objectFit="contain"
-              bg="gray.100"
-              _dark={{ bg: "gray.800" }}
-            />
-          </Box>
-        )
-      }
-
-      if (fileContent.mimetype?.startsWith("video/")) {
-        return (
-          <VStack gap={2}>
-            <video controls style={{ maxWidth: "100%", borderRadius: "8px" }}>
-              <source
-                src={
-                  publication.author.url
-                    ? `${publication.author.url}/ewp/contents/${fileContent.content_hash}`
-                    : undefined
-                }
-                type={fileContent.mimetype}
-              />
-              您的浏览器不支持视频播放。
-            </video>
-          </VStack>
-        )
-      }
-
-      // 其他文件类型
-      return (
-        <Box w="full" bg="gray.50" _dark={{ bg: "gray.800" }} p={6}>
-          <VStack gap={2} align="stretch">
-            <HStack justify="space-between" align="center">
-              <HStack gap={3} align="center">
-                <FiFileText color="currentColor" />
-                <Text
-                  fontSize="sm"
-                  fontWeight="medium"
-                  color="gray.800"
-                  _dark={{ color: "gray.200" }}
-                >
-                  {fileContent.filename || t("publication")("unknownFile")}
-                </Text>
-                {fileContent.size != null && (
-                  <FormatByte value={fileContent.size} />
-                )}
-              </HStack>
-              <Link
-                href={`/ewp/contents/${fileContent.content_hash}`}
-                color="orange.500"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {t("publication")("downloadFile")}
-              </Link>
-            </HStack>
-            <Text fontSize="xs" color="gray.500" _dark={{ color: "gray.400" }}>
-              {fileContent.mimetype || t("publication")("unknownType")}
-            </Text>
-          </VStack>
-        </Box>
-      )
-    }
-    return null
-  }
-
   // 保存编辑
   const handleSave = () => {
     // 验证输入
@@ -177,9 +85,17 @@ export const PublicationEditForm = ({
   }
 
   return (
-    <UnifiedCard.Root mb={6}>
+    <UnifiedCard.Root mb={6} overflow="hidden">
       {/* 现有文件显示（不可编辑） */}
-      {renderExistingFile()}
+      {publication.content?.type === "FILE" && (
+        <FileRenderer
+          content={{
+            ...publication.content,
+            url: `${publication.author.url}/ewp/contents/${publication.content.content_hash}`,
+          }}
+          showDownload={false}
+        />
+      )}
       <UnifiedCard.Body>
         <VStack gap={4} align="stretch">
           {/* 内容区域 */}
@@ -220,7 +136,7 @@ export const PublicationEditForm = ({
               colorPalette="orange"
               onClick={handleSave}
               loading={isLoading}
-              loadingText={t("publication")("saving")}
+              loadingText={t("publication.saving")}
               disabled={
                 disabled ||
                 isLoading ||
@@ -232,8 +148,8 @@ export const PublicationEditForm = ({
             >
               <FiSave />
               {isSigned
-                ? t("publication")("signedCannotEdit")
-                : t("publication")("saveChanges")}
+                ? t("publication.signedCannotEdit")
+                : t("publication.saveChanges")}
             </Button>
           </HStack>
         </VStack>

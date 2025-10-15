@@ -28,7 +28,7 @@ export function SettingsDialog({ isOpen, onClose }) {
         <Dialog.Positioner>
           <Dialog.Content maxW="2xl">
             <Dialog.Header>
-              <Dialog.Title>{t("settings")("nodeSettings")}</Dialog.Title>
+              <Dialog.Title>{t("settings.nodeSettings")}</Dialog.Title>
             </Dialog.Header>
 
             <Dialog.Body>
@@ -36,11 +36,11 @@ export function SettingsDialog({ isOpen, onClose }) {
                 <Tabs.List>
                   <Tabs.Trigger value="profile">
                     <LuUserCog />
-                    {t("settings")("nodeBasicInfo")}
+                    {t("settings.nodeBasicInfo")}
                   </Tabs.Trigger>
                   <Tabs.Trigger value="settings">
                     <LuSettings />
-                    {t("settings")("systemSettings")}
+                    {t("settings.systemSettings")}
                   </Tabs.Trigger>
                 </Tabs.List>
 

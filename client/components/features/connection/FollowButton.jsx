@@ -60,10 +60,10 @@ export const FollowButton = ({ ...props }) => {
             {...props}
             onClick={handleButtonClick}
             loading={isLoading}
-            loadingText={t("connection")("following")}
+            loadingText={t("connection.following")}
           >
             <FaPlus />
-            {t("connection")("follow")}
+            {t("connection.follow")}
           </Button>
         )}
       </Popover.Trigger>
@@ -74,7 +74,7 @@ export const FollowButton = ({ ...props }) => {
             <Popover.Body p={4}>
               <VStack gap={4} align="stretch">
                 <Input
-                  placeholder={t("connection")("enterNodeUrl")}
+                  placeholder={t("connection.enterNodeUrl")}
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   onKeyDown={(e) => {
@@ -90,7 +90,7 @@ export const FollowButton = ({ ...props }) => {
                     onClick={handleCancel}
                     disabled={isLoading}
                   >
-                    {t("common")("cancel")}
+                    {t("common.cancel")}
                   </Button>
                   <Button
                     size="sm"
@@ -98,7 +98,7 @@ export const FollowButton = ({ ...props }) => {
                     loading={isLoading}
                     disabled={!url.trim()}
                   >
-                    {t("connection")("follow")}
+                    {t("connection.follow")}
                   </Button>
                 </HStack>
               </VStack>

@@ -5,7 +5,6 @@ import {
   Dialog,
   HStack,
   IconButton,
-  Link,
   Text,
   VStack,
 } from "@chakra-ui/react"
@@ -17,6 +16,7 @@ import {
   AuthorInfo,
   createSignatureData,
   FileRenderer,
+  Link,
   RichTextEditor,
   SignatureDialog,
   SignedMark,
@@ -93,7 +93,7 @@ export function PublicationItem({
         // 非图片文件：保持文本链接的行为
         const fileUrl = `${baseUrl}/ewp/contents/${contentHash}?timestamp=${createdAtUnix}`
         contentSection = [
-          `> 📁 ${t("publication")("fileMode")}: ${filename}${fileInfo}`,
+          `> 📁 ${t("publication.fileMode")}: ${filename}${fileInfo}`,
           `> [${filename}](${fileUrl})`,
           `> `, // 空行
           ...(publication.description || "")
@@ -136,13 +136,13 @@ export function PublicationItem({
       await copyToClipboard(quoteText)
 
       toaster.create({
-        description: t("publication")("quoteCopied"),
+        description: t("publication.quoteCopied"),
         type: "success",
       })
     } catch (error) {
       console.error("Failed to copy quote:", error)
       toaster.create({
-        description: t("publication")("copyFailed"),
+        description: t("publication.copyFailed"),
         type: "error",
       })
     }
@@ -187,7 +187,7 @@ export function PublicationItem({
 
     if (!quoteContent.trim()) {
       toaster.create({
-        description: t("publication")("contentCannotBeEmpty"),
+        description: t("publication.contentCannotBeEmpty"),
         type: "error",
       })
       return
@@ -330,7 +330,7 @@ export function PublicationItem({
             <HStack gap={1} className="publication-item-actions">
               {/* 评论按钮（显示数量）- 只有本节点内容才显示 */}
               {shouldShowComments && (
-                <Tooltip content={t("publication")("viewComments")}>
+                <Tooltip content={t("publication.viewComments")}>
                   <Button
                     size="xs"
                     variant="ghost"
@@ -348,7 +348,7 @@ export function PublicationItem({
               )}
 
               {/* 引用按钮 */}
-              <Tooltip content={t("publication")("quote")}>
+              <Tooltip content={t("publication.quote")}>
                 <IconButton size="xs" variant="ghost" onClick={handleQuote}>
                   <LuQuote size={12} />
                 </IconButton>
@@ -360,8 +360,8 @@ export function PublicationItem({
                   <Tooltip
                     content={
                       publication.signature
-                        ? t("publication")("signedCannotEditMessage")
-                        : t("publication")("edit")
+                        ? t("publication.signedCannotEditMessage")
+                        : t("publication.edit")
                     }
                   >
                     <IconButton
@@ -374,7 +374,7 @@ export function PublicationItem({
                     </IconButton>
                   </Tooltip>
 
-                  <Tooltip content={t("publication")("delete")}>
+                  <Tooltip content={t("publication.delete")}>
                     <IconButton
                       size="xs"
                       variant="ghost"
@@ -410,7 +410,7 @@ export function PublicationItem({
         <Dialog.Positioner>
           <Dialog.Content>
             <Dialog.Header>
-              <Dialog.Title>{t("publication")("quotePublish")}</Dialog.Title>
+              <Dialog.Title>{t("publication.quotePublish")}</Dialog.Title>
             </Dialog.Header>
 
             <Dialog.Body>
@@ -424,18 +424,18 @@ export function PublicationItem({
                   variant="outline"
                   onClick={() => setIsQuoteDialogOpen(false)}
                 >
-                  {t("publication")("cancel")}
+                  {t("publication.cancel")}
                 </Button>
                 <Button
                   size="sm"
                   colorPalette="orange"
                   onClick={handleQuotePublish}
                   loading={isPublishing}
-                  loadingText={t("publication")("publishing")}
+                  loadingText={t("publication.publishing")}
                   disabled={isPublishing || !quoteContent.trim()}
                 >
                   <LuSend size={14} style={{ marginRight: "4px" }} />
-                  {t("publication")("publish")}
+                  {t("publication.publish")}
                 </Button>
               </HStack>
             </Dialog.Footer>

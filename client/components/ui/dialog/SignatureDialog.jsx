@@ -104,7 +104,7 @@ export const SignatureDialog = ({ isOpen, onClose, signatureData }) => {
       <Dialog.Positioner>
         <Dialog.Content>
           <Dialog.Header>
-            <Dialog.Title>{t("common")("proofOfSource")}</Dialog.Title>
+            <Dialog.Title>{t("common.proofOfSource")}</Dialog.Title>
             <Dialog.CloseTrigger asChild>
               <CloseButton size="sm" />
             </Dialog.CloseTrigger>
@@ -113,7 +113,7 @@ export const SignatureDialog = ({ isOpen, onClose, signatureData }) => {
           <Dialog.Body>
             <VStack gap={4} align="stretch">
               <Field.Root>
-                <Field.Label>{t("common")("statementOfSource")}</Field.Label>
+                <Field.Label>{t("common.statementOfSource")}</Field.Label>
                 <Box position="relative" w="full">
                   <Textarea
                     value={statementOfSourceJson}
@@ -134,7 +134,7 @@ export const SignatureDialog = ({ isOpen, onClose, signatureData }) => {
                 </Box>
               </Field.Root>
               <Field.Root>
-                <Field.Label>{t("common")("signature")}</Field.Label>
+                <Field.Label>{t("common.signature")}</Field.Label>
                 <Group attached w="full">
                   <Input
                     value={signatureData?.signature || ""}
@@ -157,7 +157,7 @@ export const SignatureDialog = ({ isOpen, onClose, signatureData }) => {
 
           <Dialog.Footer>
             <Button onClick={onClose} colorPalette="gray">
-              {t("common")("close")}
+              {t("common.close")}
             </Button>
           </Dialog.Footer>
         </Dialog.Content>

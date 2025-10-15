@@ -24,10 +24,10 @@ export const ConfirmDialog = ({
   const { t } = useIntl()
 
   // 使用翻译的默认值
-  const dialogTitle = title || t("dialog")("confirmOperation")
-  const dialogMessage = message || t("dialog")("confirmMessage")
-  const dialogConfirmText = confirmText || t("common")("confirm")
-  const dialogCancelText = cancelText || t("common")("cancel")
+  const dialogTitle = title || t("dialog.confirmOperation")
+  const dialogMessage = message || t("dialog.confirmMessage")
+  const dialogConfirmText = confirmText || t("common.confirm")
+  const dialogCancelText = cancelText || t("common.cancel")
 
   return (
     <Dialog.Root

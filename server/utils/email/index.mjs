@@ -55,17 +55,11 @@ export async function sendEmail(toEmail, subject, html) {
   }
 
   // Get mail from address from database
-  const mailFrom = await Setting.get("mail_from")
-  if (!mailFrom && process.env.NODE_ENV !== "test") {
-    throw new Error(
-      "Mail from address is not configured. Please configure mail settings in the admin panel.",
-    )
-  }
-
+  const mailFrom = await Setting.get("mail_from", "no-reply@epress.world")
   const transporter = await getTransporter()
 
   const mailOptions = {
-    from: mailFrom || "no-reply@epress.com",
+    from: mailFrom,
     to: toEmail,
     subject,
     html,

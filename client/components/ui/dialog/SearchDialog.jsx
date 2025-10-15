@@ -49,19 +49,19 @@ export function SearchDialog({ isOpen, onClose, initialKeyword = "" }) {
         <Dialog.Positioner>
           <Dialog.Content>
             <Dialog.Header>
-              <Dialog.Title>{t("common")("search")}</Dialog.Title>
+              <Dialog.Title>{t("common.search")}</Dialog.Title>
               <Dialog.CloseTrigger asChild>
                 <CloseButton size="sm" />
               </Dialog.CloseTrigger>
             </Dialog.Header>
             <Dialog.Body>
               <Field.Root>
-                <Field.Label>{t("common")("keyword")}</Field.Label>
+                <Field.Label>{t("common.keyword")}</Field.Label>
                 <Input
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder={t("common")("enterKeyword")}
+                  placeholder={t("common.enterKeyword")}
                   autoFocus
                 />
               </Field.Root>
@@ -69,10 +69,10 @@ export function SearchDialog({ isOpen, onClose, initialKeyword = "" }) {
             <Dialog.Footer>
               <HStack gap={2} justify="end">
                 <Button variant="outline" onClick={onClose}>
-                  {t("common")("cancel")}
+                  {t("common.cancel")}
                 </Button>
                 <Button onClick={handleSearch} colorPalette="orange">
-                  {t("common")("search")}
+                  {t("common.search")}
                 </Button>
               </HStack>
             </Dialog.Footer>

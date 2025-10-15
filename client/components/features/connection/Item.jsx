@@ -37,8 +37,8 @@ export function ConnectionItem({
 
   if (!node) return null
 
-  const title = node.title || node.address || t("node")("unnamedNode")
-  const description = node.description || t("node")("noDescription")
+  const title = node.title || node.address || t("node.unnamedNode")
+  const description = node.description || t("node.noDescription")
   const address = node.address
   const url = node.url
   const avatar = url ? `${url}/ewp/avatar` : undefined

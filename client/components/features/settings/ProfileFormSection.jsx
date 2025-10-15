@@ -72,7 +72,7 @@ export function ProfileFormSection({ onSuccess }) {
           <Alert.Indicator />
           <Alert.Content>
             <Alert.Description>
-              {t("settings")("modifyRequiresSignature")}
+              {t("settings.modifyRequiresSignature")}
             </Alert.Description>
           </Alert.Content>
         </Alert.Root>
@@ -121,25 +121,25 @@ export function ProfileFormSection({ onSuccess }) {
               />
             </Box>
             <Text fontSize="xs" color="gray.500" textAlign="center">
-              {t("settings")("supportedFormats", { maxSize: 2 })}
+              {t("settings.supportedFormats", { maxSize: 2 })}
             </Text>
           </VStack>
 
           {/* 标题和描述 */}
           <VStack gap={4} align="stretch" flex="1">
             <FormField
-              label={t("settings")("nodeTitle")}
-              placeholder={t("settings")("nodeTitlePlaceholder")}
+              label={t("settings.nodeTitle")}
+              placeholder={t("settings.nodeTitlePlaceholder")}
               error={form.formState.errors.title?.message}
               required
               {...form.register("title", {
-                required: t("settings")("titleRequired"),
+                required: t("settings.titleRequired"),
               })}
             />
 
             <FormField
-              label={t("settings")("nodeDescription")}
-              placeholder={t("settings")("nodeDescriptionPlaceholder")}
+              label={t("settings.nodeDescription")}
+              placeholder={t("settings.nodeDescriptionPlaceholder")}
               multiline
               rows={3}
               {...form.register("description")}
@@ -150,7 +150,7 @@ export function ProfileFormSection({ onSuccess }) {
         {/* 第二行：节点URL */}
         <VStack gap={2} align="stretch">
           <Text fontSize="sm" fontWeight="medium">
-            {t("settings")("nodeUrl")}{" "}
+            {t("settings.nodeUrl")}{" "}
             <Text as="span" color="red.500">
               *
             </Text>
@@ -169,20 +169,20 @@ export function ProfileFormSection({ onSuccess }) {
                     color="gray.600"
                     _dark={{ color: "gray.400" }}
                   >
-                    {t("settings")("edit")}
+                    {t("settings.edit")}
                   </Checkbox.Label>
                 </Checkbox.Root>
               </HStack>
             }
           >
             <Input
-              placeholder={t("settings")("nodeUrlPlaceholder")}
+              placeholder={t("settings.nodeUrlPlaceholder")}
               disabled={!isUrlEnabled}
               {...form.register("url", {
-                required: isUrlEnabled ? t("settings")("urlRequired") : false,
+                required: isUrlEnabled ? t("settings.urlRequired") : false,
                 pattern: {
                   value: /^https?:\/\/.+/,
-                  message: t("settings")("urlFormatIncorrect"),
+                  message: t("settings.urlFormatIncorrect"),
                 },
               })}
             />
@@ -193,17 +193,17 @@ export function ProfileFormSection({ onSuccess }) {
             </Text>
           )}
           <Text fontSize="sm" color="gray.500" _dark={{ color: "gray.400" }}>
-            {t("settings")("nodeUrlHelper")}
+            {t("settings.nodeUrlHelper")}
           </Text>
         </VStack>
 
         <Button
           type="submit"
           loading={isLoading}
-          loadingText={t("settings")("saving")}
+          loadingText={t("settings.saving")}
           colorPalette="orange"
         >
-          <LuSave /> {t("settings")("saveAndBroadcast")}
+          <LuSave /> {t("settings.saveAndBroadcast")}
         </Button>
       </VStack>
 
@@ -219,18 +219,18 @@ export function ProfileFormSection({ onSuccess }) {
           <Dialog.Positioner>
             <Dialog.Content maxW="md">
               <Dialog.Header>
-                <Dialog.Title>{t("settings")("nodeUrl")}</Dialog.Title>
+                <Dialog.Title>{t("settings.nodeUrl")}</Dialog.Title>
               </Dialog.Header>
               <Dialog.Body>
-                <Text>{t("settings")("urlEditWarning")}</Text>
+                <Text>{t("settings.urlEditWarning")}</Text>
               </Dialog.Body>
               <Dialog.Footer>
                 <HStack gap={2} justify="end">
                   <Button variant="outline" onClick={handleUrlWarningCancel}>
-                    {t("common")("cancel")}
+                    {t("common.cancel")}
                   </Button>
                   <Button onClick={handleUrlWarningConfirm}>
-                    {t("common")("confirm")}
+                    {t("common.confirm")}
                   </Button>
                 </HStack>
               </Dialog.Footer>

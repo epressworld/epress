@@ -87,7 +87,7 @@ export const PublicationList = ({
         .catch((error) => {
           console.error("加载更多失败:", error)
           toaster.create({
-            description: t("common")("pleaseRetry"),
+            description: t("common.pleaseRetry"),
             type: "error",
           })
         })
@@ -101,7 +101,7 @@ export const PublicationList = ({
   const handleSignPublication = async (publication) => {
     if (authStatus !== AUTH_STATUS.AUTHENTICATED || !isNodeOwner) {
       toaster.create({
-        description: t("common")("pleaseLoginAndConfirmOwner"),
+        description: t("common.pleaseLoginAndConfirmOwner"),
         type: "error",
       })
       return
@@ -124,7 +124,7 @@ export const PublicationList = ({
 
       if (!signature) {
         toaster.update(toasterId, {
-          description: t("common")("signFailed"),
+          description: t("common.signFailed"),
           type: "error",
         })
         return
@@ -141,14 +141,14 @@ export const PublicationList = ({
 
       if (result?.signPublication) {
         toaster.update(toasterId, {
-          description: t("common")("signSuccess"),
+          description: t("common.signSuccess"),
           type: "success",
         })
       }
     } catch (error) {
       console.error("签名失败:", error)
       toaster.update(toasterId, {
-        description: `${t("common")("signFailed")}, ${t("common")("pleaseRetry")}`,
+        description: `${t("common.signFailed")}, ${t("common.pleaseRetry")}`,
         type: "error",
       })
     }
@@ -194,7 +194,7 @@ export const PublicationList = ({
 
       if (result?.destroyPublication) {
         toaster.create({
-          description: t("common")("deleteSuccess"),
+          description: t("common.deleteSuccess"),
           type: "success",
         })
         setDeleteDialogOpen(false)
@@ -204,7 +204,7 @@ export const PublicationList = ({
     } catch (error) {
       console.error("删除失败:", error)
       toaster.create({
-        description: `${t("common")("deleteFailed")}, ${t("common")("pleaseRetry")}`,
+        description: `${t("common.deleteFailed")}, ${t("common.pleaseRetry")}`,
         type: "error",
       })
     } finally {
@@ -221,7 +221,7 @@ export const PublicationList = ({
       <Alert.Root status="error" py={8}>
         <Alert.Indicator />
         <Alert.Content>
-          <Alert.Title>{t("publication")("loadFailed")}</Alert.Title>
+          <Alert.Title>{t("publication.loadFailed")}</Alert.Title>
           <Alert.Description>{error.message}</Alert.Description>
         </Alert.Content>
       </Alert.Root>
@@ -243,9 +243,9 @@ export const PublicationList = ({
           <Alert.Root status="info" variant="subtle">
             <Alert.Indicator />
             <Alert.Content color="fg">
-              <Alert.Title>{t("common")("searchResults")}</Alert.Title>
+              <Alert.Title>{t("common.searchResults")}</Alert.Title>
               <Alert.Description>
-                {t("common")("searchResultsCount", {
+                {t("common.searchResultsCount", {
                   keyword,
                   count: data?.search?.total || 0,
                 })}
@@ -257,7 +257,7 @@ export const PublicationList = ({
               colorPalette="blue"
               onClick={handleClearSearch}
             >
-              {t("common")("clearSearch")}
+              {t("common.clearSearch")}
             </Button>
           </Alert.Root>
         )}
@@ -290,7 +290,7 @@ export const PublicationList = ({
             _dark={{ color: "gray.400" }}
             py={8}
           >
-            {t("publication")("noContent")}
+            {t("publication.noContent")}
           </Text>
         )}
       </VStack>
@@ -300,10 +300,10 @@ export const PublicationList = ({
         isOpen={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={handleDeleteConfirm}
-        title={t("common")("confirmDelete")}
-        message={t("common")("confirmDeleteContent")}
-        confirmText={t("common")("confirmDeleteText")}
-        cancelText={t("common")("cancel")}
+        title={t("common.confirmDelete")}
+        message={t("common.confirmDeleteContent")}
+        confirmText={t("common.confirmDeleteText")}
+        cancelText={t("common.cancel")}
         isLoading={isDeleting}
         confirmColorPalette="red"
       />

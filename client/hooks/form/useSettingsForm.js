@@ -75,11 +75,11 @@ export function useSettingsForm() {
         return true
       } else {
         setMailTransportValid(false)
-        return data.error || t("settings")("mailTransportInvalid")
+        return data.error || t("settings.mailTransportInvalid")
       }
-    } catch (error) {
+    } catch (_error) {
       setMailTransportValid(false)
-      return t("settings")("mailTransportInvalid")
+      return t("settings.mailTransportInvalid")
     } finally {
       setMailTransportValidating(false)
     }
@@ -109,7 +109,7 @@ export function useSettingsForm() {
       await refetchPageData()
 
       toaster.create({
-        description: t("settings")("settingsSaved"),
+        description: t("settings.settingsSaved"),
         type: "success",
       })
 
@@ -117,7 +117,7 @@ export function useSettingsForm() {
     } catch (error) {
       console.error("保存设置失败:", error)
       toaster.create({
-        description: error.message || t("settings")("saveFailed"),
+        description: error.message || t("settings.saveFailed"),
         type: "error",
       })
       return { success: false, error }

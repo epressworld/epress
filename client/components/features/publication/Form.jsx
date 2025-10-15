@@ -75,7 +75,7 @@ export const PublicationForm = ({
             </Box>
           ) : (
             <Input
-              placeholder={t("common")("addFileDescription")}
+              placeholder={t("common.addFileDescription")}
               value={fileDescription}
               onChange={(e) => setFileDescription(e.target.value)}
               disabled={disabled}
@@ -90,7 +90,7 @@ export const PublicationForm = ({
                 onClick={(_e) => setMode("post")}
               >
                 <FiFileText />
-                {t("publication")("postMode")}
+                {t("publication.postMode")}
               </Button>
               <Button
                 size="xs"
@@ -98,7 +98,7 @@ export const PublicationForm = ({
                 onClick={(_e) => setMode("file")}
               >
                 <FiFile />
-                {t("publication")("fileMode")}
+                {t("publication.fileMode")}
               </Button>
             </Group>
 
@@ -107,7 +107,7 @@ export const PublicationForm = ({
               size="sm"
               onClick={handleFormSubmit}
               loading={isLoading}
-              loadingText={t("publication")("publishing")}
+              loadingText={t("publication.publishing")}
               disabled={
                 disabled ||
                 isLoading ||
@@ -116,7 +116,7 @@ export const PublicationForm = ({
               }
             >
               <LuSend />
-              {t("publication")("publish")}
+              {t("publication.publish")}
             </Button>
           </HStack>
         </VStack>
