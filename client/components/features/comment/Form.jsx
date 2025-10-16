@@ -26,6 +26,7 @@ export const CommentForm = ({
     isWaitingForWallet,
     isConfirming,
     authType,
+    isConnected,
     isMailEnabled,
     pendingComment,
     handleAuthTypeChange,
@@ -110,6 +111,7 @@ export const CommentForm = ({
             size="md"
             width="100%"
             loading={isSubmitting || isWaitingForWallet || isConfirming}
+            disabled={authType === "ETHEREUM" && !isConnected}
             loadingText={
               isWaitingForWallet
                 ? t("common.waitingForWallet")
@@ -125,9 +127,11 @@ export const CommentForm = ({
             }}
           >
             <FiMessageCircle />
-            {isWaitingForWallet
-              ? t("common.waitingForWallet")
-              : t("comment.submitComment")}
+            {authType === "ETHEREUM" && !isConnected
+              ? t("common.pleaseConnectWalletButton")
+              : isWaitingForWallet
+                ? t("common.waitingForWallet")
+                : t("comment.submitComment")}
           </Button>
         </VStack>
       </form>

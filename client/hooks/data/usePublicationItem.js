@@ -126,7 +126,8 @@ export function usePublicationItem(options = {}) {
 
   // 签名Publication
   const handleSignPublication = async (publication) => {
-    if (authStatus !== AUTH_STATUS.AUTHENTICATED || !isNodeOwner) {
+    // 只有认证用户才能签名(只有节点所有者可以认证)
+    if (authStatus !== AUTH_STATUS.AUTHENTICATED) {
       toaster.create({
         description: t("common.onlyNodeOwnerCanSign"),
         type: "error",
@@ -175,7 +176,8 @@ export function usePublicationItem(options = {}) {
 
   // 打开删除确认对话框
   const handleDeleteClick = () => {
-    if (authStatus !== AUTH_STATUS.AUTHENTICATED || !isNodeOwner) {
+    // 只有认证用户才能删除(只有节点所有者可以认证)
+    if (authStatus !== AUTH_STATUS.AUTHENTICATED) {
       toaster.create({
         description: t("common.onlyNodeOwnerCanDelete"),
         type: "error",

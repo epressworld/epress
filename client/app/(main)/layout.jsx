@@ -1,9 +1,11 @@
+import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { Page } from "@/components/layout"
 import { ApolloProvider } from "@/components/providers"
 import { PwaRegistry } from "@/components/ui/PwaRegistry"
 import { PAGE_DATA } from "@/lib/apollo"
 import { PreloadQuery, query } from "@/lib/apollo/client"
+import { isTokenExpired } from "@/utils/helpers/jwt"
 
 import "@/styles/globals.css"
 
@@ -86,13 +88,45 @@ export default async function RootLayout({ children }) {
     locale = "en"
   }
 
+  // 在服务端检查认证状态
+  let initialAuthState = null
+  try {
+    const cookieStore = await cookies()
+    const authToken = cookieStore.get("authToken")?.value
+
+    if (authToken && !isTokenExpired(authToken)) {
+      // Token存在且未过期
+      initialAuthState = {
+        authenticated: true,
+        token: authToken,
+      }
+    } else {
+      // Token不存在或已过期
+      initialAuthState = {
+        authenticated: false,
+        token: null,
+      }
+    }
+  } catch (error) {
+    console.error("Failed to check auth state:", error)
+    initialAuthState = {
+      authenticated: false,
+      token: null,
+    }
+  }
+
   return (
     <html lang={locale} suppressHydrationWarning>
       <body suppressHydrationWarning>
         <PwaRegistry />
         <ApolloProvider url={profile.url}>
           <PreloadQuery query={PAGE_DATA}>
-            <Page intl={{ locale, messages }}>{children}</Page>
+            <Page
+              intl={{ locale, messages }}
+              initialAuthState={initialAuthState}
+            >
+              {children}
+            </Page>
           </PreloadQuery>
         </ApolloProvider>
       </body>

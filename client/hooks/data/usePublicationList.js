@@ -48,7 +48,8 @@ export function usePublicationList({ variables, keyword: _keyword }) {
 
   // 处理提交
   const handleSubmit = async (formData) => {
-    if (authStatus !== AUTH_STATUS.AUTHENTICATED || !isNodeOwner) {
+    // 只有认证用户才能发布(只有节点所有者可以认证)
+    if (authStatus !== AUTH_STATUS.AUTHENTICATED) {
       toaster.create({
         description: t("common.onlyNodeOwnerCanPublish"),
         type: "error",

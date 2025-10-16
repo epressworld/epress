@@ -1,5 +1,6 @@
 {
   "common": {
+    "pleaseConnectWalletButton": "请连接钱包",
     "confirm": "确认",
     "save": "保存",
     "edit": "编辑",
@@ -152,7 +153,8 @@
     "login": "登录",
     "logout": "退出",
     "settings": "设置",
-    "pleaseLoginFirst": "请先登录"
+    "pleaseLoginFirst": "请先登录",
+    "connectWallet": "连接钱包"
   },
   "publication": {
     "postMode": "帖子",

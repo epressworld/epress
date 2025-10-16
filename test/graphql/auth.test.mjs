@@ -249,8 +249,8 @@ test("signInWithEthereum: Should reject a malformed message string", async (t) =
 
   // Based on code implementation, when SIWE message parsing or verification fails, it throws a generic authentication failure error
   t.true(
-    errors.some((e) => e.extensions?.code === "UNAUTHORIZED"),
-    "Error code should be UNAUTHORIZED",
+    errors.some((e) => e.extensions?.code === "UNAUTHENTICATED"),
+    "Error code should be UNAUTHENTICATED",
   )
 })
 

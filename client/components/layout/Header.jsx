@@ -36,7 +36,14 @@ import { useIntl } from "@/hooks/utils"
 import { ConnectWalletButton, Link, NodeAvatar, SearchDialog } from "../ui"
 
 export const Header = () => {
-  const { authStatus, isNodeOwner, login, loginState, logout } = useAuth()
+  const {
+    authStatus,
+    isNodeOwner,
+    isWalletConnected,
+    login,
+    loginState,
+    logout,
+  } = useAuth()
   const {
     profile = {},
     settings = {},
@@ -108,12 +115,16 @@ export const Header = () => {
     // 添加ConnectWalletButton
     buttons.push(<ConnectWalletButton key="connect-wallet" />)
 
-    if (!isNodeOwner && settings?.allowFollow) {
+    // 如果未认证且允许关注,显示关注按钮
+    if (authStatus !== AUTH_STATUS.AUTHENTICATED && settings?.allowFollow) {
       buttons.push(<FollowButton key="follow" size={"xs"} />)
-    } else if (isNodeOwner) {
-      // 如果是节点所有者，根据状态机显示按钮
-      switch (authStatus) {
-        case AUTH_STATUS.CONNECTED:
+    }
+
+    // 根据认证状态显示按钮(只有节点所有者需要登录)
+    switch (authStatus) {
+      case AUTH_STATUS.UNAUTHENTICATED:
+        // 未认证时,显示登录按钮(需要钱包连接)
+        if (isNodeOwner) {
           buttons.push(
             <Button
               key="login"
@@ -125,61 +136,73 @@ export const Header = () => {
               <LuLogIn /> {t("auth.login")}
             </Button>,
           )
-          break
+        }
+        break
 
-        case AUTH_STATUS.AUTHENTICATED:
-          if (useMenu) {
-            // 小屏幕使用Menu
-            buttons.push(
-              <Menu.Root key="user-menu">
-                <Menu.Trigger asChild>
-                  <Button size="xs" variant="subtle">
-                    <LuEllipsis />
-                  </Button>
-                </Menu.Trigger>
-                <Portal>
-                  <Menu.Positioner>
-                    <Menu.Content>
-                      <Menu.Item value="settings" onClick={openSettings}>
-                        <LuSettings />
-                        {t("auth.settings")}
-                      </Menu.Item>
-                      <Menu.Item value="logout" onClick={logout}>
-                        <LuLogOut />
-                        {t("auth.logout")}
-                      </Menu.Item>
-                    </Menu.Content>
-                  </Menu.Positioner>
-                </Portal>
-              </Menu.Root>,
-            )
-          } else {
-            // 大屏幕使用独立按钮
-            buttons.push(
-              <Button
-                key="settings"
-                size="xs"
-                onClick={openSettings}
-                variant="subtle"
-              >
-                <LuSettings /> {t("auth.settings")}
-              </Button>,
-            )
-            buttons.push(
-              <Button key="logout" size="xs" onClick={logout} variant="outline">
-                <LuLogOut /> {t("auth.logout")}
-              </Button>,
-            )
-          }
-          break
-        default:
-          // 钱包未连接或加载中时，只显示ConnectWalletButton
-          break
-      }
+      case AUTH_STATUS.AUTHENTICATED:
+        // 已认证时,显示设置和登出按钮
+        if (useMenu) {
+          // 小屏幕使用Menu
+          buttons.push(
+            <Menu.Root key="user-menu">
+              <Menu.Trigger asChild>
+                <Button size="xs" variant="subtle">
+                  <LuEllipsis />
+                </Button>
+              </Menu.Trigger>
+              <Portal>
+                <Menu.Positioner>
+                  <Menu.Content>
+                    <Menu.Item value="settings" onClick={openSettings}>
+                      <LuSettings />
+                      {t("auth.settings")}
+                    </Menu.Item>
+                    <Menu.Item value="logout" onClick={logout}>
+                      <LuLogOut />
+                      {t("auth.logout")}
+                    </Menu.Item>
+                  </Menu.Content>
+                </Menu.Positioner>
+              </Portal>
+            </Menu.Root>,
+          )
+        } else {
+          // 大屏幕使用独立按钮
+          buttons.push(
+            <Button
+              key="settings"
+              size="xs"
+              onClick={openSettings}
+              variant="subtle"
+            >
+              <LuSettings /> {t("auth.settings")}
+            </Button>,
+          )
+          buttons.push(
+            <Button key="logout" size="xs" onClick={logout} variant="outline">
+              <LuLogOut /> {t("auth.logout")}
+            </Button>,
+          )
+        }
+        break
+
+      default:
+        // 加载中时，只显示ConnectWalletButton
+        break
     }
 
     return <HStack gap={useMenu ? 1 : 2}>{buttons}</HStack>
-  }, [isNodeOwner, authStatus, login, logout, openSettings, useMenu])
+  }, [
+    authStatus,
+    login,
+    logout,
+    openSettings,
+    useMenu,
+    settings?.allowFollow,
+    isWalletConnected,
+    loginState?.loading,
+    t,
+  ])
 
   return (
     <>

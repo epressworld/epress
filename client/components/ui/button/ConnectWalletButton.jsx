@@ -6,27 +6,12 @@ import { SiEthereum } from "react-icons/si"
 export const ConnectWalletButton = () => {
   return (
     <ConnectButton.Custom>
-      {({
-        account,
-        openAccountModal,
-        openConnectModal,
-        authenticationStatus,
-        mounted,
-      }) => {
-        const ready = mounted && authenticationStatus !== "loading"
-        const connected = ready && account
+      {({ account, openAccountModal, openConnectModal, mounted }) => {
+        // 只要mounted就显示,不等待authenticationStatus
+        const connected = mounted && account
 
         return (
-          <div
-            {...(!ready && {
-              "aria-hidden": true,
-              style: {
-                opacity: 0,
-                pointerEvents: "none",
-                userSelect: "none",
-              },
-            })}
-          >
+          <div>
             {!connected ? (
               <Button size="xs" onClick={openConnectModal} variant="subtle">
                 <HStack gap={{ base: 0, md: 1 }}>

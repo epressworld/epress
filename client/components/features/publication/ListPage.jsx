@@ -15,7 +15,6 @@ export function PublicationListPage({ variables, keyword }) {
   const {
     isLoading,
     formResetTrigger,
-    isNodeOwner,
     authStatus,
     profile,
     handleEdit,
@@ -30,8 +29,8 @@ export function PublicationListPage({ variables, keyword }) {
 
   return (
     <>
-      {/* Publication form - only show for node owner and authenticated */}
-      {isNodeOwner && authStatus === "AUTHENTICATED" && (
+      {/* Publication form - only show when authenticated (only node owner can authenticate) */}
+      {authStatus === "AUTHENTICATED" && (
         <PublicationForm
           onContentChange={handleContentChange}
           onSubmit={handleSubmit}
