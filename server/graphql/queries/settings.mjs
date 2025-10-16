@@ -23,15 +23,6 @@ const SettingsType = graphql.type("ObjectType", {
     defaultTheme: { type: graphql.type("NonNull", graphql.type("String")) },
     walletConnectProjectId: { type: graphql.type("String") },
     mail: { type: graphql.type("NonNull", MailType) },
-    // 保留旧字段以保持向后兼容性,但标记为已弃用
-    mailTransport: {
-      type: graphql.type("String"),
-      deprecationReason: "Use mail.mailTransport instead",
-    },
-    mailFrom: {
-      type: graphql.type("String"),
-      deprecationReason: "Use mail.mailFrom instead",
-    },
   },
 })
 
@@ -82,9 +73,6 @@ const settingsQuery = {
           mailTransport: context.user ? mailTransport : null,
           mailFrom: context.user ? mailFrom : null,
         },
-        // 保留旧字段以保持向后兼容性
-        mailTransport: context.user ? mailTransport : "",
-        mailFrom: context.user ? mailFrom : "",
       }
 
       request.log.debug(

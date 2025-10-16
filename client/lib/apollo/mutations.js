@@ -132,8 +132,6 @@ export const UPDATE_SETTINGS = gql`
         mailTransport
         mailFrom
       }
-      mailTransport
-      mailFrom
       enableRSS
       allowFollow
       allowComment
