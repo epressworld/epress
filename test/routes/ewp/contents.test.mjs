@@ -3,6 +3,8 @@ import "../../setup.mjs"
 import crypto from "node:crypto"
 import { createReadStream } from "node:fs"
 import fs from "node:fs/promises"
+import path from "node:path"
+import sharp from "sharp"
 import { Content, Node, Publication } from "../../../server/models/index.mjs"
 import { extractFileNameFromContentDisposition } from "../../../server/utils/helper.mjs"
 
@@ -10,6 +12,20 @@ import { extractFileNameFromContentDisposition } from "../../../server/utils/hel
 const SMALL_PNG_BASE64 =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
 const SMALL_PNG_BUFFER = Buffer.from(SMALL_PNG_BASE64.split(",")[1], "base64")
+
+// Create a larger test image for thumbnail tests
+async function createTestImage(width, height) {
+  return await sharp({
+    create: {
+      width,
+      height,
+      channels: 3,
+      background: { r: 255, g: 0, b: 0 },
+    },
+  })
+    .png()
+    .toBuffer()
+}
 
 test.beforeEach(async (t) => {
   t.context.selfNode = await Node.query().findOne({ is_self: true })
@@ -785,6 +801,344 @@ test("GET /contents/:content_hash should handle FILE without mimetype (use defau
 
   t.is(response.statusCode, 200)
   t.is(response.headers["content-type"], "application/octet-stream")
+
+  await fs.unlink(filePath)
+})
+
+// Thumbnail tests
+
+test("GET /contents/:content_hash?thumb=md should generate and serve medium thumbnail for image", async (t) => {
+  const imageBuffer = await createTestImage(1000, 1000)
+  const fileName = `thumbnail_test_${Date.now()}.png`
+  const filePath = `/tmp/${fileName}`
+
+  await fs.writeFile(filePath, imageBuffer)
+
+  const content = await Content.create({
+    type: "FILE",
+    file: {
+      filename: fileName,
+      mimetype: "image/png",
+      createReadStream: () => createReadStream(filePath),
+    },
+  })
+
+  await Publication.query().insert({
+    content_hash: content.content_hash,
+    author_address: t.context.selfNode.address,
+    signature: "0x123",
+  })
+
+  const response = await t.context.app.inject({
+    method: "GET",
+    url: `/ewp/contents/${content.content_hash}?thumb=md`,
+  })
+
+  t.is(response.statusCode, 200, "should return 200 OK")
+  t.is(response.headers["content-type"], "image/png")
+
+  // Verify the thumbnail is smaller than the original
+  const thumbnailSize = response.rawPayload.length
+  const originalSize = imageBuffer.length
+  t.true(
+    thumbnailSize < originalSize,
+    "thumbnail should be smaller than original",
+  )
+
+  // Verify thumbnail dimensions
+  const metadata = await sharp(response.rawPayload).metadata()
+  t.true(metadata.height <= 400, "thumbnail height should be <= 400px")
+
+  await fs.unlink(filePath)
+})
+
+test("GET /contents/:content_hash?thumb=sm should generate and serve small thumbnail", async (t) => {
+  const imageBuffer = await createTestImage(800, 800)
+  const fileName = `thumbnail_sm_${Date.now()}.png`
+  const filePath = `/tmp/${fileName}`
+
+  await fs.writeFile(filePath, imageBuffer)
+
+  const content = await Content.create({
+    type: "FILE",
+    file: {
+      filename: fileName,
+      mimetype: "image/png",
+      createReadStream: () => createReadStream(filePath),
+    },
+  })
+
+  await Publication.query().insert({
+    content_hash: content.content_hash,
+    author_address: t.context.selfNode.address,
+    signature: "0x123",
+  })
+
+  const response = await t.context.app.inject({
+    method: "GET",
+    url: `/ewp/contents/${content.content_hash}?thumb=sm`,
+  })
+
+  t.is(response.statusCode, 200)
+  const metadata = await sharp(response.rawPayload).metadata()
+  t.true(metadata.height <= 200, "small thumbnail height should be <= 200px")
+
+  await fs.unlink(filePath)
+})
+
+test("GET /contents/:content_hash?thumb=lg should generate and serve large thumbnail", async (t) => {
+  const imageBuffer = await createTestImage(1200, 1200)
+  const fileName = `thumbnail_lg_${Date.now()}.png`
+  const filePath = `/tmp/${fileName}`
+
+  await fs.writeFile(filePath, imageBuffer)
+
+  const content = await Content.create({
+    type: "FILE",
+    file: {
+      filename: fileName,
+      mimetype: "image/png",
+      createReadStream: () => createReadStream(filePath),
+    },
+  })
+
+  await Publication.query().insert({
+    content_hash: content.content_hash,
+    author_address: t.context.selfNode.address,
+    signature: "0x123",
+  })
+
+  const response = await t.context.app.inject({
+    method: "GET",
+    url: `/ewp/contents/${content.content_hash}?thumb=lg`,
+  })
+
+  t.is(response.statusCode, 200)
+  const metadata = await sharp(response.rawPayload).metadata()
+  t.true(metadata.height <= 800, "large thumbnail height should be <= 800px")
+
+  await fs.unlink(filePath)
+})
+
+test("GET /contents/:content_hash?thumb=md should serve cached thumbnail on second request", async (t) => {
+  const imageBuffer = await createTestImage(900, 900)
+  const fileName = `thumbnail_cache_${Date.now()}.png`
+  const filePath = `/tmp/${fileName}`
+
+  await fs.writeFile(filePath, imageBuffer)
+
+  const content = await Content.create({
+    type: "FILE",
+    file: {
+      filename: fileName,
+      mimetype: "image/png",
+      createReadStream: () => createReadStream(filePath),
+    },
+  })
+
+  await Publication.query().insert({
+    content_hash: content.content_hash,
+    author_address: t.context.selfNode.address,
+    signature: "0x123",
+  })
+
+  // First request - generates thumbnail
+  const response1 = await t.context.app.inject({
+    method: "GET",
+    url: `/ewp/contents/${content.content_hash}?thumb=md`,
+  })
+
+  t.is(response1.statusCode, 200)
+
+  // Verify thumbnail file exists
+  const thumbnailPath = path.join(
+    process.cwd(),
+    "data",
+    "thumbnails",
+    "md",
+    content.local_path,
+  )
+  const thumbnailExists = await fs
+    .access(thumbnailPath)
+    .then(() => true)
+    .catch(() => false)
+  t.true(thumbnailExists, "thumbnail should be cached on disk")
+
+  // Second request - serves cached thumbnail
+  const response2 = await t.context.app.inject({
+    method: "GET",
+    url: `/ewp/contents/${content.content_hash}?thumb=md`,
+  })
+
+  t.is(response2.statusCode, 200)
+  t.deepEqual(
+    response1.rawPayload,
+    response2.rawPayload,
+    "cached thumbnail should be identical",
+  )
+
+  await fs.unlink(filePath)
+})
+
+test("GET /contents/:content_hash?thumb=invalid should return 400 for invalid thumbnail size", async (t) => {
+  const imageBuffer = await createTestImage(500, 500)
+  const fileName = `thumbnail_invalid_${Date.now()}.png`
+  const filePath = `/tmp/${fileName}`
+
+  await fs.writeFile(filePath, imageBuffer)
+
+  const content = await Content.create({
+    type: "FILE",
+    file: {
+      filename: fileName,
+      mimetype: "image/png",
+      createReadStream: () => createReadStream(filePath),
+    },
+  })
+
+  await Publication.query().insert({
+    content_hash: content.content_hash,
+    author_address: t.context.selfNode.address,
+    signature: "0x123",
+  })
+
+  const response = await t.context.app.inject({
+    method: "GET",
+    url: `/ewp/contents/${content.content_hash}?thumb=invalid`,
+  })
+
+  t.is(response.statusCode, 400, "should return 400 for invalid size")
+  t.deepEqual(response.json(), { error: "INVALID_THUMBNAIL_SIZE" })
+
+  await fs.unlink(filePath)
+})
+
+test("GET /contents/:content_hash?thumb=md should ignore thumb parameter for non-image files", async (t) => {
+  const testContent = Buffer.from("This is a text file")
+  const fileName = `text_file_${Date.now()}.txt`
+  const filePath = `/tmp/${fileName}`
+
+  await fs.writeFile(filePath, testContent)
+
+  const content = await Content.create({
+    type: "FILE",
+    file: {
+      filename: fileName,
+      mimetype: "text/plain",
+      createReadStream: () => createReadStream(filePath),
+    },
+  })
+
+  await Publication.query().insert({
+    content_hash: content.content_hash,
+    author_address: t.context.selfNode.address,
+    signature: "0x123",
+  })
+
+  const response = await t.context.app.inject({
+    method: "GET",
+    url: `/ewp/contents/${content.content_hash}?thumb=md`,
+  })
+
+  t.is(response.statusCode, 200)
+  t.is(response.headers["content-type"], "text/plain")
+  t.deepEqual(response.rawPayload, testContent, "should return original file")
+
+  await fs.unlink(filePath)
+})
+
+test("GET /contents/:content_hash?thumb=md should handle JPEG images correctly", async (t) => {
+  const imageBuffer = await sharp({
+    create: {
+      width: 600,
+      height: 600,
+      channels: 3,
+      background: { r: 0, g: 255, b: 0 },
+    },
+  })
+    .jpeg()
+    .toBuffer()
+
+  const fileName = `thumbnail_jpeg_${Date.now()}.jpg`
+  const filePath = `/tmp/${fileName}`
+
+  await fs.writeFile(filePath, imageBuffer)
+
+  const content = await Content.create({
+    type: "FILE",
+    file: {
+      filename: fileName,
+      mimetype: "image/jpeg",
+      createReadStream: () => createReadStream(filePath),
+    },
+  })
+
+  await Publication.query().insert({
+    content_hash: content.content_hash,
+    author_address: t.context.selfNode.address,
+    signature: "0x123",
+  })
+
+  const response = await t.context.app.inject({
+    method: "GET",
+    url: `/ewp/contents/${content.content_hash}?thumb=md`,
+  })
+
+  t.is(response.statusCode, 200)
+  t.is(response.headers["content-type"], "image/jpeg")
+
+  const metadata = await sharp(response.rawPayload).metadata()
+  t.true(metadata.height <= 400)
+
+  await fs.unlink(filePath)
+})
+
+test("GET /contents/:content_hash?thumb=md should return original GIF (no thumbnail)", async (t) => {
+  // 创建一个 GIF 图片
+  const imageBuffer = await sharp({
+    create: {
+      width: 600,
+      height: 600,
+      channels: 4,
+      background: { r: 255, g: 0, b: 255, alpha: 1 },
+    },
+  })
+    .gif()
+    .toBuffer()
+
+  const fileName = `thumbnail_gif_${Date.now()}.gif`
+  const filePath = `/tmp/${fileName}`
+
+  await fs.writeFile(filePath, imageBuffer)
+
+  const content = await Content.create({
+    type: "FILE",
+    file: {
+      filename: fileName,
+      mimetype: "image/gif",
+      createReadStream: () => createReadStream(filePath),
+    },
+  })
+
+  await Publication.query().insert({
+    content_hash: content.content_hash,
+    author_address: t.context.selfNode.address,
+    signature: "0x123",
+  })
+
+  const response = await t.context.app.inject({
+    method: "GET",
+    url: `/ewp/contents/${content.content_hash}?thumb=md`,
+  })
+
+  t.is(response.statusCode, 200)
+  // GIF 不生成缩略图，返回原始 GIF 文件
+  t.is(response.headers["content-type"], "image/gif")
+
+  // 验证返回的是原始文件（高度应该是 600，而不是缩略图的 400）
+  const metadata = await sharp(response.rawPayload).metadata()
+  t.is(metadata.height, 600)
+  t.is(metadata.format, "gif")
 
   await fs.unlink(filePath)
 })
