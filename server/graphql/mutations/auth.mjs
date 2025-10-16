@@ -113,7 +113,7 @@ const authMutations = {
           request.log.error("Self node not configured")
           throw new ErrorWithProps(
             "Self node not configured. Authentication failed.",
-            { code: "UNAUTHORIZED" },
+            { code: "UNAUTHENTICATED" },
           )
         }
 
@@ -123,11 +123,11 @@ const authMutations = {
               signerAddress: address,
               expectedAddress: selfNode.address,
             },
-            "Unauthorized signer attempted authentication",
+            "Unauthenticated: Signer is not the node owner",
           )
           throw new ErrorWithProps(
-            "Unauthorized: Signer is not the node owner.",
-            { code: "UNAUTHORIZED" },
+            "Unauthenticated: Signer is not the node owner.",
+            { code: "UNAUTHENTICATED" },
           )
         }
 
@@ -194,7 +194,7 @@ const authMutations = {
           "SIWE authentication failed",
         )
         throw new ErrorWithProps("Authentication failed.", {
-          code: "UNAUTHORIZED",
+          code: "UNAUTHENTICATED",
         })
       }
     },

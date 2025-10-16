@@ -10,7 +10,7 @@ import { useWallet } from "../data"
 import { useIntl } from "../utils"
 
 export function useProfileForm() {
-  const { profile, authStatus, AUTH_STATUS } = useAuth()
+  const { profile, authStatus, AUTH_STATUS, isWalletConnected } = useAuth()
   const { refetchPageData } = usePage()
   const { signEIP712Data } = useWallet()
   const { t } = useIntl()
@@ -60,6 +60,14 @@ export function useProfileForm() {
     if (authStatus !== AUTH_STATUS.AUTHENTICATED) {
       toaster.create({
         description: t("settings.pleaseLoginFirst"),
+        type: "error",
+      })
+      return
+    }
+
+    if (!isWalletConnected) {
+      toaster.create({
+        description: t("settings.pleaseConnectWallet"),
         type: "error",
       })
       return
@@ -167,5 +175,6 @@ export function useProfileForm() {
     avatarPreview,
     handleAvatarChange,
     onSubmit,
+    isWalletConnected,
   }
 }

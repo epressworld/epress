@@ -1,3 +1,4 @@
+import { decode } from "jsonwebtoken"
 import { NextResponse } from "next/server"
 
 export async function POST(request) {
@@ -10,6 +11,23 @@ export async function POST(request) {
       )
     }
 
+    // 解析JWT token获取过期时间
+    let maxAge = 60 * 60 * 24 // 默认1天
+    try {
+      const decoded = decode(token)
+      if (decoded?.exp) {
+        const currentTime = Math.floor(Date.now() / 1000)
+        const remainingTime = decoded.exp - currentTime
+        // 如果token还有效,使用剩余时间;否则使用默认值
+        if (remainingTime > 0) {
+          maxAge = remainingTime
+        }
+      }
+    } catch (error) {
+      console.error("Failed to decode JWT token:", error)
+      // 解析失败时使用默认值
+    }
+
     const res = NextResponse.json({ ok: true })
     res.cookies.set({
       name: "authToken",
@@ -18,7 +36,7 @@ export async function POST(request) {
       sameSite: "lax",
       path: "/",
       secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24, // 1 day; server also enforces expiry
+      maxAge, // 使用从JWT解析的过期时间
     })
     return res
   } catch {

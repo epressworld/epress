@@ -10,7 +10,7 @@ import { ChakraProvider, WagmiProvider } from "../providers"
 import { Footer } from "./Footer"
 import { Header } from "./Header"
 
-export function Page({ children, intl }) {
+export function Page({ children, intl, initialAuthState }) {
   // 客户端 Apollo 查询 - 复用相同的查询
   const { data, loading, error, refetch } = useSuspenseQuery(PAGE_DATA, {
     fetchPolicy: "cache-and-network",
@@ -64,7 +64,7 @@ export function Page({ children, intl }) {
           walletConnectProjectId={value.settings.walletConnectProjectId}
         >
           <ChakraProvider defaultTheme={value.settings.defaultTheme}>
-            <AuthProvider>
+            <AuthProvider initialAuthState={initialAuthState}>
               <div className="layout-container page-container">
                 <Header />
                 <main className="content-area">

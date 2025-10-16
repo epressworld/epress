@@ -26,8 +26,14 @@ export function ProfileFormSection({ onSuccess }) {
   const { t } = useIntl()
   const inputRef = useRef(null)
   const { profile } = usePage()
-  const { form, isLoading, avatarPreview, handleAvatarChange, onSubmit } =
-    useProfileForm()
+  const {
+    form,
+    isLoading,
+    avatarPreview,
+    handleAvatarChange,
+    onSubmit,
+    isWalletConnected,
+  } = useProfileForm()
 
   // 控制 URL 输入框的启用状态
   const [isUrlEnabled, setIsUrlEnabled] = useState(false)
@@ -202,8 +208,12 @@ export function ProfileFormSection({ onSuccess }) {
           loading={isLoading}
           loadingText={t("settings.saving")}
           colorPalette="orange"
+          disabled={!isWalletConnected}
         >
-          <LuSave /> {t("settings.saveAndBroadcast")}
+          <LuSave />{" "}
+          {isWalletConnected
+            ? t("settings.saveAndBroadcast")
+            : t("common.pleaseConnectWalletButton")}
         </Button>
       </VStack>
 

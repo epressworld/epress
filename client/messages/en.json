@@ -1,5 +1,6 @@
 {
   "common": {
+    "pleaseConnectWalletButton": "Connect wallet first",
     "confirm": "Confirm",
     "save": "Save",
     "edit": "Edit",
@@ -152,7 +153,8 @@
     "login": "Login",
     "logout": "Logout",
     "settings": "Settings",
-    "pleaseLoginFirst": "Please login first"
+    "pleaseLoginFirst": "Please login first",
+    "connectWallet": "Connect Wallet"
   },
   "publication": {
     "postMode": "Post",
