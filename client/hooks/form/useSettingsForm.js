@@ -43,8 +43,8 @@ export function useSettingsForm() {
         walletConnectProjectId: settings.walletConnectProjectId,
         defaultLanguage: settings.defaultLanguage,
         defaultTheme: settings.defaultTheme,
-        mailTransport: settings.mailTransport,
-        mailFrom: settings.mailFrom,
+        mailTransport: settings.mail?.mailTransport,
+        mailFrom: settings.mail?.mailFrom,
       })
     }
   }, [settings, form])

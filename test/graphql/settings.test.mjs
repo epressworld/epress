@@ -15,7 +15,9 @@ test("settings query should return settings data without mailTransport", async (
         allowComment
         defaultLanguage
         defaultTheme
-        mailTransport
+        mail {
+          mailTransport
+        }
       }
     }
   `
@@ -30,7 +32,7 @@ test("settings query should return settings data without mailTransport", async (
   t.is(data.settings.allowComment, true, "allowComment should be true")
   t.is(data.settings.defaultLanguage, "en", "defaultLanguage should be en")
   t.is(data.settings.defaultTheme, "light", "defaultLanguage should be light")
-  t.is(data.settings.mailTransport, "", "defaultLanguage should be empty")
+  t.is(data.settings.mail.mailTransport, null, "defaultLanguage should be null")
 })
 
 test("settings query should return settings data with mailTransport", async (t) => {
@@ -45,7 +47,9 @@ test("settings query should return settings data with mailTransport", async (t) 
         allowComment
         defaultLanguage
         defaultTheme
-        mailTransport
+        mail {
+          mailTransport
+        }
       }
     }
   `
@@ -67,7 +71,7 @@ test("settings query should return settings data with mailTransport", async (t) 
   t.is(data.settings.allowFollow, true, "allowFollow should be true")
   t.is(data.settings.allowComment, true, "allowComment should be true")
   t.is(data.settings.defaultLanguage, "en", "defaultLanguage should be en")
-  t.is(data.settings.mailTransport, "test", "mailTransport should be test")
+  t.is(data.settings.mail.mailTransport, "test", "mailTransport should be test")
 })
 
 // Test case 2: Successfully update settings

@@ -9,6 +9,7 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react"
+import dynamic from "next/dynamic"
 import { useState } from "react"
 import {
   LuDownload,
@@ -19,11 +20,36 @@ import {
 } from "react-icons/lu"
 import { useIntl } from "@/hooks/utils"
 
+// 动态导入 Lightbox 组件以减少初始包大小
+// Lightbox 只在用户点击图片时才需要加载
+const ImageLightbox = dynamic(
+  () =>
+    import("../ImageLightbox").then((mod) => ({
+      default: mod.ImageLightbox,
+    })),
+  {
+    ssr: false, // Lightbox 不需要服务端渲染
+  },
+)
+
+/**
+ * 为图片URL添加缩略图参数
+ * @param {string} url - 原始URL
+ * @param {string} size - 缩略图尺寸 (sm/md/lg)
+ * @returns {string} 带缩略图参数的URL
+ */
+function addThumbnailParam(url, size) {
+  if (!url) return url
+  const separator = url.includes("?") ? "&" : "?"
+  return `${url}${separator}thumb=${size}`
+}
+
 /**
  * FileRenderer - 文件预览组件
  *
  * 根据文件类型展示不同的预览界面
  * 支持图片、视频、音频和通用文件
+ * 图片支持缩略图和 lightbox 查看
  *
  * @param {Object} props
  * @param {Object} props.content - 内容对象
@@ -43,45 +69,57 @@ export function FileRenderer({
   onDownload,
   ...props
 }) {
-  const [isImageExpanded, setIsImageExpanded] = useState(false)
-  // 处理图片点击
-  const handleImageClick = () => {
-    setIsImageExpanded(!isImageExpanded)
-  }
+  const [lightboxOpen, setLightboxOpen] = useState(false)
 
   const { mimetype, url, filename, size } = content
   const renderFile = () => {
     const isImage = mimetype?.startsWith("image/")
     const isVideo = mimetype?.startsWith("video/")
     const isAudio = mimetype?.startsWith("audio/")
+
     // 图片预览
     if (isImage) {
+      // 使用中等尺寸缩略图作为预览
+      const thumbnailUrl = addThumbnailParam(url, "md")
+
       return (
-        <Box w="full" {...props}>
-          <Image
-            src={url}
-            alt={filename || "Image"}
-            w="full"
-            h="auto"
-            maxH={isImageExpanded ? "none" : "400px"}
-            objectFit="contain"
-            cursor="pointer"
-            onClick={handleImageClick}
-            bg="gray.100"
-            _dark={{ bg: "gray.800" }}
-            borderRadius="md"
-          />
-          {showDownload && (
-            <FileInfo
-              filename={filename}
-              size={size}
-              mimetype={mimetype}
-              url={url}
-              onDownload={onDownload}
-              showPreview={true}
+        <>
+          <Box w="full" {...props}>
+            <Image
+              src={thumbnailUrl}
+              alt={filename || "Image"}
+              w="full"
+              h="auto"
+              maxH="400px"
+              objectFit="contain"
+              cursor="pointer"
+              onClick={() => setLightboxOpen(true)}
+              bg="gray.100"
+              _dark={{ bg: "gray.800" }}
+              borderRadius="md"
+            />
+            {showDownload && (
+              <FileInfo
+                filename={filename}
+                size={size}
+                mimetype={mimetype}
+                url={url}
+                onDownload={onDownload}
+                showPreview={true}
+              />
+            )}
+          </Box>
+
+          {/* Lightbox for full-size image viewing - 动态加载 */}
+          {lightboxOpen && (
+            <ImageLightbox
+              open={lightboxOpen}
+              onClose={() => setLightboxOpen(false)}
+              src={url}
+              alt={filename || "Image"}
             />
           )}
-        </Box>
+        </>
       )
     }
 
@@ -142,7 +180,11 @@ export function FileRenderer({
       />
     )
   }
-  return content ? <Box bg="gray.100">{renderFile()}</Box> : null
+  return content ? (
+    <Box bg="gray.100" _dark={{ bg: "gray.800" }}>
+      {renderFile()}
+    </Box>
+  ) : null
 }
 
 /**

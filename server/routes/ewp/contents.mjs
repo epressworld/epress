@@ -1,10 +1,53 @@
 import { createReadStream } from "node:fs"
 import fs from "node:fs/promises"
 import path from "node:path"
+import sharp from "sharp"
 import { Router } from "swiftify"
 import { Content, Publication } from "../../models/index.mjs"
 
 const router = new Router()
+
+// 缩略图尺寸配置
+const THUMBNAIL_SIZES = {
+  sm: { maxHeight: 200, quality: 80 },
+  md: { maxHeight: 400, quality: 85 },
+  lg: { maxHeight: 800, quality: 90 },
+}
+
+/**
+ * 生成缩略图
+ * @param {string} originalPath - 原始文件路径
+ * @param {string} thumbnailPath - 缩略图保存路径
+ * @param {string} size - 缩略图尺寸 (sm/md/lg)
+ * @param {string} mimetype - 文件MIME类型
+ * @returns {Promise<void>}
+ */
+async function generateThumbnail(originalPath, thumbnailPath, size, mimetype) {
+  const config = THUMBNAIL_SIZES[size]
+  if (!config) {
+    throw new Error(`Invalid thumbnail size: ${size}`)
+  }
+
+  // 确保缩略图目录存在
+  await fs.mkdir(path.dirname(thumbnailPath), { recursive: true })
+
+  // 使用 sharp 生成缩略图
+  const transformer = sharp(originalPath).resize({
+    height: config.maxHeight,
+    fit: "inside",
+    withoutEnlargement: true,
+  })
+
+  // 根据原始文件类型选择输出格式
+  if (mimetype.startsWith("image/png")) {
+    await transformer.png({ quality: config.quality }).toFile(thumbnailPath)
+  } else if (mimetype.startsWith("image/webp")) {
+    await transformer.webp({ quality: config.quality }).toFile(thumbnailPath)
+  } else {
+    // 默认使用 JPEG（适用于 JPEG、BMP 等格式）
+    await transformer.jpeg({ quality: config.quality }).toFile(thumbnailPath)
+  }
+}
 
 // 生成 Content-Disposition 头，兼容性最强
 function makeContentDisposition(filename, type = "attachment") {
@@ -35,7 +78,7 @@ function makeContentDisposition(filename, type = "attachment") {
 router.get("/contents/:content_hash", async (request, reply) => {
   try {
     const { content_hash } = request.params
-    const { timestamp } = request.query
+    const { timestamp, thumb } = request.query
 
     const selfNode = await request.config.getSelfNode()
     if (!selfNode) {
@@ -93,8 +136,85 @@ router.get("/contents/:content_hash", async (request, reply) => {
       const uploadDir = path.join(process.cwd(), "data", "uploads")
       const fullLocalPath = path.join(uploadDir, content.local_path)
 
+      // 检查是否请求缩略图
+      const isImage = content.mimetype?.startsWith("image/")
+      const isGif = content.mimetype?.startsWith("image/gif")
+
+      // 验证缩略图尺寸参数（如果提供了thumb参数）
+      if (thumb && isImage && !["sm", "md", "lg"].includes(thumb)) {
+        return reply.code(400).send({ error: "INVALID_THUMBNAIL_SIZE" })
+      }
+
+      // GIF 格式不生成缩略图，保留动画效果
+      const requestThumbnail =
+        thumb && isImage && !isGif && THUMBNAIL_SIZES[thumb]
+
+      let fileToServe = fullLocalPath
+      let actualMimetype = content.mimetype || "application/octet-stream"
+
+      // 如果请求缩略图且是图片类型
+      if (requestThumbnail) {
+        // 构建缩略图路径
+        const thumbnailDir = path.join(
+          process.cwd(),
+          "data",
+          "thumbnails",
+          thumb,
+        )
+        const thumbnailPath = path.join(thumbnailDir, content.local_path)
+
+        try {
+          // 检查缩略图是否已存在
+          await fs.access(thumbnailPath)
+          fileToServe = thumbnailPath
+          request.log.debug(
+            { thumbnailPath, size: thumb },
+            "Serving cached thumbnail",
+          )
+        } catch {
+          // 缩略图不存在，生成新的
+          try {
+            request.log.info(
+              { originalPath: fullLocalPath, thumbnailPath, size: thumb },
+              "Generating thumbnail",
+            )
+            await generateThumbnail(
+              fullLocalPath,
+              thumbnailPath,
+              thumb,
+              content.mimetype,
+            )
+            fileToServe = thumbnailPath
+            request.log.info(
+              { thumbnailPath, size: thumb },
+              "Thumbnail generated successfully",
+            )
+          } catch (thumbnailError) {
+            // 如果生成缩略图失败，回退到原始文件
+            request.log.error(
+              { err: thumbnailError, originalPath: fullLocalPath },
+              "Failed to generate thumbnail, falling back to original",
+            )
+            fileToServe = fullLocalPath
+          }
+        }
+
+        // 根据缩略图格式设置正确的 MIME 类型
+        // GIF 不会进入这里，因为 GIF 不生成缩略图
+        if (fileToServe !== fullLocalPath) {
+          if (content.mimetype.startsWith("image/png")) {
+            actualMimetype = "image/png"
+          } else if (content.mimetype.startsWith("image/webp")) {
+            actualMimetype = "image/webp"
+          } else {
+            // 其他格式（JPEG、BMP等）转换为 JPEG
+            actualMimetype = "image/jpeg"
+          }
+        }
+      }
+
       try {
-        const fileStat = await fs.stat(fullLocalPath)
+        const fileStat = await fs.stat(fileToServe)
         const fileSize = fileStat.size
         const lastModified = fileStat.mtime.toUTCString() // 获取文件的最后修改时间
         const safeFileName = content.filename || "download"
@@ -102,10 +222,7 @@ router.get("/contents/:content_hash", async (request, reply) => {
 
         // 设置通用响应头
         reply
-          .header(
-            "Content-Type",
-            content.mimetype || "application/octet-stream",
-          )
+          .header("Content-Type", actualMimetype)
           .header("Access-Control-Allow-Origin", "*")
           .header("Cache-Control", "public, max-age=3600")
           .header("Last-Modified", lastModified) // << 使用刚才获取的时间
@@ -139,7 +256,7 @@ router.get("/contents/:content_hash", async (request, reply) => {
           }
 
           const chunksize = end - start + 1
-          const fileStream = createReadStream(fullLocalPath, { start, end })
+          const fileStream = createReadStream(fileToServe, { start, end })
 
           return reply
             .code(206)
@@ -152,7 +269,7 @@ router.get("/contents/:content_hash", async (request, reply) => {
           // 1. 没有 'range' 请求头。
           // 2. 提供了 'if-range' 头，但与文件当前状态不匹配 (文件已更新)，需要发送完整的新文件。
           reply.header("Content-Length", fileSize)
-          const fileStream = createReadStream(fullLocalPath)
+          const fileStream = createReadStream(fileToServe)
           return reply.code(200).send(fileStream) // 明确指定 200 OK
         }
       } catch (fileReadError) {
@@ -160,7 +277,7 @@ router.get("/contents/:content_hash", async (request, reply) => {
           {
             err: fileReadError,
             contentHash: content_hash,
-            filePath: fullLocalPath,
+            filePath: fileToServe,
           },
           `Error reading file`,
         )

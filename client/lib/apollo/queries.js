@@ -296,9 +296,6 @@ export const PAGE_DATA = gql`
         mailTransport
         mailFrom
       }
-      # 保留旧字段以保持向后兼容性
-      mailTransport
-      mailFrom
     }
     profile {
       address
