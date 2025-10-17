@@ -179,9 +179,10 @@
     "browserNotSupportVideo": "Your browser does not support video playback.",
     "publishSuccess": "Published successfully",
     "publishFailed": "Publish failed, please try again",
+    "sourceCodeMode": "Source Code",
     "addFileDescription": "Add description for file...",
     "editFileDescription": "Edit file description (file itself cannot be modified)",
-    "saveChanges": "Save Changes",
+    "saveChanges": "Save",
     "saving": "Saving...",
     "signedCannotEdit": "Signed, cannot edit",
     "cancel": "Cancel",
@@ -190,7 +191,9 @@
     "sign": "Sign",
     "signedCannotEditMessage": "Signed content cannot be edited",
     "noContent": "No content",
-    "loadFailed": "Load failed"
+    "loadFailed": "Load failed",
+    "enterFullscreen": "Enter Fullscreen",
+    "exitFullscreen": "Exit Fullscreen"
   },
   "comment": {
     "addComment": "Add Comment",

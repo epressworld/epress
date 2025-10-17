@@ -181,16 +181,19 @@
     "publishFailed": "发布失败,请重试",
     "addFileDescription": "为文件添加描述...",
     "editFileDescription": "编辑文件描述(文件本身无法修改)",
-    "saveChanges": "保存更改",
+    "saveChanges": "保存",
     "saving": "保存中...",
     "signedCannotEdit": "已签名,无法编辑",
     "cancel": "取消",
     "signed": "已签名",
     "unsigned": "未签名",
     "sign": "签名",
+    "sourceCodeMode": "源代码",
     "signedCannotEditMessage": "已签名的内容无法编辑",
     "noContent": "暂无内容",
-    "loadFailed": "加载失败"
+    "loadFailed": "加载失败",
+    "enterFullscreen": "进入全屏",
+    "exitFullscreen": "退出全屏"
   },
   "comment": {
     "addComment": "发表评论",

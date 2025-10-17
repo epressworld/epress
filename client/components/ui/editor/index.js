@@ -1,5 +1,5 @@
 // 富文本编辑器模块
-// 只导出主组件 RichTextEditor
+// 只导出主组件 RichTextEditor 和 MarkdownEditor
 // EditorToolbar 是内部组件,不应该被外部直接使用
 
 export * from "./EditorToolbar"

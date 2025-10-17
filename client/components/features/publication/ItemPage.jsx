@@ -30,6 +30,7 @@ export function PublicationItemPage({ variables }) {
     publicationError,
     deleteDialogOpen,
     isDeleting,
+    isSaving,
     authStatus,
     isNodeOwner,
     handleEdit,
@@ -97,7 +98,7 @@ export function PublicationItemPage({ variables }) {
             publication={publication}
             onSave={handleSaveEdit}
             onCancel={handleCancelEdit}
-            isLoading={false}
+            isLoading={isSaving}
           />
         ) : (
           <PublicationItem

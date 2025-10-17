@@ -1,6 +1,7 @@
 "use client"
 
 import { Box, Button, Group, HStack, Input, VStack } from "@chakra-ui/react"
+import { useRef } from "react"
 import { FiFile, FiFileText } from "react-icons/fi"
 import { LuSend } from "react-icons/lu"
 import { FileModeForm, PostModeForm } from "@/components/features/publication"
@@ -21,16 +22,17 @@ export const PublicationForm = ({
   resetTrigger = 0,
 }) => {
   const { t } = useIntl()
+  const postModeFormRef = useRef(null)
 
   const {
     mode,
     setMode,
     content,
+    setContent,
     fileDescription,
     setFileDescription,
     selectedFile,
     editor,
-    fileInputRef,
     handleFileSelect,
     handleRemoveFile,
     handleSubmit,
@@ -48,7 +50,19 @@ export const PublicationForm = ({
   const handleFormSubmit = () => {
     const formData = handleSubmit()
     if (formData && onSubmit) {
-      onSubmit(formData)
+      onSubmit(formData).then((_result) => {
+        // 提交后退出全屏模式
+        if (postModeFormRef.current) {
+          postModeFormRef.current.exitFullscreen()
+        }
+      })
+    }
+  }
+
+  const handleContentChange = (newContent) => {
+    setContent(newContent)
+    if (onContentChange) {
+      onContentChange(newContent, mode, fileDescription, selectedFile)
     }
   }
 
@@ -60,7 +74,6 @@ export const PublicationForm = ({
             selectedFile={selectedFile}
             onFileSelect={handleFileSelect}
             onRemoveFile={handleRemoveFile}
-            fileInputRef={fileInputRef}
             maxFileSize={maxFileSize}
             disabled={disabled}
           />
@@ -71,7 +84,27 @@ export const PublicationForm = ({
           {/* 内容区域 */}
           {mode === "post" ? (
             <Box minH="120px">
-              <PostModeForm editor={editor} />
+              <PostModeForm
+                ref={postModeFormRef}
+                editor={editor}
+                content={content}
+                onContentChange={handleContentChange}
+                showFullscreenButton={true}
+                fullscreenActions={
+                  <Button
+                    colorPalette="orange"
+                    size="sm"
+                    onClick={handleFormSubmit}
+                    loading={isLoading}
+                    loadingText={t("publication.publishing")}
+                    disabled={disabled || isLoading || !content.trim()}
+                  >
+                    <LuSend />
+                    {t("publication.publish")}
+                  </Button>
+                }
+                disabled={disabled}
+              />
             </Box>
           ) : (
             <Input

@@ -1,2 +1,2 @@
+export * from "./body"
 export * from "./file"
-export * from "./text"
