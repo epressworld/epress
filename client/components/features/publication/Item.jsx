@@ -14,13 +14,13 @@ import { FiEdit3, FiMessageCircle, FiTrash2 } from "react-icons/fi"
 import { LuQuote, LuSend } from "react-icons/lu"
 import {
   AuthorInfo,
+  BodyRenderer,
   createSignatureData,
   FileRenderer,
   Link,
   RichTextEditor,
   SignatureDialog,
   SignedMark,
-  TextRenderer,
   Tooltip,
   toaster,
   UnifiedCard,
@@ -241,7 +241,7 @@ export function PublicationItem({
 
     if (content.type === "POST") {
       return (
-        <TextRenderer
+        <BodyRenderer
           content={content.body}
           keyword={keyword}
           type="markdown"
@@ -250,7 +250,7 @@ export function PublicationItem({
     } else if (content.type === "FILE") {
       // 新布局：媒体移至卡片顶部，此处仅显示文件描述行
       return publication.description ? (
-        <TextRenderer
+        <BodyRenderer
           content={publication.description}
           keyword={keyword}
           type="text"
@@ -291,17 +291,14 @@ export function PublicationItem({
       <UnifiedCard.Body>
         <VStack gap={4} align="stretch">
           {/* 作者信息 - 根据showAuthorInfo参数控制显示 */}
-          {showAuthorInfo &&
-            isNodeOwner &&
-            isAuthenticated &&
-            publication.author && (
-              <AuthorInfo
-                node={publication.author}
-                size="sm"
-                showAddress={true}
-                linkable={true}
-              />
-            )}
+          {showAuthorInfo && isAuthenticated && publication.author && (
+            <AuthorInfo
+              node={publication.author}
+              size="sm"
+              showAddress={true}
+              linkable={true}
+            />
+          )}
 
           {/* 内容 */}
           {renderContent()}

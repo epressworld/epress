@@ -1,7 +1,7 @@
 "use client"
 
 import { Box, Button, HStack, Input, Text, VStack } from "@chakra-ui/react"
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { FiArrowLeft, FiSave } from "react-icons/fi"
 import { PostModeForm } from "@/components/features/publication"
 import { FileRenderer, UnifiedCard } from "@/components/ui"
@@ -17,6 +17,8 @@ export const PublicationEditForm = ({
   maxFileSize = 100 * 1024 * 1024, // 100MB
 }) => {
   const { t } = useIntl()
+  const postModeFormRef = useRef(null)
+
   // 根据原始内容类型确定模式，不允许切换
   const originalMode = publication?.content?.type === "FILE" ? "file" : "post"
 
@@ -80,8 +82,17 @@ export const PublicationEditForm = ({
         mode,
         content: mode === "post" ? content : fileDescription,
         file: selectedFile, // 编辑模式下可能为null，这是正常的
+      }).then((_result) => {
+        // 保存后退出全屏模式
+        if (postModeFormRef.current) {
+          postModeFormRef.current.exitFullscreen()
+        }
       })
     }
+  }
+
+  const handleContentChange = (newContent) => {
+    setContent(newContent)
   }
 
   return (
@@ -101,7 +112,36 @@ export const PublicationEditForm = ({
           {/* 内容区域 */}
           <Box minH={mode === "post" ? "120px" : "none"}>
             {mode === "post" ? (
-              <PostModeForm editor={editor} />
+              <PostModeForm
+                ref={postModeFormRef}
+                editor={editor}
+                content={content}
+                onContentChange={handleContentChange}
+                showFullscreenButton={true}
+                fullscreenActions={
+                  <Button
+                    colorPalette="orange"
+                    size="sm"
+                    onClick={handleSave}
+                    loading={isLoading}
+                    loadingText={t("publication.saving")}
+                    disabled={
+                      disabled ||
+                      isLoading ||
+                      isSigned ||
+                      (mode === "post" && !content.trim()) ||
+                      (mode === "file" && !fileDescription.trim())
+                    }
+                    gap={2}
+                  >
+                    <FiSave />
+                    {isSigned
+                      ? t("publication.signedCannotEdit")
+                      : t("publication.saveChanges")}
+                  </Button>
+                }
+                disabled={disabled || isSigned}
+              />
             ) : (
               <VStack gap={4} align="stretch">
                 {/* 文件描述编辑 */}

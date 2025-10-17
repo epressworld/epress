@@ -31,6 +31,7 @@ export function usePublicationItem(options = {}) {
   const [signatureDialogOpen, setSignatureDialogOpen] = useState(false)
   const [signatureInfo, setSignatureInfo] = useState("")
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
   const [loading, setLoading] = useState(false)
 
@@ -66,6 +67,7 @@ export function usePublicationItem(options = {}) {
 
   // 保存编辑
   const handleSaveEdit = async (editData) => {
+    setIsSaving(true)
     try {
       const { id, content, file } = editData
 
@@ -121,6 +123,8 @@ export function usePublicationItem(options = {}) {
         description: t("common.saveEditError"),
         type: "error",
       })
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -291,6 +295,7 @@ export function usePublicationItem(options = {}) {
     signatureDialogOpen,
     signatureInfo,
     isDeleting,
+    isSaving,
     refreshKey,
     authStatus,
     isNodeOwner,
