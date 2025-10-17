@@ -23,7 +23,7 @@
     "retry": "Retry",
     "reSign": "Re-sign",
     "noMore": "No more",
-    "loadMore": "Load More",
+    "loadMore": "More",
     "noComments": "No comments yet",
     "pleaseRetry": "Please try again",
     "pleaseLoginFirst": "Please login first",
@@ -387,5 +387,11 @@
     "enterEmailAddress": "Please enter email address",
     "enterValidEmail": "Please enter a valid email address",
     "emailPlaceholder": "Please enter email address"
+  },
+  "visitor": {
+    "onlineCount": "{count, plural, =0 {No visitors} =1 {1 visitor} other {# visitors}}",
+    "onlineVisitors": "Online Visitors",
+    "noOnlineVisitors": "No online visitors",
+    "lastActive": "Last active"
   }
 }

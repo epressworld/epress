@@ -6,8 +6,7 @@ import "../config/index.mjs"
 import graphqlPlugin from "./graphql/index.mjs"
 import { Node } from "./models/node.mjs"
 import { Setting } from "./models/setting.mjs"
-import ewpRoutes from "./routes/index.mjs"
-import installRoutes from "./routes/install.mjs"
+import restfulRoutes from "./routes/index.mjs"
 
 /**
  * 构建 Fastify 日志配置对象
@@ -78,9 +77,6 @@ export default async function () {
 
   // Register mercurius-upload for file handling
   server.register(mercuriusUpload)
-
-  // Register installation routes (always available) with /api/install prefix
-  server.register(installRoutes)
 
   // Get JWT secret from database (or use temporary for pre-install)
   const jwtSecret = await Setting.get("jwt_secret")
@@ -236,7 +232,7 @@ export default async function () {
   server.register(graphqlPlugin())
 
   // Register EWP routes (always register, but routes will check installation)
-  ewpRoutes(server)
+  restfulRoutes(server)
 
   server.log.info("Server initialization completed")
   return server

@@ -2,6 +2,7 @@
 import {
   Box,
   Button,
+  Circle,
   Container,
   Float,
   Heading,
@@ -32,6 +33,7 @@ import { FollowButton } from "@/components/features/connection"
 import { SettingsDialog } from "@/components/features/settings"
 import { AUTH_STATUS, useAuth } from "@/contexts/AuthContext"
 import { usePage } from "@/contexts/PageContext"
+import { useOnlineVisitors } from "@/hooks/data"
 import { useIntl } from "@/hooks/utils"
 import { ConnectWalletButton, Link, NodeAvatar, SearchDialog } from "../ui"
 
@@ -52,6 +54,7 @@ export const Header = () => {
     errorDetails,
   } = usePage()
   const { t } = useIntl()
+  const { isAddressOnline } = useOnlineVisitors()
   const searchParams = useSearchParams()
   const currentKeyword = searchParams.get("q") || ""
 
@@ -236,12 +239,25 @@ export const Header = () => {
             {/* 左侧：头像和标题信息 */}
             <HStack gap={4} align="center" flex="1" minW={0}>
               <Link href="/" _hover={{ textDecoration: "none" }}>
-                <NodeAvatar
-                  node={profile}
-                  size="lg"
-                  className="header-avatar"
-                  cursor="pointer"
-                />
+                <Box position="relative">
+                  <NodeAvatar
+                    node={profile}
+                    size="lg"
+                    className="header-avatar"
+                    cursor="pointer"
+                  />
+                  {/* 节点所有者在线状态指示器 */}
+                  {profile.address && isAddressOnline(profile.address) && (
+                    <Float placement="bottom-end" offsetX="1" offsetY="1">
+                      <Circle
+                        bg="green.500"
+                        size="12px"
+                        outline="0.2em solid"
+                        outlineColor="bg"
+                      />
+                    </Float>
+                  )}
+                </Box>
               </Link>
 
               <VStack gap={0} align="start" flex="1" minW={0} maxW="100%">

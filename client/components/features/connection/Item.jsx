@@ -1,6 +1,7 @@
 "use client"
 
-import { Avatar, Box, HStack, Text } from "@chakra-ui/react"
+import { Avatar, Box, Circle, Float, HStack, Text } from "@chakra-ui/react"
+import { useOnlineVisitors } from "@/hooks/data"
 import { useIntl } from "@/hooks/utils"
 
 /**
@@ -34,6 +35,7 @@ export function ConnectionItem({
   ...props
 }) {
   const { t } = useIntl()
+  const { isAddressOnline } = useOnlineVisitors()
 
   if (!node) return null
 
@@ -42,6 +44,7 @@ export function ConnectionItem({
   const address = node.address
   const url = node.url
   const avatar = url ? `${url}/ewp/avatar` : undefined
+  const isOnline = address && isAddressOnline(address)
 
   return (
     <HStack
@@ -55,10 +58,23 @@ export function ConnectionItem({
       {...props}
     >
       <HStack gap={4} align="start" flex={1} minW={0}>
-        <Avatar.Root size={size}>
-          <Avatar.Fallback>{title.charAt(0)}</Avatar.Fallback>
-          <Avatar.Image src={avatar} />
-        </Avatar.Root>
+        <Box position="relative">
+          <Avatar.Root size={size}>
+            <Avatar.Fallback>{title.charAt(0)}</Avatar.Fallback>
+            <Avatar.Image src={avatar} />
+          </Avatar.Root>
+          {/* 在线状态指示器 */}
+          {isOnline && (
+            <Float placement="bottom-end" offsetX="1" offsetY="1">
+              <Circle
+                bg="green.500"
+                size="10px"
+                outline="0.2em solid"
+                outlineColor="bg"
+              />
+            </Float>
+          )}
+        </Box>
 
         <Box flex={1} minW={0}>
           {url ? (

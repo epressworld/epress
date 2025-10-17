@@ -4,6 +4,7 @@ import { Container } from "@chakra-ui/react"
 import { NextIntlClientProvider } from "next-intl"
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react"
 import { AuthProvider } from "@/contexts/AuthContext"
+import { OnlineVisitorsProvider } from "@/contexts/OnlineVisitorsContext"
 import { PageContext } from "@/contexts/PageContext"
 import { PAGE_DATA } from "@/lib/apollo/queries"
 import { ChakraProvider, WagmiProvider } from "../providers"
@@ -65,15 +66,17 @@ export function Page({ children, intl, initialAuthState }) {
         >
           <ChakraProvider defaultTheme={value.settings.defaultTheme}>
             <AuthProvider initialAuthState={initialAuthState}>
-              <div className="layout-container page-container">
-                <Header />
-                <main className="content-area">
-                  <Container maxW="6xl" py={6}>
-                    <Suspense fallback={null}>{children}</Suspense>
-                  </Container>
-                </main>
-                <Footer />
-              </div>
+              <OnlineVisitorsProvider>
+                <div className="layout-container page-container">
+                  <Header />
+                  <main className="content-area">
+                    <Container maxW="6xl" py={6}>
+                      <Suspense fallback={null}>{children}</Suspense>
+                    </Container>
+                  </main>
+                  <Footer />
+                </div>
+              </OnlineVisitorsProvider>
             </AuthProvider>
           </ChakraProvider>
         </WagmiProvider>
