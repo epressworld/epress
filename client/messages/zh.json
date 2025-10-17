@@ -23,7 +23,7 @@
     "retry": "重试",
     "reSign": "重新签名",
     "noMore": "没有更多了",
-    "loadMore": "加载更多",
+    "loadMore": "更多",
     "noComments": "暂无评论",
     "pleaseRetry": "请重试",
     "pleaseLoginFirst": "请先登录",
@@ -387,5 +387,11 @@
     "enterEmailAddress": "请输入邮箱地址",
     "enterValidEmail": "请输入有效的邮箱地址",
     "emailPlaceholder": "请输入邮箱地址"
+  },
+  "visitor": {
+    "onlineCount": "{count, plural, =0 {无访客} =1 {1 位访客} other {# 位访客}}",
+    "onlineVisitors": "在线访客",
+    "noOnlineVisitors": "暂无在线访客",
+    "lastActive": "最后活跃"
   }
 }

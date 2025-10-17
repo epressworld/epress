@@ -1,6 +1,6 @@
 import crypto from "node:crypto"
 import { knexMigration, Router } from "swiftify"
-import * as models from "../models/index.mjs"
+import * as models from "../../models/index.mjs"
 
 const router = new Router()
 
@@ -8,7 +8,7 @@ const router = new Router()
  * Perform installation
  * POST /api/install
  */
-router.post("/api/install", async (request, reply) => {
+router.post("/install", async (request, reply) => {
   try {
     // Check if already installed
     const isInstalled = await models.Node.isInstalled()

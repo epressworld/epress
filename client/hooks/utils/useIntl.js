@@ -63,7 +63,7 @@ export function useIntl() {
       })
     },
 
-    formatRelativeTime: (date) => {
+    formatRelativeTime: (date, _now) => {
       // Handle different date formats
       let dateObj
       if (date instanceof Date) {
@@ -78,7 +78,9 @@ export function useIntl() {
         dateObj = new Date(date)
       }
 
-      return format.relativeTime(dateObj, now)
+      // format.relativeTime(date, now) returns "X ago" for past dates
+      // e.g. if date is 45 seconds ago, it returns "45 seconds ago"
+      return format.relativeTime(dateObj, _now || now)
     },
 
     // Number formatting

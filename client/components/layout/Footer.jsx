@@ -19,6 +19,7 @@ import { LuCalendar, LuClock } from "react-icons/lu"
 import { SiEthereum } from "react-icons/si"
 import { usePage } from "@/contexts/PageContext"
 import { useIntl } from "@/hooks/utils"
+import { OnlineVisitorsButton } from "../features/visitor"
 import { Link } from "../ui"
 import { Toaster } from "../ui/toaster"
 
@@ -89,130 +90,137 @@ export const Footer = () => {
               />
             </Link>
 
-            {/* 右侧：运行状态 */}
-            <Popover.Root placement="top">
-              <Popover.Trigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  _hover={{
-                    bgColor: "gray.200",
-                    _dark: { bgColor: "gray.600" },
-                  }}
-                >
-                  <HStack gap={2}>
-                    <Text
-                      fontSize="sm"
-                      color="gray.500"
-                      _dark={{ color: "gray.400" }}
-                    >
-                      {t("common.onlineDays", { days: runningDays })}
-                    </Text>
-                    <Box
-                      w={3}
-                      h={3}
-                      borderRadius="full"
-                      bgColor="green.500"
-                      flexShrink={0}
-                    />
-                  </HStack>
-                </Button>
-              </Popover.Trigger>
-              <Popover.Positioner>
-                <Popover.Content maxW="md">
-                  <Popover.Arrow />
-                  <Popover.Body>
-                    <VStack gap={4} align="stretch">
-                      {/* 版本信息 */}
-                      <VStack gap={2} align="start">
-                        <HStack gap={2}>
-                          <FaCodeBranch size={16} />
-                          <Text fontWeight="semibold">
-                            {t("common.version")}
-                          </Text>
-                        </HStack>
-                        <Text
-                          fontSize="sm"
-                          color="gray.600"
-                          _dark={{ color: "gray.300" }}
-                        >
-                          v{nodeStatus.version || "..."}
-                          <Badge ml={1} colorPalette={"orange"}>
-                            Beta
-                          </Badge>
-                        </Text>
-                      </VStack>
+            {/* 右侧：在线访客 + 运行状态 */}
+            <HStack gap={1}>
+              {/* 在线访客按钮 */}
+              <OnlineVisitorsButton />
 
-                      <Separator />
-
-                      {/* 以太坊地址 */}
-                      <VStack gap={2} align="start">
-                        <HStack gap={2}>
-                          <SiEthereum size={16} />
-                          <Text fontWeight="semibold">
-                            {t("common.ethereumAddress")}
-                          </Text>
-                        </HStack>
-                        <Text
-                          fontFamily="mono"
-                          fontSize="sm"
-                          color="gray.600"
-                          _dark={{ color: "gray.300" }}
-                          wordBreak="break-all"
-                        >
-                          {profile.address || "..."}
-                        </Text>
-                      </VStack>
-
-                      <Separator />
-
-                      {/* 安装时间 */}
-                      <VStack gap={2} align="start">
-                        <HStack gap={2}>
-                          <LuCalendar size={16} />
-                          <Text fontWeight="semibold">
-                            {t("common.installTime")}
-                          </Text>
-                        </HStack>
-                        <Text
-                          fontSize="sm"
-                          color="gray.600"
-                          _dark={{ color: "gray.300" }}
-                        >
-                          {formattedInstallDate}
-                        </Text>
-                      </VStack>
-
-                      <Separator />
-
-                      {/* 运行天数 */}
-                      <VStack gap={2} align="start">
-                        <HStack gap={2}>
-                          <LuClock size={16} />
-                          <Text fontWeight="semibold">
-                            {t("common.runningDays")}
-                          </Text>
-                        </HStack>
-                        <HStack gap={2}>
-                          <Badge colorPalette="green" variant="solid">
-                            {t("common.daysWithCount", {
-                              count: runningDays,
-                            })}
-                          </Badge>
+              {/* 运行状态按钮 */}
+              <Popover.Root placement="top">
+                <Popover.Trigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    _hover={{
+                      bgColor: "gray.200",
+                      _dark: { bgColor: "gray.600" },
+                    }}
+                  >
+                    <HStack gap={2}>
+                      <Text
+                        fontSize="sm"
+                        color="gray.500"
+                        _dark={{ color: "gray.400" }}
+                      >
+                        {t("common.onlineDays", { days: runningDays })}
+                      </Text>
+                      <Box
+                        w={3}
+                        h={3}
+                        borderRadius="full"
+                        bgColor="green.500"
+                        flexShrink={0}
+                      />
+                    </HStack>
+                  </Button>
+                </Popover.Trigger>
+                <Popover.Positioner>
+                  <Popover.Content maxW="md">
+                    <Popover.Arrow />
+                    <Popover.Body>
+                      <VStack gap={4} align="stretch">
+                        {/* 版本信息 */}
+                        <VStack gap={2} align="start">
+                          <HStack gap={2}>
+                            <FaCodeBranch size={16} />
+                            <Text fontWeight="semibold">
+                              {t("common.version")}
+                            </Text>
+                          </HStack>
                           <Text
                             fontSize="sm"
                             color="gray.600"
                             _dark={{ color: "gray.300" }}
                           >
-                            ({t("common.sinceWithTime", { time: uptimeText })})
+                            v{nodeStatus.version || "..."}
+                            <Badge ml={1} colorPalette={"orange"}>
+                              Beta
+                            </Badge>
                           </Text>
-                        </HStack>
+                        </VStack>
+
+                        <Separator />
+
+                        {/* 以太坊地址 */}
+                        <VStack gap={2} align="start">
+                          <HStack gap={2}>
+                            <SiEthereum size={16} />
+                            <Text fontWeight="semibold">
+                              {t("common.ethereumAddress")}
+                            </Text>
+                          </HStack>
+                          <Text
+                            fontFamily="mono"
+                            fontSize="sm"
+                            color="gray.600"
+                            _dark={{ color: "gray.300" }}
+                            wordBreak="break-all"
+                          >
+                            {profile.address || "..."}
+                          </Text>
+                        </VStack>
+
+                        <Separator />
+
+                        {/* 安装时间 */}
+                        <VStack gap={2} align="start">
+                          <HStack gap={2}>
+                            <LuCalendar size={16} />
+                            <Text fontWeight="semibold">
+                              {t("common.installTime")}
+                            </Text>
+                          </HStack>
+                          <Text
+                            fontSize="sm"
+                            color="gray.600"
+                            _dark={{ color: "gray.300" }}
+                          >
+                            {formattedInstallDate}
+                          </Text>
+                        </VStack>
+
+                        <Separator />
+
+                        {/* 运行天数 */}
+                        <VStack gap={2} align="start">
+                          <HStack gap={2}>
+                            <LuClock size={16} />
+                            <Text fontWeight="semibold">
+                              {t("common.runningDays")}
+                            </Text>
+                          </HStack>
+                          <HStack gap={2}>
+                            <Badge colorPalette="green" variant="solid">
+                              {t("common.daysWithCount", {
+                                count: runningDays,
+                              })}
+                            </Badge>
+                            <Text
+                              fontSize="sm"
+                              color="gray.600"
+                              _dark={{ color: "gray.300" }}
+                            >
+                              ({t("common.sinceWithTime", { time: uptimeText })}
+                              )
+                            </Text>
+                          </HStack>
+                        </VStack>
                       </VStack>
-                    </VStack>
-                  </Popover.Body>
-                </Popover.Content>
-              </Popover.Positioner>
-            </Popover.Root>
+                    </Popover.Body>
+                  </Popover.Content>
+                </Popover.Positioner>
+              </Popover.Root>
+            </HStack>
           </HStack>
         </Container>
       </Center>

@@ -6,7 +6,9 @@ import {
   Badge,
   Box,
   Button,
+  Circle,
   Field,
+  Float,
   HStack,
   IconButton,
   Input,
@@ -20,7 +22,7 @@ import { TbSignature } from "react-icons/tb"
 import { ConfirmDialog, InfoDialog, Link } from "@/components/ui"
 import { AUTH_STATUS, useAuth } from "@/contexts/AuthContext"
 import { usePage } from "@/contexts/PageContext"
-import { useWallet } from "@/hooks/data"
+import { useOnlineVisitors, useWallet } from "@/hooks/data"
 import { useIntl } from "@/hooks/utils"
 import { DESTROY_COMMENT } from "@/lib/apollo"
 import { deleteCommentTypedData } from "@/utils/helpers"
@@ -35,6 +37,7 @@ export const CommentItem = ({
   const { authStatus, isNodeOwner } = useAuth()
   const { profile } = usePage()
   const { signEIP712Data } = useWallet()
+  const { isAddressOnline } = useOnlineVisitors()
   const [destroyComment] = useMutation(DESTROY_COMMENT)
 
   // i18n
@@ -200,23 +203,37 @@ export const CommentItem = ({
     } else if (comment.auth_type === "ETHEREUM") {
       // 检查是否是已知节点（通过commenter字段判断）
       const isKnownNode = comment.commenter?.url
+      const isOnline = comment.author_id && isAddressOnline(comment.author_id)
 
       if (isKnownNode) {
         return (
           <HStack gap={2}>
-            <Avatar.Root size="sm">
-              <Avatar.Image
-                src={
-                  comment.commenter.url
-                    ? `${comment.commenter.url}/ewp/avatar`
-                    : undefined
-                }
-                alt={comment.commenter.title || comment.author_name}
-              />
-              <Avatar.Fallback
-                name={comment.author_name || comment.commenter.title}
-              />
-            </Avatar.Root>
+            <Box position="relative">
+              <Avatar.Root size="sm">
+                <Avatar.Image
+                  src={
+                    comment.commenter.url
+                      ? `${comment.commenter.url}/ewp/avatar`
+                      : undefined
+                  }
+                  alt={comment.commenter.title || comment.author_name}
+                />
+                <Avatar.Fallback
+                  name={comment.author_name || comment.commenter.title}
+                />
+              </Avatar.Root>
+              {/* 在线状态指示器 */}
+              {isOnline && (
+                <Float placement="bottom-end" offsetX="1" offsetY="1">
+                  <Circle
+                    bg="green.500"
+                    size="8px"
+                    outline="0.15em solid"
+                    outlineColor="bg"
+                  />
+                </Float>
+              )}
+            </Box>
             <VStack gap={0} align="start">
               <Link
                 href={comment.commenter.url}
@@ -237,9 +254,22 @@ export const CommentItem = ({
       } else {
         return (
           <HStack gap={2}>
-            <Avatar.Root size="sm">
-              <Avatar.Fallback name={comment.author_name} />
-            </Avatar.Root>
+            <Box position="relative">
+              <Avatar.Root size="sm">
+                <Avatar.Fallback name={comment.author_name} />
+                {/* 在线状态指示器 */}
+                {isOnline && (
+                  <Float placement="bottom-end" offsetX="1" offsetY="1">
+                    <Circle
+                      bg="green.500"
+                      size="8px"
+                      outline="0.15em solid"
+                      outlineColor="bg"
+                    />
+                  </Float>
+                )}
+              </Avatar.Root>
+            </Box>
             <VStack gap={0} align="start">
               <Text fontWeight="medium">{comment.author_name}</Text>
               <Text fontSize="sm" color="gray.500" fontFamily="mono">

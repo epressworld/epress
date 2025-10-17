@@ -1,7 +1,7 @@
 import test from "ava"
 import { Model } from "swiftify"
-import { Node, Setting } from "../../server/models/index.mjs"
-import { generateTestAccount } from "../setup.mjs"
+import { Node, Setting } from "../../../server/models/index.mjs"
+import { generateTestAccount } from "../../setup.mjs"
 
 // Helper function to drop all tables for clean installation test
 const dropAllTables = async () => {

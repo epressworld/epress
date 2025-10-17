@@ -5,6 +5,7 @@ import { createMercuriusTestClient } from "mercurius-integration-testing"
 import nock from "nock"
 import nodemailer from "nodemailer"
 import { knexMigration, Model } from "swiftify"
+import { cleanupInterval } from "../server/routes/api/visitors.mjs"
 import { generateTestAccount, TEST_ETHEREUM_ADDRESS_NODE_A } from "./env.mjs"
 
 // --- Global test setup ---
@@ -148,6 +149,8 @@ test.after.always(async (t) => {
       // Ignore close errors
     }
   }
+
+  clearInterval(cleanupInterval)
 })
 
 // --- Helper functions (for generating credentials in tests) ---
