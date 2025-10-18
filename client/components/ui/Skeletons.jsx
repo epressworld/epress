@@ -25,7 +25,7 @@ export function PublicationImage() {
   return (
     <UnifiedCard.Root w="full">
       <Box w="full">
-        <Skeleton height={"200px"} w="full" />
+        <Skeleton height={"200px"} roundedBottom={0} w="full" />
       </Box>
       <UnifiedCard.Body>
         <SkeletonText noOfLines={3} gap={3} height={"6"} />
