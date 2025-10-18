@@ -1,6 +1,4 @@
-import { Suspense } from "react"
 import { ConnectionPage } from "@/components/features/connection"
-import { Skeletons } from "@/components/ui"
 import { SEARCH_NODES } from "@/lib/apollo"
 import { PreloadQuery } from "@/lib/apollo/client"
 
@@ -22,9 +20,7 @@ export default async function ConnectionsServerPage() {
           first: 20,
         }}
       >
-        <Suspense fallback={<Skeletons.Connections />}>
-          <ConnectionPage />
-        </Suspense>
+        <ConnectionPage />
       </PreloadQuery>
     </PreloadQuery>
   )
