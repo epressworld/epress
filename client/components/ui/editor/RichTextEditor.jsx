@@ -2,7 +2,7 @@
 import { Box, IconButton, Portal } from "@chakra-ui/react"
 import { EditorContent } from "@tiptap/react"
 import { BubbleMenu } from "@tiptap/react/menus"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { LuMaximize2, LuMinimize2 } from "react-icons/lu"
 import { EditorToolbar } from "./EditorToolbar"
 
@@ -14,24 +14,31 @@ export function RichTextEditor({
   fullscreenContent = null,
 }) {
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const editorContainerRef = useRef(null)
+  const fullscreenContainerRef = useRef(null)
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen)
   }
 
+  // 根据模式选择正确的 scrollTarget
+  const getScrollTarget = () => {
+    if (isFullscreen && fullscreenContainerRef.current) {
+      return fullscreenContainerRef.current
+    }
+    return editorContainerRef.current
+  }
+
   const editorBox = (
     <Box
-      border="1px"
-      borderColor="gray.200"
-      borderRadius="md"
+      ref={editorContainerRef}
       p={0}
       minH={minHeight}
       h={autoHeight ? "auto" : undefined}
-      position="relative"
     >
       {showFullscreenButton && (
         <IconButton
-          aria-label={isFullscreen ? "退出全屏" : "进入全屏"}
+          aria-label={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
           size="xs"
           variant="ghost"
           position="absolute"
@@ -54,7 +61,10 @@ export function RichTextEditor({
       />
 
       {editor && (
-        <BubbleMenu editor={editor}>
+        <BubbleMenu
+          editor={editor}
+          options={{ scrollTarget: getScrollTarget() }}
+        >
           <EditorToolbar editor={editor} />
         </BubbleMenu>
       )}
@@ -65,6 +75,7 @@ export function RichTextEditor({
     return (
       <Portal>
         <Box
+          ref={fullscreenContainerRef}
           position="fixed"
           top={0}
           left={0}
