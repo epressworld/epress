@@ -91,27 +91,16 @@ export const Footer = () => {
             </Link>
 
             {/* 右侧：在线访客 + 运行状态 */}
-            <HStack gap={1}>
+            <HStack gap={3}>
               {/* 在线访客按钮 */}
               <OnlineVisitorsButton />
 
               {/* 运行状态按钮 */}
               <Popover.Root placement="top">
                 <Popover.Trigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    _hover={{
-                      bgColor: "gray.200",
-                      _dark: { bgColor: "gray.600" },
-                    }}
-                  >
-                    <HStack gap={2}>
-                      <Text
-                        fontSize="sm"
-                        color="gray.500"
-                        _dark={{ color: "gray.400" }}
-                      >
+                  <Button variant="plain" color="fg.muted" size="sm" px={0}>
+                    <HStack gap={1}>
+                      <Text fontSize="sm">
                         {t("common.onlineDays", { days: runningDays })}
                       </Text>
                       <Box

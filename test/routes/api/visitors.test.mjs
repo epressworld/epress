@@ -1,6 +1,8 @@
 import test from "ava"
 import {
   cleanupInterval,
+  evictOldestVisitor,
+  MAX_VISITORS,
   VISITOR_TIMEOUT,
   visitors,
 } from "../../../server/routes/api/visitors.mjs"
@@ -15,6 +17,7 @@ import "../../setup.mjs"
  * - Removing visitors
  * - Getting visitor list
  * - Automatic cleanup of expired visitors
+ * - FIFO eviction when visitor limit is reached
  */
 
 // --- Test Setup ---
@@ -33,6 +36,18 @@ test.afterEach((_t) => {
   // Clean up after each test
   visitors.clear()
 })
+
+// --- Helper Functions ---
+
+/**
+ * Generate a valid Ethereum address for testing
+ * @param {number} seed - A number to make the address unique
+ * @returns {string} - A valid Ethereum address
+ */
+function generateAddress(seed) {
+  const hex = seed.toString(16).padStart(40, "0")
+  return `0x${hex}`
+}
 
 // --- Test Cases ---
 
@@ -302,6 +317,7 @@ test.serial("GET /api/visitors should get all visitors", async (t) => {
   t.true(result.success)
   t.is(result.count, 2)
   t.is(result.visitors.length, 2)
+  t.is(result.limit, MAX_VISITORS)
   t.truthy(result.visitors.find((v) => v.address === address1))
   t.truthy(result.visitors.find((v) => v.address === address2))
 })
@@ -369,3 +385,202 @@ test.serial("DELETE /api/visitors should reject invalid address", async (t) => {
   t.false(result.success)
   t.is(result.error, "Invalid Ethereum address format")
 })
+
+// --- FIFO Eviction Tests ---
+
+test.serial(
+  "evictOldestVisitor should remove the oldest visitor",
+  async (t) => {
+    const now = Date.now()
+
+    // Add three visitors with different addedAt times
+    visitors.set(generateAddress(1), {
+      address: generateAddress(1),
+      lastActive: now,
+      addedAt: now - 3000,
+    })
+    visitors.set(generateAddress(2), {
+      address: generateAddress(2),
+      lastActive: now,
+      addedAt: now - 2000,
+    })
+    visitors.set(generateAddress(3), {
+      address: generateAddress(3),
+      lastActive: now,
+      addedAt: now - 1000,
+    })
+
+    t.is(visitors.size, 3)
+
+    // Evict oldest
+    evictOldestVisitor()
+
+    t.is(visitors.size, 2)
+    t.false(visitors.has(generateAddress(1))) // Oldest should be removed
+    t.true(visitors.has(generateAddress(2)))
+    t.true(visitors.has(generateAddress(3)))
+  },
+)
+
+test.serial(
+  "POST /api/visitors should enforce MAX_VISITORS limit",
+  async (t) => {
+    // Add visitors up to the limit
+    for (let i = 0; i < MAX_VISITORS; i++) {
+      const address = generateAddress(i)
+      await t.context.app.inject({
+        method: "POST",
+        url: "/api/visitors",
+        payload: { address },
+      })
+    }
+
+    t.is(visitors.size, MAX_VISITORS)
+
+    // Add one more visitor, should trigger eviction
+    const newAddress = generateAddress(MAX_VISITORS)
+    const response = await t.context.app.inject({
+      method: "POST",
+      url: "/api/visitors",
+      payload: { address: newAddress },
+    })
+
+    t.is(response.statusCode, 200)
+    const result = response.json()
+    t.true(result.success)
+    t.true(result.evicted) // Should indicate eviction occurred
+    t.is(visitors.size, MAX_VISITORS) // Should still be at limit
+    t.true(visitors.has(newAddress)) // New visitor should be added
+    t.false(visitors.has(generateAddress(0))) // Oldest should be removed
+  },
+)
+
+test.serial(
+  "POST /api/visitors should not evict when updating existing visitor",
+  async (t) => {
+    // Add visitors up to the limit
+    for (let i = 0; i < MAX_VISITORS; i++) {
+      const address = generateAddress(i)
+      await t.context.app.inject({
+        method: "POST",
+        url: "/api/visitors",
+        payload: { address },
+      })
+    }
+
+    t.is(visitors.size, MAX_VISITORS)
+
+    // Update an existing visitor
+    const existingAddress = generateAddress(500)
+    const response = await t.context.app.inject({
+      method: "POST",
+      url: "/api/visitors",
+      payload: { address: existingAddress },
+    })
+
+    t.is(response.statusCode, 200)
+    const result = response.json()
+    t.true(result.success)
+    t.falsy(result.evicted) // Should NOT indicate eviction
+    t.is(visitors.size, MAX_VISITORS) // Should still be at limit
+    t.true(visitors.has(generateAddress(0))) // Oldest should NOT be removed
+  },
+)
+
+test.serial(
+  "POST /api/visitors FIFO eviction should maintain correct order",
+  async (t) => {
+    // Add 10 visitors
+    for (let i = 0; i < 10; i++) {
+      const address = generateAddress(i)
+      visitors.set(address, {
+        address,
+        lastActive: Date.now(),
+        addedAt: Date.now() + i,
+      })
+    }
+
+    // Evict 5 times
+    for (let i = 0; i < 5; i++) {
+      evictOldestVisitor()
+    }
+
+    t.is(visitors.size, 5)
+
+    // The first 5 should be removed, last 5 should remain
+    for (let i = 0; i < 5; i++) {
+      t.false(visitors.has(generateAddress(i)))
+    }
+    for (let i = 5; i < 10; i++) {
+      t.true(visitors.has(generateAddress(i)))
+    }
+  },
+)
+
+test.serial("GET /api/visitors should return limit in response", async (t) => {
+  const response = await t.context.app.inject({
+    method: "GET",
+    url: "/api/visitors",
+  })
+
+  t.is(response.statusCode, 200)
+  const result = response.json()
+  t.true(result.success)
+  t.is(result.limit, MAX_VISITORS)
+})
+
+test.serial(
+  "GET /api/visitors should not expose internal addedAt field",
+  async (t) => {
+    const address = generateAddress(1)
+    await t.context.app.inject({
+      method: "POST",
+      url: "/api/visitors",
+      payload: { address },
+    })
+
+    const response = await t.context.app.inject({
+      method: "GET",
+      url: "/api/visitors",
+    })
+
+    t.is(response.statusCode, 200)
+    const result = response.json()
+    t.is(result.visitors.length, 1)
+
+    const visitor = result.visitors[0]
+    t.truthy(visitor.address)
+    t.truthy(visitor.lastActive)
+    t.falsy(visitor.addedAt) // Should not be exposed
+  },
+)
+
+test.serial(
+  "POST /api/visitors should preserve addedAt when updating visitor",
+  async (t) => {
+    const address = generateAddress(1)
+
+    // Add visitor
+    await t.context.app.inject({
+      method: "POST",
+      url: "/api/visitors",
+      payload: { address },
+    })
+
+    const originalAddedAt = visitors.get(address).addedAt
+
+    // Wait a bit
+    await new Promise((resolve) => setTimeout(resolve, 10))
+
+    // Update visitor
+    await t.context.app.inject({
+      method: "POST",
+      url: "/api/visitors",
+      payload: { address },
+    })
+
+    const updatedVisitor = visitors.get(address)
+    t.is(updatedVisitor.addedAt, originalAddedAt) // addedAt should not change
+    t.true(updatedVisitor.lastActive > originalAddedAt) // lastActive should update
+  },
+)
