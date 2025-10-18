@@ -1,4 +1,5 @@
 import { Router } from "swiftify"
+import validator from "validator"
 
 const router = new Router()
 
@@ -10,7 +11,7 @@ const router = new Router()
  *
  * 数据结构:
  * visitors = Map {
- *   address: { address, lastActive }
+ *   address: { address, lastActive, addedAt }
  * }
  */
 
@@ -19,6 +20,9 @@ const visitors = new Map()
 
 // 访客过期时间（15分钟，单位：毫秒）
 const VISITOR_TIMEOUT = 15 * 60 * 1000
+
+// 最大访客数量限制（防止内存耗尽攻击）
+const MAX_VISITORS = 1000
 
 /**
  * 清理过期访客
@@ -45,19 +49,43 @@ function cleanupExpiredVisitors() {
   }
 }
 
+/**
+ * 执行 FIFO 驱逐策略
+ * 当访客数量超过限制时，移除最早添加的访客
+ */
+function evictOldestVisitor() {
+  if (visitors.size === 0) return
+
+  // 找到最早添加的访客
+  let oldestAddress = null
+  let oldestTime = Infinity
+
+  for (const [address, visitor] of visitors.entries()) {
+    if (visitor.addedAt < oldestTime) {
+      oldestTime = visitor.addedAt
+      oldestAddress = address
+    }
+  }
+
+  if (oldestAddress) {
+    visitors.delete(oldestAddress)
+    console.log(
+      `[Visitors API] Evicted oldest visitor: ${oldestAddress} (FIFO)`,
+    )
+  }
+}
+
 // 定期清理过期访客（每分钟执行一次）
 const cleanupInterval = setInterval(cleanupExpiredVisitors, 60 * 1000)
 
-// 导出清理函数供测试使用
-export { cleanupExpiredVisitors, visitors, VISITOR_TIMEOUT, cleanupInterval }
-
-/**
- * 验证以太坊地址格式
- * @param {string} address - 以太坊地址
- * @returns {boolean} - 是否有效
- */
-function isValidEthereumAddress(address) {
-  return typeof address === "string" && /^0x[a-fA-F0-9]{40}$/.test(address)
+// 导出清理函数和常量供测试使用
+export {
+  cleanupExpiredVisitors,
+  visitors,
+  VISITOR_TIMEOUT,
+  cleanupInterval,
+  MAX_VISITORS,
+  evictOldestVisitor,
 }
 
 /**
@@ -73,7 +101,8 @@ function isValidEthereumAddress(address) {
  * {
  *   success: boolean,
  *   address: string,
- *   lastActive: number
+ *   lastActive: number,
+ *   evicted?: boolean // 是否触发了 FIFO 驱逐
  * }
  */
 router.post("/visitors", async (request, reply) => {
@@ -89,7 +118,7 @@ router.post("/visitors", async (request, reply) => {
     }
 
     // 验证以太坊地址格式 (0x + 40个十六进制字符)
-    if (!isValidEthereumAddress(address)) {
+    if (!validator.isEthereumAddress(address)) {
       return reply.code(400).send({
         success: false,
         error: "Invalid Ethereum address format",
@@ -97,18 +126,33 @@ router.post("/visitors", async (request, reply) => {
     }
 
     const now = Date.now()
+    const existingVisitor = visitors.get(address)
+    let evicted = false
+
+    // 如果是新访客且已达到限制，执行 FIFO 驱逐
+    if (!existingVisitor && visitors.size >= MAX_VISITORS) {
+      evictOldestVisitor()
+      evicted = true
+    }
 
     // 更新或添加访客
     visitors.set(address, {
       address,
       lastActive: now,
+      addedAt: existingVisitor ? existingVisitor.addedAt : now,
     })
 
-    return reply.code(200).send({
+    const response = {
       success: true,
       address,
       lastActive: now,
-    })
+    }
+
+    if (evicted) {
+      response.evicted = true
+    }
+
+    return reply.code(200).send(response)
   } catch (error) {
     request.log.error(error, "[Visitors API] POST error")
     return reply.code(500).send({
@@ -147,7 +191,7 @@ router.delete("/visitors", async (request, reply) => {
     }
 
     // 验证以太坊地址格式
-    if (!isValidEthereumAddress(address)) {
+    if (!validator.isEthereumAddress(address)) {
       return reply.code(400).send({
         success: false,
         error: "Invalid Ethereum address format",
@@ -179,7 +223,8 @@ router.delete("/visitors", async (request, reply) => {
  * {
  *   success: boolean,
  *   visitors: Array<{ address: string, lastActive: number }>,
- *   count: number
+ *   count: number,
+ *   limit: number
  * }
  */
 router.get("/visitors", async (request, reply) => {
@@ -187,13 +232,17 @@ router.get("/visitors", async (request, reply) => {
     // 清理过期访客
     cleanupExpiredVisitors()
 
-    // 返回所有访客列表
-    const visitorsList = Array.from(visitors.values())
+    // 返回所有访客列表（不包含内部的 addedAt 字段）
+    const visitorsList = Array.from(visitors.values()).map((v) => ({
+      address: v.address,
+      lastActive: v.lastActive,
+    }))
 
     return reply.code(200).send({
       success: true,
       visitors: visitorsList,
       count: visitorsList.length,
+      limit: MAX_VISITORS,
     })
   } catch (error) {
     request.log.error(error, "[Visitors API] GET error")

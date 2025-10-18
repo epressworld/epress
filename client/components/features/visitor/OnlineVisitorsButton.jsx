@@ -35,17 +35,10 @@ export function OnlineVisitorsButton() {
   return (
     <Popover.Root placement="top">
       <Popover.Trigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          _hover={{
-            bgColor: "gray.200",
-            _dark: { bgColor: "gray.600" },
-          }}
-        >
-          <HStack gap={2}>
+        <Button variant="plain" color="fg.muted" size="sm" px={0}>
+          <HStack gap={1}>
             <LuUsers size={16} />
-            <Text fontSize="sm" color="gray.500" _dark={{ color: "gray.400" }}>
+            <Text fontSize="sm">
               {t("visitor.onlineCount", { count: onlineCount })}
             </Text>
             <Circle
