@@ -3,7 +3,6 @@ import { existsSync } from "node:fs"
 import { mkdir } from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
-import { execa } from "execa"
 import { Command, knexMigration, Model } from "swiftify"
 import * as modelsMap from "../server/models/index.mjs"
 
@@ -66,10 +65,9 @@ export class MigrateCommand extends Command {
     action: {
       optional: true,
       multiple: false,
-      choices: ["uninstall", "upgrade"],
-      description:
-        "Migration action: create tables, drop tables, recreate (drop + create), or seed data and upgrade database",
-      default: "create",
+      choices: ["upgrade", "rollback"],
+      description: "Migration action: rollback and upgrade database",
+      default: "upgrade",
     },
   }
 
@@ -77,14 +75,11 @@ export class MigrateCommand extends Command {
     console.log(`🚀 Starting migration command: ${action}`)
 
     switch (action) {
-      case "uninstall":
-        await migrateDatabase({ drop: true })
+      case "rollback":
+        await Model.knex().migrate.rollback()
         break
       case "upgrade":
-        await execa({
-          stdout: "inherit",
-          stderr: "inherit",
-        })`npx knex migrate:latest`
+        await Model.knex().migrate.latest()
         break
       default:
         throw new Error(`Unknown migration action: ${action}`)

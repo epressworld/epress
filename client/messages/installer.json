@@ -13,6 +13,15 @@
       "nodeAddressPlaceholder": "0x...",
       "nodeAddressHelper": "Your Ethereum address for node ownership",
       "connectWallet": "Connect Wallet",
+      "signing": "Signing...",
+      "signAndInstall": "Sign & Install",
+      "formErrors": "The form contains errors, please check.",
+      "installationSteps": "Installation Details",
+      "steps": {
+        "preCheck": "Pre-installation Check",
+        "initialSchema": "Database Initialization",
+        "initialData": "Data Initialization"
+      },
       "nodeUrl": "Node URL",
       "nodeUrlPlaceholder": "https://example.com",
       "nodeUrlHelper": "The public URL where your node will be accessible",
@@ -109,6 +118,15 @@
       "nodeDescriptionPlaceholder": "个人发布节点",
       "nodeDescriptionHelper": "简要描述您的节点",
       "avatar": "头像",
+      "signing": "签名中...",
+      "signAndInstall": "签名并安装",
+      "formErrors": "表单有错误，请检查",
+      "installationSteps": "安装详情",
+      "steps": {
+        "preCheck": "安装前置检查",
+        "initialSchema": "数据库初始化",
+        "initialData": "数据初始化"
+      },
       "avatarHelper": "为您的节点上传头像图片",
       "mailServerSettings": "邮件服务器设置",
       "mailTransport": "邮件传输",

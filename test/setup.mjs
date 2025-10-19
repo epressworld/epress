@@ -4,76 +4,41 @@ import FormData from "form-data"
 import { createMercuriusTestClient } from "mercurius-integration-testing"
 import nock from "nock"
 import nodemailer from "nodemailer"
-import { knexMigration, Model } from "swiftify"
+import setupServer from "../server/index.mjs"
+import { Comment, Model, Node } from "../server/models/index.mjs"
 import { cleanupInterval } from "../server/routes/api/visitors.mjs"
 import { generateTestAccount, TEST_ETHEREUM_ADDRESS_NODE_A } from "./env.mjs"
 
 // --- Global test setup ---
 test.before(async (t) => {
-  // 1. Database setup (in-memory SQLite for isolation)
-  Model.connect({
-    client: "sqlite3",
-    connection: ":memory:", // Use in-memory database to ensure each test run is fresh
-    useNullAsDefault: true,
-  })
+  // 2. Migrate database using standard Knex migrations
+  const knex = Model.knex()
 
-  // Dynamic import for default export
-  const { default: setupServer } = await import("../server/index.mjs")
-
-  // Dynamic import for all models
-  const models = await import("../server/models/index.mjs")
-
-  // Dynamic import for specific named export
-  const { Comment } = await import("../server/models/index.mjs")
-
-  // 2. Migrate database, create clean schema
-  // 恢复使用模型迁移
-  await knexMigration(Object.values(models), { drop: true }) // Drop and recreate tables
-  await knexMigration(Object.values(models))
-
-  const selfNode = await models.Node.query().insert({
-    address: TEST_ETHEREUM_ADDRESS_NODE_A,
-    url: "https://node-a.com",
-    title: "Test Node A",
-    description: "Local epress instance we are testing.",
-    is_self: true,
-    profile_version: 0,
-  })
+  // Run migrations
+  await knex.migrate.latest()
 
   const testAccount = await nodemailer.createTestAccount()
-  // Define the settings to insert
-  const settings = [
-    { key: "enable_rss", value: "true" },
-    { key: "allow_follow", value: "true" },
-    { key: "allow_comment", value: "true" },
-    {
-      key: "avatar",
-      value:
-        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
-    }, // Existing default avatar
-    { key: "jwt_secret", value: "test-jwt-secret-for-testing-only" },
-    { key: "jwt_expires_in", value: "24h" },
-    { key: "default_language", value: "en" },
-    { key: "default_theme", value: "light" },
-    {
-      key: "mail_transport",
-      value: `smtp://${testAccount.user}:${testAccount.pass}@smtp.ethereal.email:587`,
-    },
-    { key: "mail_from", value: "no-reply@epress.world" },
-    { key: "walletconnect_projectid", value: "" },
-  ]
-
-  // Insert settings using a for loop
-  for (const setting of settings) {
-    await models.Setting.query().insert(setting)
-  }
+  process.env.INITIAL_DATA_NODE_AVATAR =
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+  process.env.INITIAL_DATA_NODE_ADDRESS = TEST_ETHEREUM_ADDRESS_NODE_A
+  process.env.INITIAL_DATA_NODE_URL = "https://node-a.com"
+  process.env.INITIAL_DATA_NODE_TITLE = "Test Node A"
+  process.env.INITIAL_DATA_NODE_DESCRIPTION =
+    "Local epress instance we are testing."
+  process.env.INITIAL_DATA_DEFAULT_LANGUAGE = "en"
+  process.env.INITIAL_DATA_DEFAULT_THEME = "light"
+  process.env.INITIAL_DATA_WALLETCONNECT_PROJECT_ID = ""
+  process.env.INITIAL_DATA_MAIL_TRANSPORT = `smtp://${testAccount.user}:${testAccount.pass}@smtp.ethereal.email:587`
+  process.env.INITIAL_DATA_MAIL_FROM = "no-reply@epress.world"
+  await knex.seed.run()
 
   // 3. Initialize Fastify app and GraphQL client
   const app = await setupServer() // Call the actual createServer function to build the complete app
   await app.ready()
 
   const otherUserAccount = generateTestAccount()
-  const otherUserNode = await models.Node.query().insert({
+  const selfNode = await Node.query().findOne({ is_self: true })
+  const otherUserNode = await Node.query().insert({
     address: otherUserAccount.address,
     url: `https://other-epress-node.com`,
     title: "Other User Node",

@@ -92,7 +92,7 @@ test("Success: profile query should return the self node public info", async (t)
   t.truthy(data.profile.created_at, "created_at should exist")
   t.is(
     data.profile.created_at,
-    selfNode.created_at.toISOString(),
+    new Date(selfNode.created_at).toISOString(),
     "created_at should match the node creation time",
   )
   t.false(
