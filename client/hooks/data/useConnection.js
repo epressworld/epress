@@ -20,7 +20,7 @@ export function useConnection() {
   const { address } = useAccount()
   const { openConnectModal } = useConnectModal()
   const { signEIP712Data } = useWallet()
-  const { profile, isFollower, refetchFollowerStatus, isNodeOwner } = useAuth()
+  const { profile, visitor, refetchVisitorStatus, isNodeOwner } = useAuth()
   const { t } = useIntl()
 
   const [url, setUrl] = useState("")
@@ -38,7 +38,7 @@ export function useConnection() {
       return
     }
 
-    if (isFollower) {
+    if (visitor.isFollower) {
       // 如果已经关注，直接取消关注
       handleUnfollow()
     } else {
@@ -127,7 +127,7 @@ export function useConnection() {
       })
 
       // 重新查询关注状态
-      refetchFollowerStatus()
+      refetchVisitorStatus()
       setIsOpen(false)
       setUrl("")
     } catch (error) {
@@ -196,7 +196,7 @@ export function useConnection() {
       })
 
       // 重新查询关注状态
-      refetchFollowerStatus()
+      refetchVisitorStatus()
       setIsOpen(false)
     } catch (error) {
       console.error("取消关注失败:", error)
@@ -211,7 +211,7 @@ export function useConnection() {
 
   return {
     address,
-    isFollower,
+    visitor,
     isNodeOwner,
     url,
     setUrl,

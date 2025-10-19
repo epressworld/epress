@@ -1,6 +1,6 @@
 "use client"
 
-import { Avatar } from "@chakra-ui/react"
+import { Avatar, Circle, Float } from "@chakra-ui/react"
 
 /**
  * NodeAvatar - 节点头像组件
@@ -32,6 +32,7 @@ export function NodeAvatar({
   showFallback = true,
   onClick,
   className,
+  isOnline,
   ...props
 }) {
   // 安全地获取节点信息
@@ -50,6 +51,17 @@ export function NodeAvatar({
       <Avatar.Image src={avatarUrl} alt={nodeTitle} />
       {showFallback && (
         <Avatar.Fallback>{nodeTitle.charAt(0).toUpperCase()}</Avatar.Fallback>
+      )}
+      {/* 在线状态指示器 */}
+      {isOnline && (
+        <Float placement="bottom-end" offsetX="1" offsetY="1">
+          <Circle
+            bg="green.500"
+            size="8px"
+            outline="0.15em solid"
+            outlineColor="bg"
+          />
+        </Float>
       )}
     </Avatar.Root>
   )

@@ -10,6 +10,7 @@ import {
   VStack,
 } from "@chakra-ui/react"
 import { FiMessageCircle } from "react-icons/fi"
+import { AuthorInfo } from "@/components/ui"
 import { useCommentForm } from "@/hooks/form"
 import { useIntl } from "@/hooks/utils"
 
@@ -25,6 +26,9 @@ export const CommentForm = ({
     isSubmitting,
     isWaitingForWallet,
     isConfirming,
+    isAnonymous,
+    visitor,
+    isOnline,
     authType,
     isConnected,
     isMailEnabled,
@@ -64,7 +68,11 @@ export const CommentForm = ({
 
             {/* 昵称输入 */}
             <Box flex="1" minW="120px">
+              {!isAnonymous && (
+                <AuthorInfo node={visitor.node} isOnline={isOnline} />
+              )}
               <Input
+                type={isAnonymous ? "text" : "hidden"}
                 size="md"
                 placeholder={t("common.nicknamePlaceholder")}
                 error={commentForm.formState.errors.username?.message}
@@ -75,7 +83,7 @@ export const CommentForm = ({
             </Box>
 
             {/* 邮箱输入 - 仅在邮箱认证时显示 */}
-            {authType === "EMAIL" && isMailEnabled && (
+            {authType === "EMAIL" && isMailEnabled && isAnonymous && (
               <Box flex="1" minW="200px">
                 <Input
                   size="md"

@@ -197,7 +197,7 @@
   },
   "comment": {
     "addComment": "Add Comment",
-    "publishComment": "Publish Comment",
+    "publishComment": "Comment",
     "emailAuth": "Email Authentication",
     "ethereumAuth": "Ethereum Wallet Authentication",
     "walletConnectedMessage": "Wallet connected, forced to use Ethereum authentication",

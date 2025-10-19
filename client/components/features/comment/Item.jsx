@@ -6,9 +6,7 @@ import {
   Badge,
   Box,
   Button,
-  Circle,
   Field,
-  Float,
   HStack,
   IconButton,
   Input,
@@ -19,7 +17,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { FiTrash2 } from "react-icons/fi"
 import { TbSignature } from "react-icons/tb"
-import { ConfirmDialog, InfoDialog, Link } from "@/components/ui"
+import { AuthorInfo, ConfirmDialog, InfoDialog } from "@/components/ui"
 import { AUTH_STATUS, useAuth } from "@/contexts/AuthContext"
 import { usePage } from "@/contexts/PageContext"
 import { useOnlineVisitors, useWallet } from "@/hooks/data"
@@ -206,77 +204,16 @@ export const CommentItem = ({
       const isOnline = comment.author_id && isAddressOnline(comment.author_id)
 
       if (isKnownNode) {
-        return (
-          <HStack gap={2}>
-            <Box position="relative">
-              <Avatar.Root size="sm">
-                <Avatar.Image
-                  src={
-                    comment.commenter.url
-                      ? `${comment.commenter.url}/ewp/avatar`
-                      : undefined
-                  }
-                  alt={comment.commenter.title || comment.author_name}
-                />
-                <Avatar.Fallback
-                  name={comment.author_name || comment.commenter.title}
-                />
-              </Avatar.Root>
-              {/* 在线状态指示器 */}
-              {isOnline && (
-                <Float placement="bottom-end" offsetX="1" offsetY="1">
-                  <Circle
-                    bg="green.500"
-                    size="8px"
-                    outline="0.15em solid"
-                    outlineColor="bg"
-                  />
-                </Float>
-              )}
-            </Box>
-            <VStack gap={0} align="start">
-              <Link
-                href={comment.commenter.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                color="orange.500"
-                fontWeight="medium"
-                _hover={{ color: "orange.600" }}
-              >
-                {comment.author_name || comment.commenter.title}
-              </Link>
-              <Text fontSize="xs" color="gray.500" fontFamily="mono">
-                {comment.author_id}
-              </Text>
-            </VStack>
-          </HStack>
-        )
+        return <AuthorInfo node={comment.commenter} isOnline={isOnline} />
       } else {
         return (
-          <HStack gap={2}>
-            <Box position="relative">
-              <Avatar.Root size="sm">
-                <Avatar.Fallback name={comment.author_name} />
-                {/* 在线状态指示器 */}
-                {isOnline && (
-                  <Float placement="bottom-end" offsetX="1" offsetY="1">
-                    <Circle
-                      bg="green.500"
-                      size="8px"
-                      outline="0.15em solid"
-                      outlineColor="bg"
-                    />
-                  </Float>
-                )}
-              </Avatar.Root>
-            </Box>
-            <VStack gap={0} align="start">
-              <Text fontWeight="medium">{comment.author_name}</Text>
-              <Text fontSize="sm" color="gray.500" fontFamily="mono">
-                {comment.author_id}
-              </Text>
-            </VStack>
-          </HStack>
+          <AuthorInfo
+            node={{
+              address: comment.author_id,
+              title: comment.author_name,
+            }}
+            isOnline={isOnline}
+          />
         )
       }
     }

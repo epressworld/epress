@@ -59,8 +59,9 @@ const segments = {
     status
     auth_type
     author_name
-      author_id
+    author_id
     commenter {
+      address
       url
       title
       description
@@ -222,9 +223,18 @@ export const CONNECTIONS_PAGE_DATA = gql`
 `
 
 // 单独的查询 - 现在分别在服务器端和客户端使用
-export const IS_FOLLOWER = gql`
-  query IsFollower($address: String!) {
-    isFollower(address: $address)
+export const VISITOR = gql`
+  query visitor($address: String!) {
+    visitor(address: $address) {
+      isFollower
+      isFollowing
+      node {
+        address
+        url
+        title
+        description
+      }
+    }
   }
 `
 

@@ -1,10 +1,6 @@
 "use client"
 
-import {
-  useApolloClient,
-  useMutation,
-  useSuspenseQuery,
-} from "@apollo/client/react"
+import { useApolloClient, useMutation, useQuery } from "@apollo/client/react"
 import {
   createContext,
   useCallback,
@@ -15,11 +11,7 @@ import {
 } from "react"
 import { useAccount, useDisconnect, useWalletClient } from "wagmi"
 import { usePage } from "@/contexts/PageContext"
-import {
-  GET_SIWE_MESSAGE,
-  IS_FOLLOWER,
-  SIGN_IN_WITH_ETHEREUM,
-} from "@/lib/apollo"
+import { GET_SIWE_MESSAGE, SIGN_IN_WITH_ETHEREUM, VISITOR } from "@/lib/apollo"
 
 // 1. 定义清晰的状态枚举 - 解耦认证和钱包连接状态
 export const AUTH_STATUS = {
@@ -81,11 +73,11 @@ export function AuthProvider({ children, initialAuthState }) {
 
   // 查询用户关注状态 - 只有在用户连接钱包时才查询
   const {
-    data: followerData,
-    loading: followerLoading,
-    error: followerError,
-    refetch: refetchFollower,
-  } = useSuspenseQuery(IS_FOLLOWER, {
+    data: visitorData,
+    loading: visitorLoading,
+    error: visitorError,
+    refetch: refetchVisitor,
+  } = useQuery(VISITOR, {
     variables: {
       address: safeAddress || "0x0000000000000000000000000000000000000000",
     },
@@ -97,7 +89,7 @@ export function AuthProvider({ children, initialAuthState }) {
     fetchPolicy: "cache-first",
     // 错误处理
     onError: (error) => {
-      console.error("AuthContext isFollower query error:", error)
+      console.error("AuthContext visitor query error:", error)
     },
   })
 
@@ -269,15 +261,15 @@ export function AuthProvider({ children, initialAuthState }) {
   }, [logout, disconnect])
 
   // 重新获取关注状态
-  const refetchFollowerStatus = useCallback(async () => {
+  const refetchVisitorStatus = useCallback(async () => {
     if (isClient && safeAddress) {
       try {
-        await refetchFollower()
+        await refetchVisitor()
       } catch (error) {
         console.error("Failed to refetch follower status:", error)
       }
     }
-  }, [isClient, safeAddress, refetchFollower])
+  }, [isClient, safeAddress, refetchVisitor])
 
   const value = useMemo(
     () => ({
@@ -296,19 +288,19 @@ export function AuthProvider({ children, initialAuthState }) {
       profile,
 
       // 用户相关的动态数据
-      isFollower: followerData?.isFollower || false,
+      visitor: visitorData?.visitor || {},
       isNodeOwner,
 
       // 加载状态
-      followerLoading,
-      followerError,
+      visitorLoading,
+      visitorError,
 
       // 操作函数
       login,
       loginState,
       logout,
       disconnectAndLogout,
-      refetchFollowerStatus,
+      refetchVisitorStatus,
     }),
     [
       authStatus,
@@ -316,15 +308,15 @@ export function AuthProvider({ children, initialAuthState }) {
       walletStatus,
       safeAddress,
       profile,
-      followerData?.isFollower,
+      visitorData,
       isNodeOwner,
-      followerLoading,
-      followerError,
+      visitorLoading,
+      visitorError,
       login,
       loginState,
       logout,
       disconnectAndLogout,
-      refetchFollowerStatus,
+      refetchVisitorStatus,
     ],
   )
 
