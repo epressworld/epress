@@ -61,6 +61,7 @@ export function AuthorInfo({
   onClick,
   actions,
   className,
+  isOnline,
   ...props
 }) {
   // 安全地获取节点信息
@@ -169,7 +170,7 @@ export function AuthorInfo({
   if (layout === "horizontal") {
     return (
       <HStack gap={config.gap} align="start" className={className} {...props}>
-        <NodeAvatar node={node} size={config.avatar} />
+        <NodeAvatar node={node} size={config.avatar} isOnline={isOnline} />
         {renderInfo()}
         {actions && <Box flexShrink={0}>{actions}</Box>}
       </HStack>
@@ -179,7 +180,7 @@ export function AuthorInfo({
   // 垂直布局
   return (
     <VStack gap={config.gap} align="center" className={className} {...props}>
-      <NodeAvatar node={node} size={config.avatar} />
+      <NodeAvatar node={node} size={config.avatar} isOnline={isOnline} />
       <VStack gap={0} align="center" w="full">
         {renderTitle()}
         {showAddress && nodeAddress && (

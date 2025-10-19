@@ -5,10 +5,11 @@ import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { useAccount } from "wagmi"
 import { toaster } from "@/components/ui/toaster"
+import { useAuth } from "@/contexts/AuthContext"
 import { usePage } from "@/contexts/PageContext"
 import { CONFIRM_COMMENT, CREATE_COMMENT } from "@/lib/apollo"
 import { commentSignatureTypedData } from "@/utils/helpers"
-import { useWallet } from "../data"
+import { useOnlineVisitors, useWallet } from "../data"
 import { useIntl } from "../utils"
 
 export function useCommentForm(
@@ -18,8 +19,10 @@ export function useCommentForm(
 ) {
   const { profile, settings } = usePage()
   const { signEIP712Data } = useWallet()
+  const { visitor } = useAuth()
   const { t } = useIntl()
   const { openConnectModal } = useConnectModal()
+  const { isAddressOnline } = useOnlineVisitors()
 
   // 直接使用wagmi的hooks获取最新状态
   const { address, isConnected } = useAccount()
@@ -63,7 +66,8 @@ export function useCommentForm(
       setAuthType("ETHEREUM")
       commentForm.setValue("authType", "ETHEREUM")
     }
-  }, [isConnected, isMailEnabled]) // 监听 isConnected 和 isMailEnabled 变化
+    commentForm.setValue("username", visitor?.node?.title)
+  }, [isConnected, isMailEnabled, visitor]) // 监听 isConnected 和 isMailEnabled 变化
 
   // 监听钱包连接状态，清除等待状态
   useEffect(() => {
@@ -296,12 +300,17 @@ export function useCommentForm(
       setIsConfirming(false)
     }
   }
+  const isAnonymous = !visitor.node
+  const isOnline = isAddressOnline(address)
 
   return {
     commentForm,
     isSubmitting,
     isWaitingForWallet,
     isConfirming,
+    visitor,
+    isAnonymous,
+    isOnline,
     authType,
     isConnected,
     isMailEnabled,

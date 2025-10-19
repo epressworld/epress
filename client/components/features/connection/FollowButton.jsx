@@ -18,7 +18,7 @@ export const FollowButton = ({ ...props }) => {
 
   const {
     address,
-    isFollower,
+    visitor,
     isNodeOwner,
     url,
     setUrl,
@@ -46,9 +46,9 @@ export const FollowButton = ({ ...props }) => {
 
   // 统一的关注/取消关注按钮
   return (
-    <Popover.Root open={isOpen && !isFollower} onOpenChange={setIsOpen}>
+    <Popover.Root open={isOpen && !visitor.isFollower} onOpenChange={setIsOpen}>
       <Popover.Trigger asChild>
-        {isFollower ? (
+        {visitor.isFollower ? (
           <UnfollowAction
             onClick={handleButtonClick}
             isLoading={isLoading}

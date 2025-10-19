@@ -197,7 +197,7 @@
   },
   "comment": {
     "addComment": "发表评论",
-    "publishComment": "发表评论",
+    "publishComment": "评论",
     "emailAuth": "邮箱认证",
     "ethereumAuth": "以太坊钱包认证",
     "walletConnectedMessage": "已连接钱包,强制使用以太坊认证",
