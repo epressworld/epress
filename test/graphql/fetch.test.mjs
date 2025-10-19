@@ -57,8 +57,8 @@ test("Success: fetch NODE should return node information", async (t) => {
   t.truthy(data.fetch.created_at, "Created_at should exist")
   t.is(
     typeof data.fetch.updated_at,
-    "object",
-    "Updated_at should be an object (timestamp or null)",
+    "number",
+    "Updated_at should be number (timestamp or null)",
   )
 })
 

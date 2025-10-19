@@ -7,6 +7,7 @@ import {
 } from "@chakra-ui/react"
 import { NextIntlClientProvider } from "next-intl"
 import { useEffect, useState } from "react"
+import { Toaster } from "@/components"
 import { LanguageSwitcher } from "@/components/features/installer"
 import { WagmiProvider } from "@/components/providers"
 import installerMessages from "@/messages/installer.json"
@@ -51,6 +52,7 @@ export default function InstallerLayout({ children }) {
               </Flex>
             </Container>
             {children}
+            <Toaster />
           </div>
         </WagmiProvider>
       </ChakraProvider>

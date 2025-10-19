@@ -119,7 +119,7 @@ export const Header = () => {
     buttons.push(<ConnectWalletButton key="connect-wallet" />)
 
     // 如果未认证且允许关注,显示关注按钮
-    if (authStatus !== AUTH_STATUS.AUTHENTICATED && settings?.allowFollow) {
+    if (!isNodeOwner && settings?.allowFollow) {
       buttons.push(<FollowButton key="follow" size={"xs"} />)
     }
 

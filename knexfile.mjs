@@ -1,25 +1,15 @@
 import "./config/index.mjs"
+
 export default {
-  development: {
-    client: "sqlite3",
-    connection: process.env.EPRESS_DATABASE_CONNECTION || {
-      filename: "./data/epress.sqlite",
-    },
-    useNullAsDefault: true,
-    migrations: {
-      directory: "./deploy/migrations",
-      tableName: "knex_migrations",
-    },
+  client: "sqlite3",
+  useNullAsDefault: true,
+  connection: process.env.EPRESS_DATABASE_CONNECTION,
+  migrations: {
+    directory: "./deploy/migrations",
+    loadExtensions: [".mjs", ".js"],
   },
-  production: {
-    client: "sqlite3",
-    connection: process.env.EPRESS_DATABASE_CONNECTION || {
-      filename: "./data/epress.sqlite",
-    },
-    useNullAsDefault: true,
-    migrations: {
-      directory: "./deploy/migrations",
-      tableName: "knex_migrations",
-    },
+  seeds: {
+    directory: "./deploy/seeds",
+    loadExtensions: [".mjs", ".js"],
   },
 }

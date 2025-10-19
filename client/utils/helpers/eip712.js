@@ -216,6 +216,49 @@ export const nodeProfileUpdateTypedData = (
   }
 }
 
+// 安装
+export const installTypedData = (node, settings, timestamp) => {
+  return {
+    domain: {
+      name: "epress world",
+      version: "1",
+      chainId: 1,
+    },
+    primaryType: "DATA",
+    types: {
+      EIP712Domain: [
+        { name: "name", type: "string" },
+        { name: "version", type: "string" },
+        { name: "chainId", type: "uint256" },
+      ],
+      DATA: [
+        { name: "node", type: "Node" },
+        { name: "settings", type: "Settings" },
+        { name: "timestamp", type: "uint256" },
+      ],
+      Node: [
+        { name: "avatar", type: "string" },
+        { name: "address", type: "string" },
+        { name: "url", type: "string" },
+        { name: "title", type: "string" },
+        { name: "description", type: "string" },
+      ],
+      Settings: [
+        { name: "defaultLanguage", type: "string" },
+        { name: "defaultTheme", type: "string" },
+        { name: "walletConnectProjectId", type: "string" },
+        { name: "mailTransport", type: "string" },
+        { name: "mailFrom", type: "string" },
+      ],
+    },
+    message: {
+      node,
+      settings,
+      timestamp,
+    },
+  }
+}
+
 // 使用钱包签名EIP-712数据
 export const signTypedData = async (walletClient, account, typedData) => {
   try {
