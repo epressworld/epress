@@ -24,9 +24,6 @@ export const visitorQuery = {
 
         // 获取当前节点（被关注方）
         const selfNode = await request.config.getSelfNode()
-        if (!selfNode) {
-          throw new Error("Self node not configured")
-        }
 
         // 查找关注者节点
         const visitor = await Node.query().findOne({

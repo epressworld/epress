@@ -4,7 +4,6 @@ import { Node } from "../../models/index.mjs"
 const router = new Router()
 
 router.get("/profile", async (request, reply) => {
-  // 使用 Fastify 内置的 request.log，自动包含请求上下文
   request.log.debug(
     {
       ip: request.ip,
@@ -42,19 +41,14 @@ router.get("/profile", async (request, reply) => {
       {
         error: error.message,
         stack: error.stack,
+        code: error.code,
+        errno: error.errno,
         success: false,
       },
       "Profile endpoint failed",
     )
-    if (error.message.includes("no such table")) {
-      reply.code(422).send({
-        error: "INSTALL_FIRST",
-        message:
-          "The application is not installed. Please complete the installation process before making requests.",
-      })
-    } else {
-      reply.code(500).send({ error: "INTERNAL_ERROR" })
-    }
+
+    reply.code(500).send({ error: "INTERNAL_ERROR" })
   }
 })
 

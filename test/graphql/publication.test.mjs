@@ -12,22 +12,15 @@ import {
   generateSignature,
   generateTestAccount,
   TEST_ACCOUNT_NODE_A,
+  TEST_ETHEREUM_ADDRESS_NODE_A,
 } from "../setup.mjs"
 
-// Helper function: Get JWT for node owner (deprecated - use t.context.createClientJwt instead)
-async function getAuthToken(app) {
-  const payload = { aud: "client", sub: TEST_ACCOUNT_NODE_A.address }
-  return app.jwt.sign(payload)
-}
-
 // Test case: Successfully create POST type publication
-test.serial(
-  "createPublication: Successfully create POST type publication",
-  async (t) => {
-    const { app, graphqlClient } = t.context
-    const authToken = await getAuthToken(app)
+test("createPublication: Successfully create POST type publication", async (t) => {
+  const { graphqlClient, createClientJwt } = t.context
+  const authToken = await createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
 
-    const query = `
+  const query = `
     mutation CreatePostPublication($input: CreatePublicationInput!) {
       createPublication(input: $input) {
         id
@@ -46,54 +39,50 @@ test.serial(
     }
   `
 
-    const input = {
-      type: "post",
-      body: "This is test post content for createPublication.",
-    }
+  const input = {
+    type: "post",
+    body: "This is test post content for createPublication.",
+  }
 
-    const { data, errors } = await graphqlClient.query(query, {
-      variables: { input },
-      headers: { Authorization: `Bearer ${authToken}` },
-    })
+  const { data, errors } = await graphqlClient.query(query, {
+    variables: { input },
+    headers: { Authorization: `Bearer ${authToken}` },
+  })
 
-    t.falsy(errors, "Should not have any GraphQL errors")
-    t.truthy(data.createPublication, "Should return created publication")
+  t.falsy(errors, "Should not have any GraphQL errors")
+  t.truthy(data.createPublication, "Should return created publication")
 
-    const publication = data.createPublication
-    t.falsy(publication.signature, "Publication should initially be unsigned")
-    t.truthy(publication.content_hash, "Publication should have content hash")
-    t.truthy(
-      publication.created_at,
-      "Publication should have created timestamp",
-    )
-    t.is(
-      publication.author.address,
-      TEST_ACCOUNT_NODE_A.address,
-      "Author should be authenticated node owner",
-    )
+  const publication = data.createPublication
+  t.falsy(publication.signature, "Publication should initially be unsigned")
+  t.truthy(publication.content_hash, "Publication should have content hash")
+  t.truthy(publication.created_at, "Publication should have created timestamp")
+  t.is(
+    publication.author.address,
+    TEST_ACCOUNT_NODE_A.address,
+    "Author should be authenticated node owner",
+  )
 
-    // Verify database records
-    const dbPublication = await Publication.query().findById(publication.id)
-    t.truthy(dbPublication, "Publication record should exist in database")
-    t.is(
-      dbPublication.content_hash,
-      publication.content_hash,
-      "Database content hash should match",
-    )
+  // Verify database records
+  const dbPublication = await Publication.query().findById(publication.id)
+  t.truthy(dbPublication, "Publication record should exist in database")
+  t.is(
+    dbPublication.content_hash,
+    publication.content_hash,
+    "Database content hash should match",
+  )
 
-    const dbContent = await Content.query().findOne({
-      content_hash: publication.content_hash,
-    })
-    t.truthy(dbContent, "Content record should exist in database")
-    t.is(dbContent.body, input.body, "Database content body should match")
-    t.is(dbContent.type, "POST", "Database content type should be post")
-  },
-)
+  const dbContent = await Content.query().findOne({
+    content_hash: publication.content_hash,
+  })
+  t.truthy(dbContent, "Content record should exist in database")
+  t.is(dbContent.body, input.body, "Database content body should match")
+  t.is(dbContent.type, "POST", "Database content type should be post")
+})
 
 // Test case: Successfully create FILE type publication
 test("createPublication: Successfully create FILE type publication", async (t) => {
-  const { app } = t.context
-  const authToken = await getAuthToken(app)
+  const { app, createClientJwt } = t.context
+  const authToken = await createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
 
   const fileName = "temp_content.png"
   const tempFilePath = `/tmp/${fileName}`
@@ -219,8 +208,8 @@ test("createPublication: Should return UNAUTHENTICATED when JWT not provided", a
 
 // Test case: Validation failure (POST type missing body)
 test("createPublication: POST type missing body should return VALIDATION_FAILED", async (t) => {
-  const { app, graphqlClient } = t.context
-  const authToken = await getAuthToken(app)
+  const { graphqlClient, createClientJwt } = t.context
+  const authToken = await createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
 
   const query = `
     mutation CreatePostPublication($input: CreatePublicationInput!) {
@@ -250,8 +239,8 @@ test("createPublication: POST type missing body should return VALIDATION_FAILED"
 
 // Test case: Validation failure (FILE type missing file)
 test("createPublication: FILE type missing file should return VALIDATION_FAILED", async (t) => {
-  const { app, graphqlClient } = t.context
-  const authToken = await getAuthToken(app)
+  const { graphqlClient, createClientJwt } = t.context
+  const authToken = await createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
 
   const query = `
     mutation CreateFilePublication($input: CreatePublicationInput!) {
@@ -281,8 +270,8 @@ test("createPublication: FILE type missing file should return VALIDATION_FAILED"
 
 // Test case: Validation failure (both body and file provided)
 test("createPublication: Providing both body and file should return VALIDATION_FAILED", async (t) => {
-  const { app } = t.context
-  const authToken = await getAuthToken(app)
+  const { app, createClientJwt } = t.context
+  const authToken = await createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
 
   const fileName = "temp_content.png"
   const tempFilePath = `/tmp/${fileName}`
@@ -383,7 +372,7 @@ async function createTestPublication(
 test.serial(
   "updatePublication: Should successfully update an unsigned post",
   async (t) => {
-    const { graphqlClient } = t.context
+    const { graphqlClient, createClientJwt } = t.context
     const selfNode = await Node.query().findOne({ is_self: true })
 
     // Prepare: Create an unsigned post using imported main account
@@ -392,7 +381,7 @@ test.serial(
       TEST_ACCOUNT_NODE_A,
       "Original content",
     )
-    const token = t.context.createClientJwt(selfNode.address)
+    const token = await createClientJwt(selfNode.address)
 
     const mutation = `
     mutation UpdatePublication($input: UpdatePublicationInput!) {
@@ -425,7 +414,7 @@ test.serial(
 test.serial(
   "updatePublication: Should successfully update an unsigned FILE publication",
   async (t) => {
-    const { graphqlClient } = t.context
+    const { graphqlClient, createClientJwt } = t.context
     const selfNode = await Node.query().findOne({ is_self: true })
 
     // Prepare: Create an unsigned FILE publication
@@ -449,7 +438,7 @@ test.serial(
       description: "Original file description",
     })
 
-    const token = t.context.createClientJwt(selfNode.address)
+    const token = await createClientJwt(selfNode.address)
 
     const mutation = `
     mutation UpdatePublication($input: UpdatePublicationInput!) {
@@ -490,7 +479,7 @@ test.serial(
 test.serial(
   "updatePublication: Attempting to update signed post should fail",
   async (t) => {
-    const { graphqlClient } = t.context
+    const { graphqlClient, createClientJwt } = t.context
     const selfNode = await Node.query().findOne({ is_self: true })
     const { publication } = await createTestPublication(
       selfNode,
@@ -498,7 +487,7 @@ test.serial(
       "Signed content",
       true,
     )
-    const token = t.context.createClientJwt(selfNode.address)
+    const token = await createClientJwt(selfNode.address)
 
     const mutation = `
     mutation UpdatePublication($input: UpdatePublicationInput!) {
@@ -526,9 +515,9 @@ test.serial(
 test.serial(
   "updatePublication: Attempting to update others post should fail",
   async (t) => {
-    const { graphqlClient } = t.context
+    const { graphqlClient, createClientJwt } = t.context
     const selfNode = await Node.query().findOne({ is_self: true })
-    const token = t.context.createClientJwt(selfNode.address)
+    const token = await createClientJwt(selfNode.address)
 
     // Prepare: Create a complete "other node" and its signed post
     const otherAccount = generateTestAccount()
@@ -596,9 +585,8 @@ test("updatePublication: Should fail when unauthenticated", async (t) => {
 })
 
 test("updatePublication: Updating non-existent post should fail", async (t) => {
-  const { graphqlClient } = t.context
-  const selfNode = await Node.query().findOne({ is_self: true })
-  const token = t.context.createClientJwt(selfNode.address)
+  const { graphqlClient, selfNode, createClientJwt } = t.context
+  const token = await createClientJwt(selfNode.address)
 
   const mutation = `
     mutation UpdatePublication($input: UpdatePublicationInput!) {
@@ -623,8 +611,8 @@ test("updatePublication: Updating non-existent post should fail", async (t) => {
 test.serial(
   "destroyPublication: Success path - Owner should be able to delete own unsigned publication",
   async (t) => {
-    const { graphqlClient, selfNode, createJwt } = t.context
-    const token = createJwt(selfNode.address)
+    const { graphqlClient, selfNode, createClientJwt } = t.context
+    const token = await createClientJwt(selfNode.address)
 
     // 1. Create an own unsigned publication
     const content = await Content.create({
@@ -662,8 +650,8 @@ test.serial(
 test.serial(
   "destroyPublication: Success path - Owner should be able to delete own signed publication",
   async (t) => {
-    const { graphqlClient, selfNode, createJwt } = t.context
-    const token = createJwt(selfNode.address)
+    const { graphqlClient, selfNode, createClientJwt } = t.context
+    const token = await createClientJwt(selfNode.address)
 
     // 1. Create an own signed publication
     const content = await Content.create({
@@ -701,8 +689,9 @@ test.serial(
 test.serial(
   "destroyPublication: Success path - Owner should be able to delete synced publication copy from other node",
   async (t) => {
-    const { graphqlClient, selfNode, otherUserNode, createJwt } = t.context
-    const token = createJwt(selfNode.address)
+    const { graphqlClient, selfNode, otherUserNode, createClientJwt } =
+      t.context
+    const token = await createClientJwt(selfNode.address)
 
     // 1. Create a publication belonging to other node (simulate synced copy)
     const content = await Content.create({
@@ -765,8 +754,8 @@ test("destroyPublication: Failure path - Unauthenticated user cannot delete", as
 })
 
 test("destroyPublication: Failure path - Deleting non-existent publication should return NOT_FOUND", async (t) => {
-  const { graphqlClient, selfNode, createJwt } = t.context
-  const token = createJwt(selfNode.address)
+  const { graphqlClient, selfNode, createClientJwt } = t.context
+  const token = await createClientJwt(selfNode.address)
   const nonExistentId = "999999"
   const mutation = `mutation DestroyPublication($id: ID!) { destroyPublication(id: $id) { id } }`
 
@@ -783,8 +772,8 @@ test("signPublication: Success path - should sign and push content to all follow
   // 清理之前的 nock 状态
   nock.cleanAll()
 
-  const { graphqlClient, selfNode, otherUserNode, createJwt } = t.context
-  const token = createJwt(selfNode.address)
+  const { graphqlClient, selfNode, otherUserNode, createClientJwt } = t.context
+  const token = await createClientJwt(selfNode.address)
 
   // 1. Setup: Make otherUserNode a follower of selfNode
   await Connection.query().insert({
@@ -883,8 +872,9 @@ test("signPublication: Success path - should sign and push content to all follow
 test.serial(
   "signPublication: Failure path - should fail and not push if publication is already signed",
   async (t) => {
-    const { graphqlClient, selfNode, otherUserNode, createJwt } = t.context
-    const token = createJwt(selfNode.address)
+    const { graphqlClient, selfNode, otherUserNode, createClientJwt } =
+      t.context
+    const token = await createClientJwt(selfNode.address)
 
     // 1. Setup: Create a signed publication
     const { publication } = await createTestPublication(
@@ -932,8 +922,8 @@ test.serial(
 test.serial(
   "signPublication: Failure path - should fail if signature does not match content or author",
   async (t) => {
-    const { graphqlClient, selfNode, createJwt } = t.context
-    const token = createJwt(selfNode.address)
+    const { graphqlClient, selfNode, createClientJwt } = t.context
+    const token = await createClientJwt(selfNode.address)
     const { content, publication } = await createTestPublication(
       selfNode,
       TEST_ACCOUNT_NODE_A,
@@ -983,12 +973,10 @@ test.serial(
 
 // Test integration token permissions for publication operations
 test("Success: createPublication with integration token should work", async (t) => {
-  const { graphqlClient } = t.context
+  const { graphqlClient, createIntegrationJwt } = t.context
 
   // 使用 integration token 创建发布内容
-  const integrationToken = t.context.createIntegrationJwt([
-    "create:publications",
-  ])
+  const integrationToken = await createIntegrationJwt(["create:publications"])
 
   const content = await Content.create({
     type: "POST",
@@ -1027,12 +1015,10 @@ test("Success: createPublication with integration token should work", async (t) 
 })
 
 test("Success: updatePublication with integration token should work", async (t) => {
-  const { graphqlClient } = t.context
+  const { graphqlClient, createIntegrationJwt } = t.context
 
   // 使用 integration token 更新发布内容
-  const integrationToken = t.context.createIntegrationJwt([
-    "update:publications",
-  ])
+  const integrationToken = await createIntegrationJwt(["update:publications"])
 
   // 先创建一个发布内容
   const content = await Content.create({
@@ -1075,12 +1061,10 @@ test("Success: updatePublication with integration token should work", async (t) 
 })
 
 test("Success: destroyPublication with integration token should work", async (t) => {
-  const { graphqlClient } = t.context
+  const { graphqlClient, createIntegrationJwt } = t.context
 
   // 使用 integration token 删除发布内容
-  const integrationToken = t.context.createIntegrationJwt([
-    "delete:publications",
-  ])
+  const integrationToken = await createIntegrationJwt(["delete:publications"])
 
   // 先创建一个发布内容
   const content = await Content.create({

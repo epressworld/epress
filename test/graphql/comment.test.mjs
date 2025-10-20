@@ -24,7 +24,7 @@ test.beforeEach(async (t) => {
   await Setting.query().where({ key: "allow_comment" }).delete()
 
   // Create a virtual Publication for commenting
-  const selfNode = await Node.query().findOne({ is_self: true })
+  const selfNode = await Node.getSelf()
   const uniqueBody = `Test content for comment ${Date.now()}-${Math.random()}.`
   const content = await Content.create({ type: "post", body: uniqueBody })
   testPublication = await Publication.query().insert({
@@ -646,7 +646,7 @@ test("createComment: ETHEREUM authentication but invalid address format should r
 test.serial(
   "confirmComment: should confirm EMAIL authenticated comment with a valid token",
   async (t) => {
-    const { graphqlClient, publicationId } = t.context
+    const { graphqlClient, publicationId, createCommentJwt } = t.context
 
     // 1. Call createComment and request the temporary verificationToken field
     const createMutation = `
@@ -671,7 +671,7 @@ test.serial(
     // Ensure comment creation was successful before proceeding
     t.falsy(createErrors, "Comment creation should not have errors")
     const commentId = createData.createComment.id
-    const token = await t.context.createCommentJwt(commentId, "confirm")
+    const token = await createCommentJwt(commentId, "confirm")
 
     // 2. Call the verifyCommentEmail mutation with the retrieved token
     const verifyMutation = `
@@ -924,7 +924,7 @@ test.serial(
 test.serial(
   "confirmCommentDeletion: EMAIL auth should delete comment with valid token",
   async (t) => {
-    const { graphqlClient } = t.context
+    const { graphqlClient, createCommentJwt } = t.context
     const testEmail = "confirm_delete_email@example.com"
     const createdComment = await createTestComment(
       t,
@@ -944,7 +944,7 @@ test.serial(
     })
 
     // Manually generate the token as if it came from the email link
-    const token = await t.context.createCommentJwt(
+    const token = await createCommentJwt(
       createdComment.id,
       "destroy",
       testEmail,
@@ -1207,9 +1207,9 @@ test("confirmCommentDeletion: should return INVALID_SIGNATURE for invalid token"
 
 // Test Case: confirmCommentDeletion - Token for non-existent comment
 test("confirmCommentDeletion: should return NOT_FOUND for token of non-existent comment", async (t) => {
-  const { graphqlClient } = t.context
+  const { graphqlClient, createCommentJwt } = t.context
   const nonExistentCommentId = 99999
-  const token = await t.context.createCommentJwt(
+  const token = await createCommentJwt(
     nonExistentCommentId,
     "destroy",
     "test@example.com",
@@ -1345,8 +1345,7 @@ test.serial(
 test.serial(
   "confirmComment: comment_count should auto-increase when confirming email authenticated comment",
   async (t) => {
-    const { graphqlClient } = t.context
-    const { testPublication } = t.context
+    const { graphqlClient, testPublication, createCommentJwt } = t.context
 
     // First create an email authenticated comment (status PENDING)
     const createMutation = `
@@ -1391,10 +1390,7 @@ test.serial(
     )
 
     // Generate confirmation token
-    const token = await t.context.createCommentJwt(
-      createData.createComment.id,
-      "confirm",
-    )
+    const token = await createCommentJwt(createData.createComment.id, "confirm")
 
     // Confirm comment
     const confirmMutation = `
@@ -1441,8 +1437,7 @@ test.serial(
 test.serial(
   "confirmCommentDeletion: comment_count should auto-decrease when deleting email authenticated comment",
   async (t) => {
-    const { graphqlClient } = t.context
-    const { testPublication } = t.context
+    const { graphqlClient, createCommentJwt, testPublication } = t.context
 
     // First create an email authenticated comment and confirm it
     const createMutation = `
@@ -1470,7 +1465,7 @@ test.serial(
     })
 
     // Confirm comment
-    const confirmToken = await t.context.createCommentJwt(
+    const confirmToken = await createCommentJwt(
       createData.createComment.id,
       "confirm",
     )
@@ -1498,7 +1493,7 @@ test.serial(
     )
 
     // Generate deletion token
-    const deleteToken = await t.context.createCommentJwt(
+    const deleteToken = await createCommentJwt(
       createData.createComment.id,
       "destroy",
       "delete@example.com",

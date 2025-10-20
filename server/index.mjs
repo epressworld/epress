@@ -62,6 +62,28 @@ export default async function () {
 
   // Decorate the server instance with the start time
   server.decorate("serverStartedAt", serverStartedAt)
+  server.addHook("onRequest", async (request) => {
+    // Initialize config cache for this request
+    request.config = {
+      _cache: {},
+      async getSelfNode() {
+        if (!this._cache.selfNode) {
+          const selfNode = await Node.getSelf()
+          if (!selfNode) {
+            throw new Error("Self node not found")
+          }
+          this._cache.selfNode = selfNode
+        }
+        return this._cache.selfNode
+      },
+      async getSetting(key, defaultValue) {
+        if (!(key in this._cache)) {
+          this._cache[key] = await Setting.get(key, defaultValue)
+        }
+        return this._cache[key]
+      },
+    }
+  })
 
   // 使用 Fastify 内置的 server.log
   server.log.info(
@@ -79,44 +101,16 @@ export default async function () {
   server.register(mercuriusUpload)
 
   // Get JWT secret from database (or use temporary for pre-install)
-  const jwtSecret = await Setting.get("jwt_secret")
-  const selfNode = await Node.getSelf()
 
   // Register JWT plugin with secret from database or temporary secret
   server.register(jwt, {
-    secret: jwtSecret || "temporary-secret-for-pre-install-mode",
-    sign: selfNode
-      ? {
-          iss: selfNode.address,
-        }
-      : undefined,
-    verify: selfNode
-      ? {
-          allowedIss: selfNode.address,
-        }
-      : undefined,
+    secret: async () => {
+      return await Setting.get("jwt_secret")
+    },
   })
 
   // Decorate request with config cache to avoid repeated database queries
   server.decorateRequest("config", null)
-  server.addHook("onRequest", async (request) => {
-    // Initialize config cache for this request
-    request.config = {
-      _cache: {},
-      async getSelfNode() {
-        if (!this._cache.selfNode) {
-          this._cache.selfNode = await Node.getSelf()
-        }
-        return this._cache.selfNode
-      },
-      async getSetting(key, defaultValue) {
-        if (!(key in this._cache)) {
-          this._cache[key] = await Setting.get(key, defaultValue)
-        }
-        return this._cache[key]
-      },
-    }
-  })
 
   // Decorate request with permission checking method
   server.decorateRequest("cani", function (permission) {
@@ -153,8 +147,8 @@ export default async function () {
 
     // Check if installed for GraphQL routes only
     if (request.url.startsWith("/api/graphql")) {
-      const isInstalled = await Node.isInstalled()
-      if (!isInstalled) {
+      const selfNode = await request.config.getSelfNode()
+      if (!selfNode) {
         return reply.code(503).send({
           error: "NOT_INSTALLED",
           message:
@@ -167,16 +161,18 @@ export default async function () {
   // Add preHandler hook for JWT verification
   server.addHook("preHandler", async (request) => {
     try {
+      const selfNode = await request.config.getSelfNode()
       request.log.debug(
         { headers: request.headers, url: request.url },
         "request headers & url",
       )
-      await request.jwtVerify()
+      await request.jwtVerify({
+        allowedIss: selfNode.address,
+      })
       request.log.debug({ user: request.user }, "jwtVerify user successfully")
 
       // 首先检查 sub 是否是节点所有者地址
       const userSub = request.user?.sub
-      const selfNode = await request.config.getSelfNode()
       const nodeOwnerAddress = selfNode?.address
 
       if (request.user && nodeOwnerAddress && userSub !== nodeOwnerAddress) {

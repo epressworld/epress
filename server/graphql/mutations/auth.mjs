@@ -2,7 +2,6 @@ import { GraphQLError } from "graphql"
 import mercurius from "mercurius"
 import { SiweMessage } from "siwe"
 import { graphql } from "swiftify"
-import { Node } from "../../models/index.mjs" // 移除 Token 导入
 
 const { ErrorWithProps } = mercurius
 
@@ -15,6 +14,7 @@ const authMutations = {
     },
     resolve: async (_parent, { message, signature }, context) => {
       const { request } = context
+      const _selfNode = await request.config.getSelfNode()
 
       const startTime = Date.now()
 
@@ -108,7 +108,7 @@ const authMutations = {
         // --- END NEW ---
 
         // --- 修正后的步骤 4: 验证签名者是否为本节点所有者 ---
-        const selfNode = await Node.query().findOne({ is_self: true })
+        const selfNode = await request.config.getSelfNode()
         if (!selfNode) {
           request.log.error("Self node not configured")
           throw new ErrorWithProps(
@@ -142,6 +142,7 @@ const authMutations = {
           {
             aud: "client",
             sub: address,
+            iss: selfNode.address,
           },
           { expiresIn: jwtExpiresIn },
         )
@@ -243,6 +244,7 @@ const authMutations = {
         {
           aud: "integration",
           sub: selfNode.address,
+          iss: selfNode.address,
           scope: scope,
         },
         { expiresIn },

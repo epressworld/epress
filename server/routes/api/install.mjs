@@ -1,3 +1,6 @@
+import { constants } from "node:fs"
+import { access, readFile, writeFile } from "node:fs/promises"
+import path from "node:path"
 import { Router } from "swiftify"
 import { getAddress, verifyTypedData } from "viem"
 import { Model, Node } from "../../models/index.mjs"
@@ -6,6 +9,59 @@ const router = new Router()
 
 // 步骤常量，用于错误跟踪
 const INSTALL_STEPS = ["preCheck", "initialSchema", "initialData"]
+
+const INSTALL_LOCK_FILE = path.resolve(process.cwd(), "./data/.INSTALL_LOCK")
+
+/**
+ * 检查安装锁文件是否存在
+ * @returns {Promise<boolean>}
+ */
+async function checkInstallLock() {
+  try {
+    await access(INSTALL_LOCK_FILE, constants.F_OK)
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * 写入安装锁文件
+ * @throws {Error} 如果写入失败
+ */
+async function writeInstallLock() {
+  try {
+    const lockData = {
+      installedAt: new Date().toISOString(),
+    }
+    await writeFile(
+      INSTALL_LOCK_FILE,
+      JSON.stringify(lockData, null, 2),
+      "utf8",
+    )
+    console.log("INSTALL_LOCK file written successfully:", lockData)
+  } catch (error) {
+    console.error("Error writing INSTALL_LOCK file:", error)
+    throw new Error(`Failed to write install lock file: ${error.message}`)
+  }
+}
+
+/**
+ * 读取安装锁文件内容
+ * @returns {Promise<object|null>}
+ */
+async function getInstallLock() {
+  try {
+    const content = await readFile(INSTALL_LOCK_FILE, "utf8")
+    return JSON.parse(content)
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      return null
+    }
+    console.error("Error reading INSTALL_LOCK file:", error)
+    return null
+  }
+}
 
 /**
  * 自定义安装错误类
@@ -197,13 +253,41 @@ async function runDatabaseInstall(knex, data, log) {
 }
 
 /**
- * 主路由：执行安装
+ * GET /api/install
+ * 检查系统是否已安装
+ */
+router.get("/install", async (request, reply) => {
+  try {
+    const isInstalled = await checkInstallLock()
+
+    if (isInstalled) {
+      const lockData = await getInstallLock()
+      return reply.code(200).send({
+        installed: true,
+        installedAt: lockData?.installedAt || null,
+      })
+    }
+
+    return reply.code(200).send({
+      installed: false,
+      installedAt: null,
+    })
+  } catch (error) {
+    request.log.error("Error checking install status:", error)
+    return reply.code(500).send({
+      error: "Failed to check installation status",
+    })
+  }
+})
+
+/**
  * POST /api/install
+ * 主路由：执行安装
  */
 router.post("/install", async (request, reply) => {
   try {
     // --- 步骤 1: 检查是否已安装 (preCheck) ---
-    const isInstalled = await Node.isInstalled()
+    const isInstalled = await checkInstallLock()
     if (isInstalled) {
       throw new InstallError(
         "Installation attempted but system is already installed",
@@ -235,9 +319,21 @@ router.post("/install", async (request, reply) => {
       request.log,
     )
 
-    // --- 步骤 4: 成功 ---
+    // --- 步骤 4: 写入安装锁文件 ---
+    try {
+      await writeInstallLock()
+    } catch (lockError) {
+      // 如果写入锁文件失败，记录警告但不回滚（数据库已成功初始化）
+      request.log.warn(
+        "Installation completed but failed to write lock file:",
+        lockError.message,
+      )
+    }
+
+    // --- 步骤 5: 成功 ---
     request.log.info("Installation completed successfully")
     const _node = await Node.query().findOne({ is_self: true })
+
     reply.send({ result, node: _node })
   } catch (error) {
     // 统一的错误处理

@@ -24,8 +24,4 @@ export const appConfig = validateInfrastructureConfig()
 
 // Export configuration descriptions (for documentation generation)
 // Export validation functions (for testing)
-export {
-  getConfigDescription,
-  validateConfig,
-  validateInfrastructureConfig,
-} from "./validation.mjs"
+export { validateInfrastructureConfig } from "./validation.mjs"

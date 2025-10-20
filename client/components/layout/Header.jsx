@@ -37,7 +37,286 @@ import { useOnlineVisitors } from "@/hooks/data"
 import { useIntl } from "@/hooks/utils"
 import { ConnectWalletButton, Link, NodeAvatar, SearchDialog } from "../ui"
 
+// 1. 节点信息组件 (左侧)
+// 负责显示头像、标题、描述，并处理加载和错误状态
+const HeaderNodeInfo = ({
+  profile,
+  settings,
+  isLoading,
+  error,
+  isAddressOnline,
+  t,
+}) => {
+  return (
+    <HStack gap={4} align="center" flex="1" minW={0}>
+      <Link href="/" _hover={{ textDecoration: "none" }}>
+        <Box position="relative">
+          <NodeAvatar
+            node={profile}
+            size="lg"
+            className="header-avatar"
+            cursor="pointer"
+          />
+          {/* 节点所有者在线状态指示器 */}
+          {profile.address && isAddressOnline(profile.address) && (
+            <Float placement="bottom-end" offsetX="1" offsetY="1">
+              <Circle
+                bg="green.500"
+                size="12px"
+                outline="0.2em solid"
+                outlineColor="bg"
+              />
+            </Float>
+          )}
+        </Box>
+      </Link>
+
+      <VStack gap={0} align="start" flex="1" minW={0} maxW="100%">
+        {isLoading ? (
+          <Skeleton height="24px" width="60%" />
+        ) : error ? (
+          <VStack align="start" gap={1} w="full">
+            <Text size="sm" color="red.500" fontWeight="medium">
+              Error loading node data
+            </Text>
+            <Text size="xs" color="red.400" noOfLines={1}>
+              {error.message || "Unknown error"}
+            </Text>
+          </VStack>
+        ) : (
+          <HStack gap={2} align="center" w="full">
+            <Link href="/" _hover={{ textDecoration: "none" }}>
+              <Heading
+                size="md"
+                className="header-title"
+                noOfLines={1}
+                cursor="pointer"
+                _hover={{ color: "orange.500" }}
+                transition="color 0.2s"
+              >
+                {profile.title || "Node"}
+              </Heading>
+            </Link>
+            {settings?.enableRSS && (
+              <Link
+                href="/feed"
+                target="_blank"
+                rel="noopener noreferrer"
+                title={t("common.rssFeed")}
+                color="orange.500"
+                _hover={{ color: "orange.600" }}
+                transition="color 0.2s"
+              >
+                <LuRss size={18} />
+              </Link>
+            )}
+          </HStack>
+        )}
+        {isLoading ? (
+          <Skeleton height="16px" width="80%" mt="4px" />
+        ) : error ? (
+          <Text size="xs" color="red.300" noOfLines={1} w="full">
+            Check console for details
+          </Text>
+        ) : (
+          <Text
+            size="sm"
+            color={"gray.600"}
+            _dark={{ color: "gray.300" }}
+            className="header-description"
+            noOfLines={1}
+            w="full"
+            overflow="hidden"
+            textOverflow="ellipsis"
+            whiteSpace="nowrap"
+          >
+            {profile.description || "Node description"}
+          </Text>
+        )}
+      </VStack>
+    </HStack>
+  )
+}
+
+// 2. 操作按钮组件 (右侧)
+// 负责显示连接钱包、关注、登录、登出、设置等按钮
+// 保持了与原版 renderButtons 完全一致的逻辑，以确保 'isNodeOwner' 和 'authStatus' 的渲染行为不变
+const HeaderActions = ({
+  authStatus,
+  isNodeOwner,
+  login,
+  loginState,
+  logout,
+  settings,
+  openSettings,
+  useMenu,
+  t,
+}) => {
+  const buttons = []
+
+  // 添加ConnectWalletButton
+  buttons.push(<ConnectWalletButton key="connect-wallet" />)
+
+  // 根据认证状态显示按钮(只有节点所有者需要登录)
+  switch (authStatus) {
+    case AUTH_STATUS.UNAUTHENTICATED:
+      // 未认证时,显示登录按钮(需要钱包连接)
+      // isNodeOwner 异步加载为 true 后，此按钮才会显示，符合原逻辑
+      if (isNodeOwner) {
+        buttons.push(
+          <Button
+            key="login"
+            size="xs"
+            onClick={login}
+            loading={loginState?.loading}
+            colorPalette="orange"
+          >
+            <LuLogIn /> {t("auth.login")}
+          </Button>,
+        )
+      } else {
+        if (settings?.allowFollow) {
+          buttons.push(<FollowButton key="follow" size={"xs"} />)
+        }
+      }
+      break
+
+    case AUTH_STATUS.AUTHENTICATED:
+      // 已认证时,显示设置和登出按钮
+      if (useMenu) {
+        // 小屏幕使用Menu
+        buttons.push(
+          <Menu.Root key="user-menu">
+            <Menu.Trigger asChild>
+              <Button size="xs" variant="subtle">
+                <LuEllipsis />
+              </Button>
+            </Menu.Trigger>
+            <Portal>
+              <Menu.Positioner>
+                <Menu.Content>
+                  <Menu.Item value="settings" onClick={openSettings}>
+                    <LuSettings />
+                    {t("auth.settings")}
+                  </Menu.Item>
+                  <Menu.Item value="logout" onClick={logout}>
+                    <LuLogOut />
+                    {t("auth.logout")}
+                  </Menu.Item>
+                </Menu.Content>
+              </Menu.Positioner>
+            </Portal>
+          </Menu.Root>,
+        )
+      } else {
+        // 大屏幕使用独立按钮
+        buttons.push(
+          <Button
+            key="settings"
+            size="xs"
+            onClick={openSettings}
+            variant="subtle"
+          >
+            <LuSettings /> {t("auth.settings")}
+          </Button>,
+        )
+        buttons.push(
+          <Button key="logout" size="xs" onClick={logout} variant="outline">
+            <LuLogOut /> {t("auth.logout")}
+          </Button>,
+        )
+      }
+      break
+
+    default:
+      // 加载中时且不是节点所有者，显示FollowButton
+      if (settings?.allowFollow && !isNodeOwner) {
+        buttons.push(<FollowButton key="follow" size={"xs"} />)
+      }
+      break
+  }
+
+  return (
+    <HStack gap={useMenu ? 1 : 2} className="header-actions" flexShrink={0}>
+      {buttons}
+    </HStack>
+  )
+}
+
+// 3. 导航Tabs组件
+// 负责显示 "内容" 和 "连接" 标签页，以及搜索按钮，并处理滚动隐藏动画
+const HeaderTabs = ({ shouldShowTabs, currentTab, router, t, openSearch }) => {
+  // 标签点击处理
+  const handleTabClick = useCallback(
+    (path) => {
+      router.push(path)
+    },
+    [router],
+  )
+
+  return (
+    <motion.div
+      initial={{ y: 0 }}
+      animate={{
+        y: shouldShowTabs ? 0 : -60, // 向上移动60px，被Header遮住
+      }}
+      transition={{
+        duration: 0.3,
+        ease: "easeInOut",
+      }}
+      style={{
+        position: "sticky",
+        top: "80px", // Header的高度，让Tabs栏紧贴Header下方
+        zIndex: 999,
+        overflow: "hidden",
+      }}
+    >
+      <Box
+        bgColor={"rgba(237, 242, 247, 0.6)"}
+        borderBottom="1px solid"
+        borderColor="gray.200"
+        _dark={{
+          bgColor: "rgba(45, 55, 72, 0.6)",
+          borderColor: "gray.600",
+        }}
+        className="header-tabs"
+      >
+        <Container maxW="6xl">
+          <Tabs.Root value={currentTab}>
+            <Tabs.List>
+              <Tabs.Trigger
+                value="content"
+                className="header-tab-button"
+                onClick={() => handleTabClick("/publications")}
+              >
+                <LuFileText />
+                {t("navigation.content")}
+              </Tabs.Trigger>
+              <Tabs.Trigger
+                value="connections"
+                className="header-tab-button"
+                onClick={() => handleTabClick("/connections")}
+              >
+                <LuUsers />
+                {t("navigation.connections")}
+              </Tabs.Trigger>
+            </Tabs.List>
+          </Tabs.Root>
+          <Float placement={"middle-end"} offsetX={{ md: 12, base: 8 }}>
+            <Button key="search" size="xs" onClick={openSearch} variant="ghost">
+              <LuSearch />
+            </Button>
+          </Float>
+        </Container>
+      </Box>
+    </motion.div>
+  )
+}
+
+// 4. 主 Header 组件
+// 负责状态管理、数据获取和协调子组件
 export const Header = () => {
+  // --- Hooks: 数据获取 ---
   const {
     authStatus,
     isNodeOwner,
@@ -56,27 +335,48 @@ export const Header = () => {
   const { t } = useIntl()
   const { isAddressOnline } = useOnlineVisitors()
   const searchParams = useSearchParams()
+  const pathname = usePathname()
+  const router = useRouter()
+  const [{ y: scrollY }] = useWindowScroll()
+
+  // --- State: 对话框状态 ---
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const openSearch = useCallback(() => setIsSearchOpen(true), [])
+  const closeSearch = useCallback(() => setIsSearchOpen(false), [])
+
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const openSettings = useCallback(() => setIsSettingsOpen(true), [])
+  const closeSettings = useCallback(() => setIsSettingsOpen(false), [])
+
+  // --- Memos: 衍生状态计算 ---
+
+  // 搜索关键词
   const currentKeyword = searchParams.get("q") || ""
 
-  // 搜索对话框状态
-  const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const openSearch = () => setIsSearchOpen(true)
-  const closeSearch = () => setIsSearchOpen(false)
-
-  // 检测屏幕尺寸，决定是否使用Menu
+  // 响应式断点
   const useMenu = useBreakpointValue({
     base: true, // 移动端使用Menu
     sm: false, // 小屏幕及以上使用按钮
   })
 
-  // 使用 useMemo 稳定加载状态计算，避免不必要的重新渲染
-  // 只有在真正加载中且没有节点信息时才显示加载状态
+  // 节点加载状态 (避免在已有数据时仍显示加载)
   const isLoading = useMemo(
     () => nodeLoading && !profile.title,
     [nodeLoading, profile.title],
   )
 
-  // 监听错误状态，在控制台输出错误信息
+  // 滚动状态 (控制Tabs显隐)
+  const shouldShowTabs = scrollY < 100 // 滚动超过100px时开始隐藏
+
+  // 当前激活的Tab
+  const currentTab = useMemo(() => {
+    if (pathname.startsWith("/connections")) {
+      return "connections"
+    }
+    return "content"
+  }, [pathname])
+
+  // --- Effect: 错误日志 ---
   useEffect(() => {
     if (error && errorDetails.hasError) {
       console.error("Header: NodeContext error detected:", {
@@ -89,134 +389,17 @@ export const Header = () => {
     }
   }, [error, errorDetails, profile, isNodeOwner, authStatus])
 
-  const pathname = usePathname()
-  const router = useRouter()
-
-  // 滚动监听
-  const [{ y }] = useWindowScroll()
-
-  // 使用 useState 管理对话框状态
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-  const openSettings = () => setIsSettingsOpen(true)
-  const closeSettings = () => setIsSettingsOpen(false)
-
-  // 计算 Tabs 栏的显示状态
-  const shouldShowTabs = y < 100 // 滚动超过100px时开始隐藏
-
-  // 根据当前路径确定选中的 Tab，使用 useMemo 避免重复计算
-  const currentTab = useMemo(() => {
-    if (pathname.startsWith("/connections")) {
-      return "connections"
-    }
-    return "content"
-  }, [pathname])
-
-  // 渲染按钮组件的函数，使用 useCallback 避免重复创建
-  const renderButtons = useCallback(() => {
-    const buttons = []
-
-    // 添加ConnectWalletButton
-    buttons.push(<ConnectWalletButton key="connect-wallet" />)
-
-    // 如果未认证且允许关注,显示关注按钮
-    if (!isNodeOwner && settings?.allowFollow) {
-      buttons.push(<FollowButton key="follow" size={"xs"} />)
-    }
-
-    // 根据认证状态显示按钮(只有节点所有者需要登录)
-    switch (authStatus) {
-      case AUTH_STATUS.UNAUTHENTICATED:
-        // 未认证时,显示登录按钮(需要钱包连接)
-        if (isNodeOwner) {
-          buttons.push(
-            <Button
-              key="login"
-              size="xs"
-              onClick={login}
-              loading={loginState?.loading}
-              colorPalette="orange"
-            >
-              <LuLogIn /> {t("auth.login")}
-            </Button>,
-          )
-        }
-        break
-
-      case AUTH_STATUS.AUTHENTICATED:
-        // 已认证时,显示设置和登出按钮
-        if (useMenu) {
-          // 小屏幕使用Menu
-          buttons.push(
-            <Menu.Root key="user-menu">
-              <Menu.Trigger asChild>
-                <Button size="xs" variant="subtle">
-                  <LuEllipsis />
-                </Button>
-              </Menu.Trigger>
-              <Portal>
-                <Menu.Positioner>
-                  <Menu.Content>
-                    <Menu.Item value="settings" onClick={openSettings}>
-                      <LuSettings />
-                      {t("auth.settings")}
-                    </Menu.Item>
-                    <Menu.Item value="logout" onClick={logout}>
-                      <LuLogOut />
-                      {t("auth.logout")}
-                    </Menu.Item>
-                  </Menu.Content>
-                </Menu.Positioner>
-              </Portal>
-            </Menu.Root>,
-          )
-        } else {
-          // 大屏幕使用独立按钮
-          buttons.push(
-            <Button
-              key="settings"
-              size="xs"
-              onClick={openSettings}
-              variant="subtle"
-            >
-              <LuSettings /> {t("auth.settings")}
-            </Button>,
-          )
-          buttons.push(
-            <Button key="logout" size="xs" onClick={logout} variant="outline">
-              <LuLogOut /> {t("auth.logout")}
-            </Button>,
-          )
-        }
-        break
-
-      default:
-        // 加载中时，只显示ConnectWalletButton
-        break
-    }
-
-    return <HStack gap={useMenu ? 1 : 2}>{buttons}</HStack>
-  }, [
-    authStatus,
-    login,
-    logout,
-    openSettings,
-    useMenu,
-    settings?.allowFollow,
-    isWalletConnected,
-    loginState?.loading,
-    t,
-  ])
-
+  // --- Render ---
   return (
     <>
-      {/* 搜索对话框 */}
+      {/* 搜索对话框 (Portal) */}
       <SearchDialog
         isOpen={isSearchOpen}
         onClose={closeSearch}
         initialKeyword={currentKeyword}
       />
 
-      {/* Header 主要内容区域 */}
+      {/* 顶部主 Header 栏 */}
       <Box
         position="sticky"
         top={0}
@@ -236,172 +419,44 @@ export const Header = () => {
             py={4}
             className="header-main-content"
           >
-            {/* 左侧：头像和标题信息 */}
-            <HStack gap={4} align="center" flex="1" minW={0}>
-              <Link href="/" _hover={{ textDecoration: "none" }}>
-                <Box position="relative">
-                  <NodeAvatar
-                    node={profile}
-                    size="lg"
-                    className="header-avatar"
-                    cursor="pointer"
-                  />
-                  {/* 节点所有者在线状态指示器 */}
-                  {profile.address && isAddressOnline(profile.address) && (
-                    <Float placement="bottom-end" offsetX="1" offsetY="1">
-                      <Circle
-                        bg="green.500"
-                        size="12px"
-                        outline="0.2em solid"
-                        outlineColor="bg"
-                      />
-                    </Float>
-                  )}
-                </Box>
-              </Link>
-
-              <VStack gap={0} align="start" flex="1" minW={0} maxW="100%">
-                {isLoading ? (
-                  <Skeleton height="24px" width="60%" />
-                ) : error ? (
-                  <VStack align="start" gap={1} w="full">
-                    <Text size="sm" color="red.500" fontWeight="medium">
-                      Error loading node data
-                    </Text>
-                    <Text size="xs" color="red.400" noOfLines={1}>
-                      {error.message || "Unknown error"}
-                    </Text>
-                  </VStack>
-                ) : (
-                  <HStack gap={2} align="center" w="full">
-                    <Link href="/" _hover={{ textDecoration: "none" }}>
-                      <Heading
-                        size="md"
-                        className="header-title"
-                        noOfLines={1}
-                        cursor="pointer"
-                        _hover={{ color: "orange.500" }}
-                        transition="color 0.2s"
-                      >
-                        {profile.title || "Node"}
-                      </Heading>
-                    </Link>
-                    {settings?.enableRSS && (
-                      <Link
-                        href="/feed"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title={t("common.rssFeed")}
-                        color="orange.500"
-                        _hover={{ color: "orange.600" }}
-                        transition="color 0.2s"
-                      >
-                        <LuRss size={18} />
-                      </Link>
-                    )}
-                  </HStack>
-                )}
-                {isLoading ? (
-                  <Skeleton height="16px" width="80%" mt="4px" />
-                ) : error ? (
-                  <Text size="xs" color="red.300" noOfLines={1} w="full">
-                    Check console for details
-                  </Text>
-                ) : (
-                  <Text
-                    size="sm"
-                    color={"gray.600"}
-                    _dark={{ color: "gray.300" }}
-                    className="header-description"
-                    noOfLines={1}
-                    w="full"
-                    overflow="hidden"
-                    textOverflow="ellipsis"
-                    whiteSpace="nowrap"
-                  >
-                    {profile.description || "Node description"}
-                  </Text>
-                )}
-              </VStack>
-            </HStack>
+            {/* 左侧：节点信息 */}
+            <HeaderNodeInfo
+              profile={profile}
+              settings={settings}
+              isLoading={isLoading}
+              error={error}
+              errorDetails={errorDetails}
+              isAddressOnline={isAddressOnline}
+              t={t}
+            />
 
             {/* 右侧：操作按钮 */}
-            <HStack gap={2} className="header-actions" flexShrink={0}>
-              {renderButtons()}
-            </HStack>
+            <HeaderActions
+              authStatus={authStatus}
+              isNodeOwner={isNodeOwner}
+              isWalletConnected={isWalletConnected}
+              login={login}
+              loginState={loginState}
+              logout={logout}
+              settings={settings}
+              openSettings={openSettings}
+              useMenu={useMenu}
+              t={t}
+            />
           </HStack>
         </Container>
       </Box>
 
-      {/* Tabs 栏 - 独立的组件，带滚动动画 */}
-      <motion.div
-        initial={{ y: 0 }}
-        animate={{
-          y: shouldShowTabs ? 0 : -60, // 向上移动60px，被Header遮住
-        }}
-        transition={{
-          duration: 0.3,
-          ease: "easeInOut",
-        }}
-        style={{
-          position: "sticky",
-          top: "80px", // Header的高度，让Tabs栏紧贴Header下方
-          zIndex: 999,
-          overflow: "hidden",
-        }}
-      >
-        <Box
-          bgColor={"rgba(237, 242, 247, 0.6)"}
-          borderBottom="1px solid"
-          borderColor="gray.200"
-          _dark={{
-            bgColor: "rgba(45, 55, 72, 0.6)",
-            borderColor: "gray.600",
-          }}
-          className="header-tabs"
-        >
-          <Container maxW="6xl">
-            <Tabs.Root value={currentTab}>
-              <Tabs.List>
-                <Tabs.Trigger
-                  value="content"
-                  className="header-tab-button"
-                  onClick={() => {
-                    // Content tab clicked
-                    router.push("/publications")
-                  }}
-                >
-                  <LuFileText />
-                  {t("navigation.content")}
-                </Tabs.Trigger>
-                <Tabs.Trigger
-                  value="connections"
-                  className="header-tab-button"
-                  onClick={() => {
-                    // Connections tab clicked
-                    router.push("/connections")
-                  }}
-                >
-                  <LuUsers />
-                  {t("navigation.connections")}
-                </Tabs.Trigger>
-              </Tabs.List>
-            </Tabs.Root>
-            <Float placement={"middle-end"} offsetX={{ md: 12, base: 8 }}>
-              <Button
-                key="search"
-                size="xs"
-                onClick={openSearch}
-                variant="ghost"
-              >
-                <LuSearch />
-              </Button>
-            </Float>
-          </Container>
-        </Box>
-      </motion.div>
+      {/* 导航 Tabs 栏 (带动画) */}
+      <HeaderTabs
+        shouldShowTabs={shouldShowTabs}
+        currentTab={currentTab}
+        router={router}
+        t={t}
+        openSearch={openSearch}
+      />
 
-      {/* 设置对话框 */}
+      {/* 设置对话框 (Portal) */}
       <SettingsDialog isOpen={isSettingsOpen} onClose={closeSettings} />
     </>
   )

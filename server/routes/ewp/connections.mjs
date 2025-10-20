@@ -48,14 +48,8 @@ router.post("/connections", async (request, reply) => {
     }
 
     // Get self node's address first (Node B, the receiver)
-    const selfNode = await Node.query().findOne({ is_self: true })
+    const selfNode = await request.config.getSelfNode()
     const profileVersion = selfNode ? selfNode.profile_version : 0
-
-    if (!selfNode) {
-      // Self node not found
-      request.log.error("Self node not configured in POST /connections")
-      return reply.code(500).send({ error: "INTERNAL_ERROR" }) // Self node not configured
-    }
 
     try {
       const result = await verifyTypedData({

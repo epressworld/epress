@@ -81,9 +81,6 @@ router.get("/contents/:content_hash", async (request, reply) => {
     const { timestamp, thumb } = request.query
 
     const selfNode = await request.config.getSelfNode()
-    if (!selfNode) {
-      return reply.code(503).send({ error: "Node not configured" })
-    }
 
     let publicationQuery = Publication.query().where({
       content_hash,
