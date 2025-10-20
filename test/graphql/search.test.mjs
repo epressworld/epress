@@ -1010,7 +1010,7 @@ test("Success: search with very large first should handle gracefully", async (t)
 
 // Test integration token permissions for search
 test("Success: search PUBLICATION with integration token should return all publications", async (t) => {
-  const { graphqlClient } = t.context
+  const { graphqlClient, createIntegrationJwt } = t.context
 
   // 先插入一个非本节点的发布内容用于测试
   const otherNodeContent = await Content.create({
@@ -1025,9 +1025,7 @@ test("Success: search PUBLICATION with integration token should return all publi
   })
 
   // 使用 integration token 搜索发布内容
-  const integrationToken = t.context.createIntegrationJwt([
-    "search:publications",
-  ])
+  const integrationToken = await createIntegrationJwt(["search:publications"])
 
   const query = `
     query SearchPublications($first: Int) {
@@ -1069,7 +1067,7 @@ test("Success: search PUBLICATION with integration token should return all publi
 })
 
 test("Success: search COMMENT with integration token should return all comments", async (t) => {
-  const { graphqlClient } = t.context
+  const { graphqlClient, createIntegrationJwt } = t.context
 
   // 先插入一个非本节点的发布内容和评论用于测试
   const otherNodeContent = await Content.create({
@@ -1093,7 +1091,7 @@ test("Success: search COMMENT with integration token should return all comments"
   })
 
   // 使用 integration token 搜索评论
-  const integrationToken = t.context.createIntegrationJwt(["search:comments"])
+  const integrationToken = await createIntegrationJwt(["search:comments"])
 
   const query = `
     query SearchComments($first: Int, $publicationId: ID!) {

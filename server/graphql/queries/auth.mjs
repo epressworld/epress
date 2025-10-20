@@ -3,16 +3,15 @@ import mercurius from "mercurius"
 import { SiweMessage } from "siwe"
 import { graphql } from "swiftify"
 import { getAddress, isAddress } from "viem"
-import { Node } from "../../models/index.mjs"
 
 const { ErrorWithProps } = mercurius
 
 // Exported for testing purposes
-export function generateNonceJwt(app, address, expiresIn = "3m") {
+export async function generateNonceJwt({ app, address, expiresIn = "3m" }) {
   const actualNonce = crypto.randomBytes(32).toString("hex")
   // 使用 app.jwt 来签名，并返回 Base64 编码的 JWT
   return Buffer.from(
-    app.jwt.sign(
+    await app.jwt.sign(
       {
         aud: "nonce",
         sub: address,
@@ -40,13 +39,7 @@ const getSiweMessageQuery = {
           code: "VALIDATION_FAILED",
         })
       }
-      const selfNode = await Node.query().findOne({ is_self: true })
-      if (!selfNode) {
-        throw new ErrorWithProps(
-          "Self node not configured. Cannot generate SIWE message.",
-          { code: "INTERNAL_SERVER_ERROR" },
-        )
-      }
+      const selfNode = await request.config.getSelfNode()
 
       const siweMessage = new SiweMessage({
         domain: new URL(selfNode.url).hostname,
@@ -55,7 +48,10 @@ const getSiweMessageQuery = {
         uri: selfNode.url,
         version: "1",
         chainId: 1,
-        nonce: generateNonceJwt(context.app, address), // 调用新函数生成 Nonce
+        nonce: await generateNonceJwt({
+          app: context.app,
+          address,
+        }), // 调用新函数生成 Nonce
         issuedAt: new Date().toISOString(),
       })
 

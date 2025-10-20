@@ -6,6 +6,7 @@ import { TEST_ETHEREUM_ADDRESS_NODE_A } from "../setup.mjs"
 test("settings query should return settings data without mailTransport", async (t) => {
   const { graphqlClient } = t.context
   await Setting.set("mail_transport", "test")
+  await Setting.set("enableRSS", "true")
 
   const query = `
     query GetSettings {
@@ -36,7 +37,7 @@ test("settings query should return settings data without mailTransport", async (
 })
 
 test("settings query should return settings data with mailTransport", async (t) => {
-  const { graphqlClient } = t.context
+  const { graphqlClient, createClientJwt } = t.context
 
   await Setting.set("mail_transport", "test")
   const query = `
@@ -56,7 +57,7 @@ test("settings query should return settings data with mailTransport", async (t) 
 
   // Arrange: Get valid JWT for self node owner
   const ownerAddress = TEST_ETHEREUM_ADDRESS_NODE_A
-  const token = t.context.createClientJwt(ownerAddress)
+  const token = await createClientJwt(ownerAddress)
 
   const { data, errors } = await graphqlClient.query(query, {
     headers: {
@@ -76,11 +77,11 @@ test("settings query should return settings data with mailTransport", async (t) 
 
 // Test case 2: Successfully update settings
 test("updateSettings mutation should update a public setting with valid JWT", async (t) => {
-  const { graphqlClient } = t.context
+  const { graphqlClient, createClientJwt } = t.context
 
   // Arrange: Get valid JWT for self node owner
   const ownerAddress = TEST_ETHEREUM_ADDRESS_NODE_A
-  const token = t.context.createClientJwt(ownerAddress)
+  const token = await createClientJwt(ownerAddress)
 
   // Act: Send mutation to update enableRSS
   const mutation = `
@@ -125,11 +126,11 @@ test("updateSettings mutation should update a public setting with valid JWT", as
 
 // Test case 3: Successfully update another setting
 test("updateSettings mutation should update a private setting with valid JWT", async (t) => {
-  const { graphqlClient } = t.context
+  const { graphqlClient, createClientJwt } = t.context
 
   // Prepare: Get valid JWT for self node owner
   const ownerAddress = TEST_ETHEREUM_ADDRESS_NODE_A
-  const token = t.context.createClientJwt(ownerAddress)
+  const token = await createClientJwt(ownerAddress)
 
   // Execute: Send mutation to update someSecretKey
   const mutation = `
@@ -223,8 +224,8 @@ test("updateSettings mutation should return 401 Unauthorized with invalid JWT", 
 
 // Test case 6: Input type validation failure
 test("updateSettings mutation should return VALIDATION_FAILED for invalid input type", async (t) => {
-  const { graphqlClient } = t.context
-  const token = t.context.createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
+  const { graphqlClient, createClientJwt } = t.context
+  const token = await createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
 
   const mutation = `
     mutation UpdateSettings($input: UpdateSettingsInput!) {
@@ -257,8 +258,8 @@ test("updateSettings mutation should return VALIDATION_FAILED for invalid input 
 test.serial(
   "updateSettings mutation should update allowComment setting with valid JWT",
   async (t) => {
-    const { graphqlClient } = t.context
-    const token = t.context.createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
+    const { graphqlClient, createClientJwt } = t.context
+    const token = await createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
 
     const mutation = `
     mutation UpdateSettings($input: UpdateSettingsInput!) {

@@ -1,7 +1,12 @@
+import { constants } from "node:fs"
+import { access, unlink } from "node:fs/promises"
+import path from "node:path"
 import test from "ava"
 import { Model } from "swiftify"
 import { Node, Setting } from "../../../server/models/index.mjs"
 import { generateSignature, generateTestAccount } from "../../setup.mjs"
+
+const INSTALL_LOCK_FILE = path.resolve(process.cwd(), "./data/.INSTALL_LOCK")
 
 // Helper function to drop all tables for clean installation test
 const dropAllTables = async () => {
@@ -12,6 +17,28 @@ const dropAllTables = async () => {
   `)
   for (const table of tables) {
     await knex.schema.dropTableIfExists(table.name)
+  }
+}
+
+// Helper function to remove install lock file
+const removeInstallLock = async () => {
+  try {
+    await unlink(INSTALL_LOCK_FILE)
+  } catch (error) {
+    // Ignore if file doesn't exist
+    if (error.code !== "ENOENT") {
+      console.error("Error removing install lock:", error)
+    }
+  }
+}
+
+// Helper function to check if install lock exists
+const checkInstallLockExists = async () => {
+  try {
+    await access(INSTALL_LOCK_FILE, constants.F_OK)
+    return true
+  } catch {
+    return false
   }
 }
 
@@ -69,6 +96,80 @@ const createInstallTypedData = (node, settings, timestamp) => {
   }
 }
 
+// --- Test Suite: GET /api/install - Status Check ---
+
+test.serial(
+  "GET /api/install should return not installed when system is fresh",
+  async (t) => {
+    const { app } = t.context
+    await dropAllTables()
+    await removeInstallLock()
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/install",
+    })
+
+    t.is(response.statusCode, 200)
+    const body = response.json()
+    t.false(body.installed)
+    t.is(body.installedAt, null)
+  },
+)
+
+test.serial(
+  "GET /api/install should return installed status after successful installation",
+  async (t) => {
+    const { app } = t.context
+    await dropAllTables()
+    await removeInstallLock()
+
+    // First install the system
+    const testAccount = generateTestAccount()
+    const node = {
+      avatar: "",
+      address: testAccount.address,
+      url: "https://test.com",
+      title: "Test",
+      description: "",
+    }
+    const settings = {
+      defaultLanguage: "",
+      defaultTheme: "",
+      walletConnectProjectId: "",
+      mailTransport: "",
+      mailFrom: "",
+    }
+    const typedData = createInstallTypedData(
+      node,
+      settings,
+      getValidTimestamp(),
+    )
+    const signature = await generateSignature(
+      testAccount,
+      typedData,
+      "typedData",
+    )
+
+    await app.inject({
+      method: "POST",
+      url: "/api/install",
+      payload: { typedData, signature },
+    })
+
+    // Now check install status
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/install",
+    })
+
+    t.is(response.statusCode, 200)
+    const body = response.json()
+    t.true(body.installed)
+    t.truthy(body.installedAt)
+  },
+)
+
 // --- Test Suite: POST /install - Success Cases ---
 
 test.serial(
@@ -76,6 +177,7 @@ test.serial(
   async (t) => {
     const { app } = t.context
     await dropAllTables()
+    await removeInstallLock()
 
     const testAccount = generateTestAccount()
     const avatarDataUrl = generateValidAvatarDataUrl()
@@ -154,6 +256,10 @@ test.serial(
 
     const allowComment = await Setting.get("allow_comment")
     t.is(allowComment, "true")
+
+    // Verify install lock file was created
+    const lockExists = await checkInstallLockExists()
+    t.true(lockExists)
   },
 )
 
@@ -162,6 +268,7 @@ test.serial(
   async (t) => {
     const { app } = t.context
     await dropAllTables()
+    await removeInstallLock()
 
     const testAccount = generateTestAccount()
     const timestamp = getValidTimestamp()
@@ -211,15 +318,21 @@ test.serial(
     // Verify empty avatar is not saved
     const avatar = await Setting.get("avatar")
     t.falsy(avatar)
+
+    // Verify install lock file was created
+    const lockExists = await checkInstallLockExists()
+    t.true(lockExists)
   },
 )
 
-// --- Test Suite: Validation Errors ---
+// --- Test Suite: Install Lock File Tests ---
 
 test.serial(
-  "POST /install should return 500 when already installed",
+  "POST /install should return 500 when already installed (via lock file)",
   async (t) => {
     const { app } = t.context
+    await dropAllTables()
+    await removeInstallLock()
 
     const testAccount = generateTestAccount()
     const timestamp = getValidTimestamp()
@@ -247,14 +360,42 @@ test.serial(
       "typedData",
     )
 
-    const response = await app.inject({
+    // First installation should succeed
+    const firstResponse = await app.inject({
       method: "POST",
       url: "/api/install",
       payload: { typedData, signature },
     })
+    t.is(firstResponse.statusCode, 200)
 
-    t.is(response.statusCode, 500)
-    const body = response.json()
+    // Second installation attempt should fail
+    const testAccount2 = generateTestAccount()
+    const node2 = {
+      avatar: "",
+      address: testAccount2.address,
+      url: "https://test2.com",
+      title: "Test 2",
+      description: "",
+    }
+    const typedData2 = createInstallTypedData(
+      node2,
+      settings,
+      getValidTimestamp(),
+    )
+    const signature2 = await generateSignature(
+      testAccount2,
+      typedData2,
+      "typedData",
+    )
+
+    const secondResponse = await app.inject({
+      method: "POST",
+      url: "/api/install",
+      payload: { typedData: typedData2, signature: signature2 },
+    })
+
+    t.is(secondResponse.statusCode, 500)
+    const body = secondResponse.json()
     const preCheck = body.result.find((r) => r.step === "preCheck")
     t.false(preCheck.success)
     t.regex(preCheck.error, /already installed/i)
@@ -262,10 +403,62 @@ test.serial(
 )
 
 test.serial(
+  "POST /install should create lock file even if lock write fails (db should succeed)",
+  async (t) => {
+    const { app } = t.context
+    await dropAllTables()
+    await removeInstallLock()
+
+    const testAccount = generateTestAccount()
+    const node = {
+      avatar: "",
+      address: testAccount.address,
+      url: "https://test.com",
+      title: "Test",
+      description: "",
+    }
+    const settings = {
+      defaultLanguage: "",
+      defaultTheme: "",
+      walletConnectProjectId: "",
+      mailTransport: "",
+      mailFrom: "",
+    }
+    const typedData = createInstallTypedData(
+      node,
+      settings,
+      getValidTimestamp(),
+    )
+    const signature = await generateSignature(
+      testAccount,
+      typedData,
+      "typedData",
+    )
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/install",
+      payload: { typedData, signature },
+    })
+
+    // Installation should succeed even if lock file fails
+    t.is(response.statusCode, 200)
+
+    // Database should be initialized
+    const selfNode = await Node.query().findOne({ is_self: true })
+    t.truthy(selfNode)
+    t.is(selfNode.address, testAccount.address)
+  },
+)
+
+// --- Test Suite: Validation Errors ---
+
+test.serial(
   "POST /install should return 500 when typedData is missing",
   async (t) => {
     const { app } = t.context
     await dropAllTables()
+    await removeInstallLock()
 
     const response = await app.inject({
       method: "POST",
@@ -286,6 +479,7 @@ test.serial(
   async (t) => {
     const { app } = t.context
     await dropAllTables()
+    await removeInstallLock()
 
     const testAccount = generateTestAccount()
     const node = {
@@ -326,6 +520,7 @@ test.serial(
   async (t) => {
     const { app } = t.context
     await dropAllTables()
+    await removeInstallLock()
 
     const node = {
       avatar: "",
@@ -366,6 +561,7 @@ test.serial(
   async (t) => {
     const { app } = t.context
     await dropAllTables()
+    await removeInstallLock()
 
     const testAccount = generateTestAccount()
     const node = {
@@ -412,6 +608,7 @@ test.serial(
   async (t) => {
     const { app } = t.context
     await dropAllTables()
+    await removeInstallLock()
 
     const testAccount = generateTestAccount()
     const node = {
@@ -458,6 +655,7 @@ test.serial(
   async (t) => {
     const { app } = t.context
     await dropAllTables()
+    await removeInstallLock()
 
     const testAccount = generateTestAccount()
     const node = {
@@ -504,6 +702,7 @@ test.serial(
   async (t) => {
     const { app } = t.context
     await dropAllTables()
+    await removeInstallLock()
 
     const testAccount = generateTestAccount()
     const node = {
@@ -550,6 +749,7 @@ test.serial(
   async (t) => {
     const { app } = t.context
     await dropAllTables()
+    await removeInstallLock()
 
     const testAccount = generateTestAccount()
     const node = {
@@ -598,6 +798,7 @@ test.serial(
   async (t) => {
     const { app } = t.context
     await dropAllTables()
+    await removeInstallLock()
 
     const testAccount = generateTestAccount()
     const anotherAccount = generateTestAccount()
@@ -646,6 +847,7 @@ test.serial(
   async (t) => {
     const { app } = t.context
     await dropAllTables()
+    await removeInstallLock()
 
     const testAccount = generateTestAccount()
     const node = {
@@ -688,6 +890,7 @@ test.serial(
   async (t) => {
     const { app } = t.context
     await dropAllTables()
+    await removeInstallLock()
 
     const testAccount = generateTestAccount()
     const node = {
@@ -734,6 +937,7 @@ test.serial(
   async (t) => {
     const { app } = t.context
     await dropAllTables()
+    await removeInstallLock()
 
     const testAccount = generateTestAccount()
     const node = {
@@ -782,6 +986,7 @@ test.serial(
   async (t) => {
     const { app } = t.context
     await dropAllTables()
+    await removeInstallLock()
 
     const testAccount = generateTestAccount()
     const node = {
@@ -824,6 +1029,7 @@ test.serial(
   async (t) => {
     const { app } = t.context
     await dropAllTables()
+    await removeInstallLock()
 
     const testAccount1 = generateTestAccount()
     const node1 = {
@@ -861,6 +1067,7 @@ test.serial(
 
     // Clean up and install again
     await dropAllTables()
+    await removeInstallLock()
 
     const testAccount2 = generateTestAccount()
     const node2 = {
@@ -905,6 +1112,7 @@ test.serial(
   async (t) => {
     const { app } = t.context
     await dropAllTables()
+    await removeInstallLock()
 
     const testAccount = generateTestAccount()
     const node = {
@@ -947,6 +1155,7 @@ test.serial(
 test.serial("POST /install should report error steps correctly", async (t) => {
   const { app } = t.context
   await dropAllTables()
+  await removeInstallLock()
 
   const response = await app.inject({
     method: "POST",

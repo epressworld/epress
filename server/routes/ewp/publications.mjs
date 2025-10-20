@@ -1,5 +1,5 @@
 import { Router } from "swiftify"
-import { Node, Publication } from "../../models/index.mjs"
+import { Publication } from "../../models/index.mjs"
 
 const router = new Router()
 
@@ -21,10 +21,7 @@ router.get("/publications", async (request, reply) => {
     }
 
     // 3. 获取节点所有者信息
-    const selfNode = await Node.query().findOne({ is_self: true })
-    if (!selfNode) {
-      return reply.code(500).send({ error: "SELF_NODE_NOT_FOUND" })
-    }
+    const selfNode = await request.config.getSelfNode()
 
     // 4. 构建查询条件 - 只查询节点所有者的内容
     let query = Publication.query()

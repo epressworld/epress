@@ -180,11 +180,15 @@ test("signInWithEthereum: Invalid signature should return error", async (t) => {
 test("signInWithEthereum: Should reject an expired Nonce JWT", async (t) => {
   const { graphqlClient, app } = t.context
 
+  const selfNode = await Node.getSelf()
   // 1. Arrange: Manually construct a SIWE message with an expired Nonce
   // Directly call our exported function to generate a JWT that expired 1 second ago
-  const expiredNonce = generateNonceJwt(app, TEST_ACCOUNT_NODE_A.address, "-1s")
-  const selfNode = await Node.query().findOne({ is_self: true })
-
+  const expiredNonce = await generateNonceJwt({
+    app,
+    address: TEST_ACCOUNT_NODE_A.address,
+    iss: selfNode.address,
+    expiresIn: "-1s",
+  })
   const siweMessage = new SiweMessage({
     domain: new URL(selfNode.url).hostname,
     address: TEST_ACCOUNT_NODE_A.address,
@@ -256,10 +260,10 @@ test("signInWithEthereum: Should reject a malformed message string", async (t) =
 
 // Test case: generateIntegrationToken - Success path
 test("generateIntegrationToken: Should generate token with valid client JWT", async (t) => {
-  const { graphqlClient } = t.context
+  const { graphqlClient, createClientJwt } = t.context
 
   // 1. Get a valid client JWT directly
-  const clientJwt = t.context.createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
+  const clientJwt = await createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
 
   // 2. Test generateIntegrationToken
   const mutation = `
@@ -289,8 +293,12 @@ test("generateIntegrationToken: Should generate token with valid client JWT", as
 
   // 4. Verify the generated token
   try {
+    const selfNode = await Node.getSelf()
     const decodedToken = await t.context.app.jwt.verify(
       data.generateIntegrationToken,
+      {
+        allowedIss: selfNode.address,
+      },
     )
     t.is(
       decodedToken.aud,
@@ -345,7 +353,9 @@ test("generateIntegrationToken: Should fail with non-client JWT", async (t) => {
   const { graphqlClient } = t.context
 
   // Create an integration JWT (not client JWT)
-  const integrationJwt = t.context.createIntegrationJwt(["search:publications"])
+  const integrationJwt = await t.context.createIntegrationJwt([
+    "search:publications",
+  ])
 
   const mutation = `
     mutation GenerateIntegrationToken($scope: [String!]!) {

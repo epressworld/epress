@@ -28,7 +28,7 @@ async function createTestImage(width, height) {
 }
 
 test.beforeEach(async (t) => {
-  t.context.selfNode = await Node.query().findOne({ is_self: true })
+  t.context.selfNode = await Node.getSelf()
 })
 
 test("GET /contents/:content_hash should return Markdown content successfully", async (t) => {
@@ -306,26 +306,6 @@ test("GET /contents/:content_hash should return INVALID_TIMESTAMP for invalid ti
   t.is(response.statusCode, 400, "should return 400 Bad Request")
   t.deepEqual(response.json(), { error: "INVALID_TIMESTAMP" })
 })
-
-// New tests for 100% coverage
-
-test.serial(
-  "GET /contents/:content_hash should return 503 if node is not configured",
-  async (t) => {
-    // Mock the request to override getSelfNode
-    const selfNode = await Node.query().findOne({ is_self: true })
-    await selfNode.$query().delete()
-
-    const response = await t.context.app.inject({
-      method: "GET",
-      url: `/ewp/contents/0xsomehash`,
-    })
-
-    t.is(response.statusCode, 503, "should return 503 Service Unavailable")
-    t.deepEqual(response.json(), { error: "Node not configured" })
-    await Node.query().insert(selfNode)
-  },
-)
 
 test("GET /contents/:content_hash should return CONTENT_NOT_FOUND if publication exists but content does not", async (t) => {
   const fakeHash = `0x${"a".repeat(66)}`

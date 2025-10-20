@@ -53,17 +53,38 @@ export const viewport = {
 }
 
 export default async function RootLayout({ children }) {
-  const response = await fetch(`${process.env.EPRESS_API_URL}/ewp/profile`)
-  // 检查响应是否成功
-  if (!response.ok) {
-    if (response.status === 422) {
+  // 首先检查系统是否已安装
+  const installCheckResponse = await fetch(
+    `${process.env.EPRESS_API_URL}/api/install`,
+    {
+      cache: "no-store",
+    },
+  )
+
+  if (installCheckResponse.ok) {
+    const { installed } = await installCheckResponse.json()
+
+    // 如果未安装，重定向到安装页面
+    if (!installed) {
       redirect("/install")
-    } else {
-      throw new Error(`HTTP error! Status: ${response.status}`)
     }
+  } else {
+    console.error(
+      "Failed to check install status:",
+      installCheckResponse.status,
+    )
+    // 如果检查接口失败，尝试继续加载（可能是临时网络问题）
   }
 
-  // 解析 JSON 数据
+  // 获取 profile 信息
+  const response = await fetch(`${process.env.EPRESS_API_URL}/ewp/profile`, {
+    cache: "no-store",
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch profile: ${response.status}`)
+  }
+
   const profile = await response.json()
 
   // 直接查询 PAGE_DATA（会被缓存）

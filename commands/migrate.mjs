@@ -1,63 +1,10 @@
 import "../config/index.mjs"
-import { existsSync } from "node:fs"
-import { mkdir } from "node:fs/promises"
-import path from "node:path"
 import { fileURLToPath } from "node:url"
-import { Command, knexMigration, Model } from "swiftify"
-import * as modelsMap from "../server/models/index.mjs"
+import { Command } from "swiftify"
+import { Model } from "../server/models/index.mjs"
 
 function isMainModule(meta) {
   return process.argv[1] === fileURLToPath(meta.url)
-}
-
-export async function migrateDatabase(options = {}) {
-  const { drop = false } = options
-
-  // Ensure data directory exists
-  const dataDir = path.dirname(
-    process.env.DATABASE_PATH || "./data/icopilot.db",
-  )
-  if (!existsSync(dataDir)) {
-    console.log(`Creating data directory: ${dataDir}`)
-    await mkdir(dataDir, { recursive: true })
-  }
-
-  // Ensure database connection is established
-  if (!Model.knex()) {
-    throw new Error(
-      "Database connection not established. Please check your database configuration.",
-    )
-  }
-
-  // All models list
-  const models = Object.values(modelsMap)
-
-  console.log(`Starting database migration...`)
-  console.log(`Models to migrate: ${models.map((m) => m.tableName).join(", ")}`)
-
-  if (drop) {
-    console.log(`Dropping existing tables...`)
-  }
-
-  try {
-    await knexMigration(models, { drop })
-    console.log(`✅ Database migration completed successfully!`)
-
-    if (!drop) {
-      console.log(`Created tables:`)
-      models.forEach((model) => {
-        console.log(`  - ${model.tableName}`)
-      })
-    } else {
-      console.log(`Dropped tables:`)
-      models.forEach((model) => {
-        console.log(`  - ${model.tableName}`)
-      })
-    }
-  } catch (error) {
-    console.error(`❌ Database migration failed:`, error.message)
-    throw error
-  }
 }
 
 export class MigrateCommand extends Command {
@@ -66,27 +13,68 @@ export class MigrateCommand extends Command {
       optional: true,
       multiple: false,
       choices: ["upgrade", "rollback"],
-      description: "Migration action: rollback and upgrade database",
+      description: "Migration action: rollback or upgrade database",
       default: "upgrade",
     },
   }
 
   async action(action) {
     console.log(`🚀 Starting migration command: ${action}`)
+    console.log(`📅 Timestamp: ${new Date().toISOString()}`)
 
-    switch (action) {
-      case "rollback":
-        await Model.knex().migrate.rollback()
-        break
-      case "upgrade":
-        await Model.knex().migrate.latest()
-        break
-      default:
-        throw new Error(`Unknown migration action: ${action}`)
+    try {
+      let result
+      switch (action) {
+        case "rollback":
+          console.log("🔄 Initiating database rollback...")
+          result = await Model.knex().migrate.rollback()
+          console.log("📋 Rollback Results:")
+          this.logMigrationResult(result)
+          break
+
+        case "upgrade":
+          console.log("⬆️ Initiating database upgrade...")
+          result = await Model.knex().migrate.latest()
+          console.log("📋 Upgrade Results:")
+          this.logMigrationResult(result)
+          break
+
+        default:
+          throw new Error(`Unknown migration action: ${action}`)
+      }
+
+      console.log(`🎉 Migration command '${action}' completed successfully!`)
+    } catch (error) {
+      console.error(`❌ Migration command '${action}' failed!`)
+      console.error(`Error details: ${error.message}`)
+      throw error // Re-throw to maintain error handling
+    } finally {
+      console.log("🧹 Cleaning up database connection...")
+      await Model.knex()?.destroy()
+      console.log("🔌 Database connection closed.")
+    }
+  }
+
+  logMigrationResult(result) {
+    if (!result || !Array.isArray(result)) {
+      console.log("  No migrations were executed.")
+      return
     }
 
-    console.log(`🎉 Migration command '${action}' completed successfully!`)
-    Model.knex()?.destroy()
+    const [batchNo, migrations] = result
+
+    if (migrations.length === 0) {
+      console.log("  No migrations were executed, database is up to date.")
+      return
+    }
+
+    console.log(`  Batch Number: ${batchNo}`)
+    console.log(`  Total Migrations: ${migrations.length}`)
+    console.log("  Executed Migrations:")
+
+    migrations.forEach((migration, index) => {
+      console.log(`    ${index + 1}. ${migration}`)
+    })
   }
 }
 

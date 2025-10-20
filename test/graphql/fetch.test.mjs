@@ -324,7 +324,7 @@ test("Error: fetch with invalid type should return GraphQL error", async (t) => 
 })
 
 test("Success: fetch PUBLICATION with integration token should return any publication", async (t) => {
-  const { graphqlClient } = t.context
+  const { graphqlClient, createIntegrationJwt } = t.context
 
   // 创建一个测试内容
   const content = await Content.create({
@@ -340,9 +340,7 @@ test("Success: fetch PUBLICATION with integration token should return any public
   })
 
   // 使用 integration token 获取发布内容
-  const integrationToken = t.context.createIntegrationJwt([
-    "fetch:publications",
-  ])
+  const integrationToken = await createIntegrationJwt(["fetch:publications"])
 
   const query = `
     query FetchPublication($id: ID!) {
@@ -424,7 +422,7 @@ test("Success: fetch PUBLICATION without token should return only self-authored 
 })
 
 test("Success: fetch COMMENT with integration token should return any comment", async (t) => {
-  const { graphqlClient } = t.context
+  const { graphqlClient, createIntegrationJwt } = t.context
 
   // 创建一个测试内容
   const content = await Content.create({
@@ -450,7 +448,7 @@ test("Success: fetch COMMENT with integration token should return any comment", 
   })
 
   // 使用 integration token 获取评论
-  const integrationToken = t.context.createIntegrationJwt(["fetch:comments"])
+  const integrationToken = await createIntegrationJwt(["fetch:comments"])
 
   const query = `
     query FetchComment($id: ID!) {

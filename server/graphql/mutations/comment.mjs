@@ -2,7 +2,7 @@ import mercurius from "mercurius"
 import { graphql } from "swiftify"
 import validator from "validator"
 import { getAddress, isAddress, recoverTypedDataAddress } from "viem" // 导入 verifyTypedData
-import { Comment, Node, Publication, Setting } from "../../models/index.mjs" // 导入 Node 用于 selfNode.address
+import { Comment, Publication, Setting } from "../../models/index.mjs" // 导入 Node 用于 selfNode.address
 import { hash } from "../../utils/crypto.mjs" // 导入 hash 工具
 import { renderEmail, sendEmail } from "../../utils/email/index.mjs"
 
@@ -125,7 +125,7 @@ const commentMutations = {
         )
       }
 
-      const selfNode = await Node.query().findOne({ is_self: true })
+      const selfNode = await request.config.getSelfNode()
 
       const publication = await Publication.query().findById(publication_id)
       if (!publication) {
@@ -200,6 +200,7 @@ const commentMutations = {
             aud: "comment",
             comment_id: newComment.id,
             sub: author_id,
+            iss: selfNode.address,
             action: "confirm",
           },
           { expiresIn: "24h" },
@@ -258,12 +259,15 @@ const commentMutations = {
     resolve: async (_parent, { id, tokenOrSignature }, context) => {
       const { app, request } = context
       request.log.debug("Confirming comment")
+      const selfNode = await request.config.getSelfNode()
 
       // 尝试作为 JWT 验证（EMAIL 路径）
       let isJwt = false
       let payload
       try {
-        payload = await app.jwt.verify(tokenOrSignature)
+        payload = await app.jwt.verify(tokenOrSignature, {
+          allowedIss: selfNode.address,
+        })
         isJwt = true
       } catch {
         isJwt = false
@@ -337,13 +341,6 @@ const commentMutations = {
       if (comment.auth_type !== "ETHEREUM" || !comment.author_id) {
         throw new ErrorWithProps("Signature information does not match.", {
           code: "FORBIDDEN",
-        })
-      }
-
-      const selfNode = await Node.query().findOne({ is_self: true })
-      if (!selfNode) {
-        throw new ErrorWithProps("Self node not configured.", {
-          code: "INTERNAL_SERVER_ERROR",
         })
       }
 
@@ -443,7 +440,7 @@ const commentMutations = {
         return comment
       }
 
-      const selfNode = await Node.query().findOne({ is_self: true })
+      const selfNode = await request.config.getSelfNode()
       if (!selfNode) {
         throw new ErrorWithProps("Self node not configured.", {
           code: "INTERNAL_SERVER_ERROR",
@@ -472,6 +469,7 @@ const commentMutations = {
             aud: "comment",
             comment_id: comment.id,
             sub: comment.author_id,
+            iss: selfNode.address,
             action: "destroy",
           },
           { expiresIn: "24h" },
@@ -589,12 +587,15 @@ const commentMutations = {
     resolve: async (_parent, { token }, context) => {
       const { app, request } = context
       let payload
+      const selfNode = await request.config.getSelfNode()
 
       request.log.debug("Confirming comment deletion")
 
       // 1. 验证 JWT
       try {
-        payload = await app.jwt.verify(token)
+        payload = await app.jwt.verify(token, {
+          allowedIss: selfNode.address,
+        })
       } catch {
         throw new ErrorWithProps("Invalid or expired token.", {
           code: "INVALID_SIGNATURE",

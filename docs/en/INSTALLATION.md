@@ -233,12 +233,35 @@ EPRESS_CLIENT_PORT=8080
 EPRESS_SERVER_PORT=8081
 ```
 
-### 7. Managing an epress Node (Source)
+### 7. Using a Different Database (e.g., PostgreSQL)
+
+By default, epress uses SQLite for easy setup. For production environments, you can switch to a more robust database like PostgreSQL or MySQL.
+
+1.  **Install the Database Driver**:
+    Install the required driver for your chosen database. For example, for PostgreSQL:
+    ```bash
+    npm install pg
+    ```
+
+2.  **Configure Environment Variables**:
+    Create or edit your `.env.local` file to set the database client and connection string.
+
+    **Example for PostgreSQL**:
+    ```
+    # .env.local
+    EPRESS_DATABASE_CLIENT=pg
+    EPRESS_DATABASE_CONNECTION=postgres://user:password@host:port/database
+    ```
+
+    - `EPRESS_DATABASE_CLIENT`: Set this to the knex client for your database (`pg` for PostgreSQL, `mysql` for MySQL, etc.).
+    - `EPRESS_DATABASE_CONNECTION`: The connection string for your database.
+
+### 8. Managing an epress Node (Source)
 
 - **Stop the Node**: Press `Ctrl + C` in the terminal.
 - **Update Configuration**: Infrastructure settings can be changed in the `.env.local` file (requires a server restart). Application settings can be updated from the settings panel within the epress application itself.
 
-### 8. Troubleshooting (Source)
+### 9. Troubleshooting (Source)
 
 Check the terminal output for logs to diagnose issues.
 

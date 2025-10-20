@@ -869,8 +869,9 @@ export default function InstallPage() {
     // Check if already installed
     const checkStatus = async () => {
       try {
-        const response = await fetch("/ewp/profile")
-        if (response.status !== 422) {
+        const response = await fetch("/api/install")
+        const { installed } = await response.json()
+        if (installed) {
           router.push("/")
         }
       } catch (error) {

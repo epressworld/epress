@@ -106,8 +106,8 @@ test("Success: profile query should return the self node public info", async (t)
 test.serial(
   "updateProfile: Authenticated user should be able to successfully update profile",
   async (t) => {
-    const { graphqlClient, selfNode } = t.context
-    const token = t.context.createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
+    const { graphqlClient, selfNode, createClientJwt } = t.context
+    const token = await createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
 
     const mutation = `
     mutation UpdateProfile($input: UpdateProfileInput!) {
@@ -209,8 +209,8 @@ test("updateProfile: Unauthenticated user should not be able to update profile",
 })
 
 test("updateProfile: Should return validation error if title is too long", async (t) => {
-  const { graphqlClient } = t.context
-  const token = t.context.createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
+  const { graphqlClient, createClientJwt } = t.context
+  const token = await createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
 
   const mutation = `
       mutation UpdateProfile($input: UpdateProfileInput!) {
@@ -249,8 +249,8 @@ test("updateProfile: Should return validation error if title is too long", async
 test.serial(
   "updateProfile: Should be able to successfully update URL field",
   async (t) => {
-    const { graphqlClient, selfNode } = t.context
-    const token = t.context.createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
+    const { graphqlClient, selfNode, createClientJwt } = t.context
+    const token = await createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
 
     const mutation = `
     mutation UpdateProfile($input: UpdateProfileInput!) {
@@ -318,8 +318,8 @@ test.serial(
 )
 
 test("updateProfile: Should return validation error if URL format is invalid", async (t) => {
-  const { graphqlClient } = t.context
-  const token = t.context.createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
+  const { graphqlClient, createClientJwt } = t.context
+  const token = await createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
 
   const mutation = `
     mutation UpdateProfile($input: UpdateProfileInput!) {
@@ -356,8 +356,8 @@ test("updateProfile: Should return validation error if URL format is invalid", a
 })
 
 test("updateProfile: Should return validation error if URL is not HTTP or HTTPS", async (t) => {
-  const { graphqlClient } = t.context
-  const token = t.context.createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
+  const { graphqlClient, createClientJwt } = t.context
+  const token = await createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
 
   const mutation = `
     mutation UpdateProfile($input: UpdateProfileInput!) {
@@ -396,8 +396,8 @@ test("updateProfile: Should return validation error if URL is not HTTP or HTTPS"
 test.serial(
   "updateProfile: Should be able to successfully upload avatar",
   async (t) => {
-    const { app } = t.context
-    const token = t.context.createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
+    const { app, createClientJwt } = t.context
+    const token = await createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
 
     const tempFilePath = "/tmp/temp_avatar.png"
     fs.writeFileSync(tempFilePath, "fake-png-data")
@@ -440,8 +440,8 @@ test.serial(
 )
 
 test("updateProfile: Should return error if avatar file exceeds 2MB", async (t) => {
-  const { app } = t.context
-  const token = t.context.createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
+  const { app, createClientJwt } = t.context
+  const token = await createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
 
   const tempFilePath = "/tmp/large_avatar.png"
   const largeBuffer = Buffer.alloc(2 * 1024 * 1024 + 1)
@@ -485,8 +485,8 @@ test("updateProfile: Should return error if avatar file exceeds 2MB", async (t) 
 test.serial(
   "broadcastProfileUpdate: should broadcast profile update to followers",
   async (t) => {
-    const { graphqlClient, selfNode } = t.context
-    const token = t.context.createClientJwt(selfNode.address)
+    const { graphqlClient, selfNode, createClientJwt } = t.context
+    const token = await createClientJwt(selfNode.address)
 
     // 1. Create a follower node and establish connection
     const followerNode = await Node.query().insertAndFetch({

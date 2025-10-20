@@ -1,5 +1,4 @@
 import crypto from "node:crypto"
-import pkg from "../../package.json" with { type: "json" }
 
 /**
  * @param { import("knex").Knex } knex
@@ -45,7 +44,6 @@ export const seed = async (knex) => {
     { key: "avatar", value: process.env.INITIAL_DATA_NODE_AVATAR || "" },
     { key: "jwt_secret", value: crypto.randomBytes(32).toString("hex") },
     { key: "jwt_expires_in", value: "24h" },
-    { key: "version", value: pkg.version },
   ]
 
   // 批量插入设置

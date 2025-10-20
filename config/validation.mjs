@@ -32,7 +32,11 @@ export const EPRESS_INFRASTRUCTURE_SCHEMA = yup.object({
   // ===========================================
   // Database Configuration
   // ===========================================
-  EPRESS_DATABASE_CONNECTION: yup.string().default("./data/epress.sqlite"),
+  EPRESS_DATABASE_CONNECTION: yup
+    .string()
+    .default("./data/database/epress.sqlite"),
+
+  EPRESS_DATABASE_CLIENT: yup.string().default("sqlite3"),
 
   // ===========================================
   // Frontend Proxy Configuration
@@ -148,78 +152,5 @@ export function validateInfrastructureConfig(env = process.env) {
       process.exit(1)
     }
     throw error
-  }
-}
-
-/**
- * Validate full configuration (for backward compatibility and after installation)
- * @param {Object} env - Environment variable object
- * @param {boolean} strict - If true, require all application settings
- * @returns {Object} Validated configuration object
- */
-export function validateConfig(env = process.env, strict = false) {
-  try {
-    if (strict) {
-      return EPRESS_CONFIG_SCHEMA.validateSync(env, {
-        abortEarly: false,
-        stripUnknown: true,
-      })
-    } else {
-      // In non-strict mode, only validate infrastructure settings
-      return validateInfrastructureConfig(env)
-    }
-  } catch (error) {
-    if (error instanceof yup.ValidationError) {
-      console.error("❌ Configuration validation failed:")
-      error.errors.forEach((err) => {
-        console.error(`  - ${err}`)
-      })
-      console.error("\nPlease check the configuration items in .env file.")
-      process.exit(1)
-    }
-    throw error
-  }
-}
-
-/**
- * Get configuration item descriptions
- * @returns {Object} Configuration item descriptions
- */
-export function getConfigDescription() {
-  return {
-    // Client Configuration
-    EPRESS_CLIENT_DEFAULT_LANGUAGE: "Default language for client (en|zh)",
-    EPRESS_CLIENT_DEFAULT_THEME: "Default theme for client (light|dark|system)",
-    EPRESS_WALLETCONNECT_PROJECTID: "WalletConnect Project ID",
-
-    // Server Configuration
-    EPRESS_SERVER_HOST: "Server listening address",
-    EPRESS_SERVER_PORT: "Server port number",
-    EPRESS_CLIENT_PORT: "Client port number",
-
-    // Database Configuration
-    EPRESS_DATABASE_CONNECTION: "SQLite database file path",
-
-    // Authentication Configuration
-    EPRESS_AUTH_JWT_SECRET:
-      "JWT signing secret (must be changed in production)",
-    EPRESS_AUTH_JWT_EXPIRES_IN: "JWT expiration time",
-
-    // Node Configuration
-    EPRESS_NODE_ADDRESS: "Node address",
-    EPRESS_NODE_URL: "Node public URL",
-    EPRESS_NODE_TITLE: "Node title",
-    EPRESS_NODE_DESCRIPTION: "Node description",
-
-    // Email Configuration
-    EPRESS_MAIL_TRANSPORT: "Email transport configuration",
-    EPRESS_MAIL_FROM: "Sender information",
-
-    // Frontend Proxy Configuration
-    EPRESS_API_URL: "API service address (for frontend proxy)",
-
-    // Development Configuration
-    EPRESS_DEV_DEBUG: "Enable debug mode (true|false)",
-    EPRESS_DEV_LOG_LEVEL: "Log level (error|warn|info|debug)",
   }
 }

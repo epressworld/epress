@@ -1,7 +1,7 @@
 import "./config/index.mjs"
 
 export default {
-  client: "sqlite3",
+  client: process.env.EPRESS_DATABASE_CLIENT || "sqlite3",
   useNullAsDefault: true,
   connection: process.env.EPRESS_DATABASE_CONNECTION,
   migrations: {

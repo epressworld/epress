@@ -37,7 +37,7 @@ test.before(async (t) => {
   await app.ready()
 
   const otherUserAccount = generateTestAccount()
-  const selfNode = await Node.query().findOne({ is_self: true })
+  const selfNode = await Node.getSelf()
   const otherUserNode = await Node.query().insert({
     address: otherUserAccount.address,
     url: `https://other-epress-node.com`,
@@ -51,10 +51,13 @@ test.before(async (t) => {
   t.context.otherUserNode = otherUserNode
 
   // JWT generation helper functions
-  t.context.createJwt = (address) =>
-    app.jwt.sign({ aud: "client", sub: address })
-  t.context.createClientJwt = (address) =>
-    app.jwt.sign({ aud: "client", sub: address })
+  t.context.createClientJwt = async (address) => {
+    return await app.jwt.sign({
+      aud: "client",
+      sub: address,
+      iss: selfNode.address,
+    })
+  }
   t.context.createCommentJwt = async (
     commentId,
     action,
@@ -73,16 +76,27 @@ test.before(async (t) => {
         payload.sub = comment.author_id
       }
     }
-    return app.jwt.sign(payload, { expiresIn })
+    payload.iss = selfNode.address
+    return await app.jwt.sign(payload, { expiresIn })
   }
-  t.context.createIntegrationJwt = (scope, expiresIn = "24h") =>
-    app.jwt.sign(
-      { aud: "integration", sub: TEST_ETHEREUM_ADDRESS_NODE_A, scope },
+  t.context.createIntegrationJwt = async (scope, expiresIn = "24h") =>
+    await app.jwt.sign(
+      {
+        aud: "integration",
+        sub: TEST_ETHEREUM_ADDRESS_NODE_A,
+        scope,
+        iss: selfNode.address,
+      },
       { expiresIn },
     )
-  t.context.createNonceJwt = (address, expiresIn = "3m") =>
-    app.jwt.sign(
-      { aud: "nonce", sub: address, nonce: "test-nonce" },
+  t.context.createNonceJwt = async (address, expiresIn = "3m") =>
+    await app.jwt.sign(
+      {
+        aud: "nonce",
+        sub: address,
+        nonce: "test-nonce",
+        iss: selfNode.address,
+      },
       { expiresIn },
     )
 
