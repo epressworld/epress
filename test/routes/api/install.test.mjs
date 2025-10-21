@@ -2,22 +2,20 @@ import { constants } from "node:fs"
 import { access, unlink } from "node:fs/promises"
 import path from "node:path"
 import test from "ava"
-import { Model } from "swiftify"
-import { Node, Setting } from "../../../server/models/index.mjs"
+import { Model, Node, Setting } from "../../../server/models/index.mjs"
 import { generateSignature, generateTestAccount } from "../../setup.mjs"
 
 const INSTALL_LOCK_FILE = path.resolve(process.cwd(), "./data/.INSTALL_LOCK")
 
 // Helper function to drop all tables for clean installation test
 const dropAllTables = async () => {
-  const knex = Model.knex()
-  const tables = await knex.raw(`
-    SELECT name FROM sqlite_master 
-    WHERE type='table' AND name NOT LIKE 'sqlite_%'
-  `)
-  for (const table of tables) {
-    await knex.schema.dropTableIfExists(table.name)
-  }
+  await Model.knex().migrate.rollback(null, true)
+  // await knexMigration(
+  //   [Setting, Comment, Publication, Connection, Content, Node],
+  //   {
+  //     drop: true,
+  //   },
+  // )
 }
 
 // Helper function to remove install lock file
@@ -234,7 +232,7 @@ test.serial(
     t.is(selfNode.address, testAccount.address)
     t.is(selfNode.url, "https://test-node.example.com")
     t.is(selfNode.title, "Test Node")
-    t.is(selfNode.is_self, 1)
+    t.truthy(selfNode.is_self)
     t.is(selfNode.profile_version, 0)
 
     // Verify settings (including all optional ones)

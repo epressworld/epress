@@ -33,6 +33,8 @@ export default function InstallerLayout({ children }) {
     <NextIntlClientProvider
       locale={locale}
       messages={installerMessages[locale]}
+      timeZone={Intl.DateTimeFormat().resolvedOptions().timeZone}
+      now={new Date()}
     >
       <ChakraProvider value={defaultSystem}>
         <WagmiProvider

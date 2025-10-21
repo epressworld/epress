@@ -31,7 +31,6 @@ test.before(async (t) => {
   process.env.INITIAL_DATA_MAIL_TRANSPORT = `smtp://${testAccount.user}:${testAccount.pass}@smtp.ethereal.email:587`
   process.env.INITIAL_DATA_MAIL_FROM = "no-reply@epress.world"
   await knex.seed.run()
-
   // 3. Initialize Fastify app and GraphQL client
   const app = await setupServer() // Call the actual createServer function to build the complete app
   await app.ready()

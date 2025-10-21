@@ -39,8 +39,10 @@ router.post("/replications", async (request, reply) => {
       content_hash: contentHash,
       author_address: publisherNode.address,
     })
-    .where("created_at", ">=", timestamp * 1000)
-    .where("created_at", "<", (timestamp + 1) * 1000)
+    .whereBetween("created_at", [
+      new Date(Number(timestamp) * 1000),
+      new Date((Number(timestamp) + 1) * 1000),
+    ])
     .first()
 
   if (existingPublication) {
