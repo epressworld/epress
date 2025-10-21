@@ -82,7 +82,7 @@ export const up = async (knex) => {
     table.string("auth_type").notNullable()
     table.string("author_name").notNullable()
     table.string("author_id").notNullable()
-    table.string("credential").nullable()
+    table.text("credential").nullable()
     table.timestamp("created_at").defaultTo(knex.fn.now())
     table.timestamp("updated_at").defaultTo(knex.fn.now())
   })

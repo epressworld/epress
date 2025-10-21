@@ -164,7 +164,11 @@ test("createPublication: Successfully create FILE type publication", async (t) =
   t.truthy(dbContent, "Content record should exist in database")
   t.is(dbContent.filename, fileName, "Database content filename should match")
   t.is(dbContent.mimetype, mimeType, "Database content MIME type should match")
-  t.is(dbContent.size, largeBuffer.length, "Database content size should match")
+  t.is(
+    Number(dbContent.size),
+    largeBuffer.length,
+    "Database content size should match",
+  )
   t.is(dbContent.type, "FILE", "Database content type should be file")
   t.truthy(dbContent.local_path, "Database content should have local path")
 

@@ -4,8 +4,10 @@ import path from "node:path" // Import path for path concatenation
 import { Readable } from "node:stream"
 import fs from "fs-extra" // Import fs-extra for file operations
 import { Content, Publication } from "../../server/models/index.mjs"
+import { TEST_ETHEREUM_ADDRESS_NODE_A } from "../setup.mjs"
 
 test.beforeEach(async () => {
+  await Publication.query().delete()
   await Content.query().delete()
 })
 
@@ -242,7 +244,7 @@ test.serial(
     // Create Publication reference
     await Publication.query().insert({
       content_hash: content.content_hash,
-      author_address: 1,
+      author_address: TEST_ETHEREUM_ADDRESS_NODE_A,
       signature: "test-sig",
     })
 
@@ -298,7 +300,7 @@ test.serial(
     // Create Publication reference
     await Publication.query().insert({
       content_hash: linkedContent.content_hash,
-      author_address: 1,
+      author_address: TEST_ETHEREUM_ADDRESS_NODE_A,
       signature: "test-sig",
     })
 
@@ -502,12 +504,12 @@ test.serial(
     // Create Publication reference
     await Publication.query().insert({
       content_hash: linkedPost.content_hash,
-      author_address: 1,
+      author_address: TEST_ETHEREUM_ADDRESS_NODE_A,
       signature: "sig1",
     })
     await Publication.query().insert({
       content_hash: linkedFile.content_hash,
-      author_address: 1,
+      author_address: TEST_ETHEREUM_ADDRESS_NODE_A,
       signature: "sig2",
     })
 

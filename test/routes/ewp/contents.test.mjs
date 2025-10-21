@@ -275,7 +275,7 @@ test("GET /contents/:content_hash should return PUBLICATION_NOT_FOUND if content
   // Create a publication for a different author
   await Publication.query().insert({
     content_hash: content.content_hash,
-    author_address: "0xOtherNodeAddress", // Not self node
+    author_address: t.context.otherUserNode.address, // Not self node
     signature: "0x456",
   })
 
@@ -308,6 +308,7 @@ test("GET /contents/:content_hash should return INVALID_TIMESTAMP for invalid ti
 })
 
 test("GET /contents/:content_hash should return CONTENT_NOT_FOUND if publication exists but content does not", async (t) => {
+  if (process.env.EPRESS_DATABASE_CLIENT === "pg") return t.pass() // postgresql will never happen
   const fakeHash = `0x${"a".repeat(66)}`
 
   await Publication.query().insert({

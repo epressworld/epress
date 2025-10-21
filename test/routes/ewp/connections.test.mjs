@@ -113,8 +113,8 @@ test.serial(
       followee_address: followeeNode.address, // The external followee (Node A in spec)
     })
     t.truthy(connection, "should create connection record in DB")
-    await followeeNode.$query().delete()
     await connection.$query().delete()
+    await followeeNode.$query().delete()
   },
 )
 
@@ -683,8 +683,8 @@ test.serial(
       connectionAfter,
       "connection record should be deleted from the database",
     )
-    await followerNode.$query().delete()
     await connection.$query().delete()
+    await followerNode.$query().delete()
   },
 )
 
@@ -781,8 +781,8 @@ test.serial(
 
     const connectionAfter = await Connection.query().findById(connection.id)
     t.truthy(connectionAfter, "connection should not be deleted on failure")
-    await followerNode.$query().delete()
     await connection.$query().delete()
+    await followerNode.$query().delete()
   },
 )
 
@@ -838,8 +838,8 @@ test.serial(
 
     const connectionAfter = await Connection.query().findById(connection.id)
     t.truthy(connectionAfter, "connection should not be deleted on failure")
-    await followerNode.$query().delete()
     await connection.$query().delete()
+    await followerNode.$query().delete()
   },
 )
 
@@ -899,8 +899,8 @@ test.serial(
       connectionAfter,
       "connection record should be deleted from the database",
     )
-    await followerNode.$query().delete()
     await connection.$query().delete()
+    await followerNode.$query().delete()
   },
 )
 
@@ -998,8 +998,8 @@ test.serial(
 
     const connectionAfter = await Connection.query().findById(connection.id)
     t.truthy(connectionAfter, "connection should not be deleted on failure")
-    await followerNode.$query().delete()
     await connection.$query().delete()
+    await followerNode.$query().delete()
   },
 )
 

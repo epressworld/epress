@@ -30,7 +30,7 @@ export function generateTestAccount() {
 
 // Set test environment variables (infrastructure settings only)
 // Application settings (node address, JWT secret, etc.) are now stored in database
-process.env.EPRESS_DATABASE_CONNECTION = ":memory:"
+// process.env.EPRESS_DATABASE_CONNECTION = ":memory:"
 process.env.EPRESS_API_URL = "http://localhost:4000"
 process.env.EPRESS_SERVER_HOST = "0.0.0.0"
 process.env.EPRESS_SERVER_PORT = "4000"

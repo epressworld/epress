@@ -146,7 +146,11 @@ test("Success: should replicate a FILE from a followed node", async (t) => {
   t.truthy(content, "Content should be saved to the database")
   t.is(content.type, "FILE", 'Content type should be "file"')
   t.is(content.mimetype, mockFileType, "MIME type should be correct")
-  t.is(content.size, mockFileBuffer.length, "File size should be correct")
+  t.is(
+    Number(content.size),
+    mockFileBuffer.length,
+    "File size should be correct",
+  )
   t.truthy(content.local_path, "local_path should be recorded")
 
   const publication = await Publication.query().findOne({
