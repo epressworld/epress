@@ -640,15 +640,9 @@ function InstallStepsResult({ installResult }) {
                   mt="1"
                 />
                 <Text fontWeight="medium">
-                  {/* Используем t() для перевода названий шагов */}
                   {t(`installer.steps.${step.step}`, step.step)}
                 </Text>
               </HStack>
-              {!step.success && step.error && (
-                <Text color="red.600" fontSize="sm" textAlign="right" pl={4}>
-                  {step.error}
-                </Text>
-              )}
             </HStack>
           ))}
         </Box>
