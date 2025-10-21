@@ -6,7 +6,6 @@
     "dev": "NODE_ENV=development nodemon -w ./server commands/start.mjs",
     "build": "next build ./client",
     "migrate": "node commands/migrate.mjs",
-    "maintenance": "node commands/maintenance.mjs",
     "seed": "node commands/migrate.mjs seed run",
     "seed:make": "node commands/migrate.mjs seed make",
     "test": "NODE_ENV=test ava",
