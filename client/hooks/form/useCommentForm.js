@@ -275,7 +275,7 @@ export function useCommentForm(
 
       if (!skipToast) {
         toaster.create({
-          description: t("comment.commentSubmitSuccess"),
+          description: t("comment.commentSubmitSuccessEthereum"),
           type: "success",
         })
       }
