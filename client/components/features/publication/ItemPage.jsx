@@ -110,6 +110,7 @@ export function PublicationItemPage({ variables }) {
             onShowSignature={handleShowSignature}
             onEdit={handleEdit}
             showAuthorInfo={false}
+            showCommentIcon={false}
             onPublish={handlePublish}
           />
         )}

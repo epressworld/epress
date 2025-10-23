@@ -1,6 +1,6 @@
 "use client"
 
-import { useSuspenseQuery } from "@apollo/client/react"
+import { useQuery, useSuspenseQuery } from "@apollo/client/react"
 import { Alert, Button, HStack, Spinner, Text, VStack } from "@chakra-ui/react"
 import { useEffect, useState } from "react"
 import { LuEllipsis } from "react-icons/lu"
@@ -15,13 +15,15 @@ export const CommentList = ({
   localPendingComment,
   onRetrySignature,
   onSetRefetch,
+  suspense = true,
 }) => {
   const [hasMore, setHasMore] = useState(false)
   const [hasAttemptedLoadMore, setHasAttemptedLoadMore] = useState(false)
   const { t } = useIntl()
 
+  const useQueryHook = suspense ? useSuspenseQuery : useQuery
   // 获取评论列表 - 使用 Apollo Client
-  const { data, loading, error, fetchMore, refetch } = useSuspenseQuery(
+  const { data, loading, error, fetchMore, refetch } = useQueryHook(
     SEARCH_COMMENTS,
     {
       variables: {

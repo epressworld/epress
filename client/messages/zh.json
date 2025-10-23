@@ -213,6 +213,7 @@
     "required": "此字段为必填项",
     "commentSubmitSuccess": "评论提交成功!请检查您的邮箱并点击验证链接,验证后评论才会显示。",
     "commentSubmitSuccessShort": "评论提交成功",
+    "commentSubmitSuccessEthereum": "评论发表成功",
     "commentDeleteSuccess": "评论删除成功",
     "commentVerifySuccess": "评论验证成功!您的评论现在已显示。",
     "commentVerificationSuccess": "评论验证成功!",

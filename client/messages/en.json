@@ -213,6 +213,7 @@
     "required": "This field is required",
     "commentSubmitSuccess": "Comment submitted successfully! Please check your email and click the verification link. The comment will be displayed after verification.",
     "commentSubmitSuccessShort": "Comment submitted successfully",
+    "commentSubmitSuccessEthereum": "Comment successfully",
     "commentDeleteSuccess": "Comment deleted successfully",
     "commentVerifySuccess": "Comment verification successful! Your comment is now displayed.",
     "commentVerificationSuccess": "Comment verification successful!",
