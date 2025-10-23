@@ -6,9 +6,72 @@ on:
       - 'v*.*.*'
 
 jobs:
+  lint:
+    name: Lint & Style Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Biome Check
+        run: npm run lint
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests and generate coverage
+        run: npx c8 --reporter=lcov --reporter=text npm test
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  build:
+    name: Build Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Next.js Build
+        run: npm run build
+
   build-and-push-release-docker:
     name: Build and Push Release Docker Image
     runs-on: ubuntu-latest
+    needs: [lint, test, build]  # 必须等待所有检查通过
     permissions:
       contents: read
       packages: write
@@ -31,7 +94,7 @@ jobs:
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest # Add latest tag for releases
+            type=raw,value=latest
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -44,33 +107,37 @@ jobs:
   create-github-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: build-and-push-release-docker
+    needs: build-and-push-release-docker  # 必须等待 Docker 镜像构建成功
     permissions:
       contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.repository.default_branch }} # Solution 1: Checkout default branch
-          fetch-depth: 0 # Fetch all history
+          fetch-depth: 0
+
+      - name: Get previous tag
+        id: previousTag
+        run: |
+          name=$(git --no-pager tag --sort=creatordate --merged ${{ github.ref_name }} | tail -2 | head -1)
+          echo "previousTag: $name"
+          echo "previousTag=$name" >> $GITHUB_ENV
 
       - name: Generate changelog
         id: changelog
-        uses: TriPSs/conventional-changelog-action@v5
+        uses: requarks/changelog-action@v1
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          git-branch: ${{ github.event.repository.default_branch }}
-          skip-bump: true  # 关键：跳过自动 bump，只生成 changelog
-          skip-commit: true  # 跳过 commit（我们手动做了）
-          skip-tag: true  # 跳过 tag（release 步骤处理）
-          skip-on-empty: true  # 无新 commits 时跳过
+          token: ${{ github.token }}
+          fromTag: ${{ github.ref_name }}
+          toTag: ${{ env.previousTag }}
+          writeToFile: false
 
       - name: Create Release
-        uses: softprops/action-gh-release@v2 # Solution 3: Use softprops/action-gh-release
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}  # 修复：用 ref_name，如 0.1.1
-          name: ${{ github.ref_name }}  # 修复：release 标题
-          body: ${{ steps.changelog.outputs.changelog }}  # tag 间 changelog
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          body: ${{ steps.changelog.outputs.changes }}
           draft: false
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
