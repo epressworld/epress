@@ -17,7 +17,12 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { FiTrash2 } from "react-icons/fi"
 import { TbSignature } from "react-icons/tb"
-import { AuthorInfo, ConfirmDialog, InfoDialog } from "@/components/ui"
+import {
+  AuthorInfo,
+  CommentRenderer,
+  ConfirmDialog,
+  InfoDialog,
+} from "@/components/ui"
 import { AUTH_STATUS, useAuth } from "@/contexts/AuthContext"
 import { usePage } from "@/contexts/PageContext"
 import { useOnlineVisitors, useWallet } from "@/hooks/data"
@@ -269,7 +274,7 @@ export const CommentItem = ({
           </HStack>
 
           {/* 评论内容 */}
-          <Text>{comment.body}</Text>
+          <CommentRenderer>{comment.body}</CommentRenderer>
 
           {/* 时间和状态 */}
           <HStack gap={2} align="center" justify="space-between">

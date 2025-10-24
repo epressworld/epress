@@ -9,6 +9,7 @@ export * from "./badge"
 
 // Button 组件族
 export * from "./button"
+export * from "./Comment"
 export * from "./content"
 // Dialog 组件族
 export * from "./dialog"
