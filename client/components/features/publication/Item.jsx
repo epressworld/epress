@@ -2,6 +2,7 @@
 
 import {
   Button,
+  Container,
   Dialog,
   Drawer,
   HStack,
@@ -474,9 +475,11 @@ export function PublicationItem({
                 overflow="hidden"
               >
                 <Drawer.Header flexShrink={0}>
-                  <Drawer.Title>
-                    {t("comment.publishComment")} ({commentCount})
-                  </Drawer.Title>
+                  <Container width="6xl">
+                    <Drawer.Title>
+                      {t("comment.publishComment")} ({commentCount})
+                    </Drawer.Title>
+                  </Container>
                 </Drawer.Header>
 
                 <Drawer.CloseTrigger
@@ -499,34 +502,36 @@ export function PublicationItem({
                   px={6}
                   py={4}
                 >
-                  {/* 评论列表 */}
-                  <VStack align="stretch">
-                    <CommentList
-                      publicationId={publication.id}
-                      onCommentDeleted={handleCommentDeleted}
-                      localPendingComment={localPendingComment}
-                      onRetrySignature={
-                        localPendingComment?.retryFn || undefined
-                      }
-                      onSetRefetch={setCommentRefetch}
-                      suspense={false}
-                    />
-                  </VStack>
+                  <Container width="6xl">
+                    {/* 评论列表 */}
+                    <VStack align="stretch">
+                      <CommentList
+                        publicationId={publication.id}
+                        onCommentDeleted={handleCommentDeleted}
+                        localPendingComment={localPendingComment}
+                        onRetrySignature={
+                          localPendingComment?.retryFn || undefined
+                        }
+                        onSetRefetch={setCommentRefetch}
+                        suspense={false}
+                      />
+                    </VStack>
 
-                  {/* 评论表单 */}
-                  <VStack
-                    align="stretch"
-                    flexShrink={0}
-                    borderTop="1px"
-                    borderColor="gray.100"
-                    pt={4}
-                  >
-                    <CommentForm
-                      publicationId={publication.id}
-                      onCommentCreated={handleCommentCreated}
-                      onPendingCommentChange={handlePendingCommentChange}
-                    />
-                  </VStack>
+                    {/* 评论表单 */}
+                    <VStack
+                      align="stretch"
+                      flexShrink={0}
+                      borderTop="1px"
+                      borderColor="gray.100"
+                      pt={4}
+                    >
+                      <CommentForm
+                        publicationId={publication.id}
+                        onCommentCreated={handleCommentCreated}
+                        onPendingCommentChange={handlePendingCommentChange}
+                      />
+                    </VStack>
+                  </Container>
                 </Drawer.Body>
               </Drawer.Content>
             </Drawer.Positioner>
