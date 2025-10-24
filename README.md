@@ -12,7 +12,7 @@
     <a href="/docs/zh/README.md">中文</a> •
     <a href="/docs/en/WHITEPAPER.md">White Paper</a> •
     <a href="https://youtu.be/BB1Zn3oFDVc">Video Demo</a> •
-    <a href="/docs/en/INSTALLATION.md">Installation</a>
+    <a href="/docs/en/SELF_HOSTING.md">Installation</a>
   </p>
 </div>
 
@@ -111,20 +111,15 @@ Run your own `epress` node in two ways:
 
 The fastest and easiest deployment method, using the official pre-built image `ghcr.io/epressworld/epress`.
 
-1. **Create a Data Volume**:
-    ```bash
-    docker volume create epress-data
-    ```
-
-2. **Start Your Node**:
+1. **Start Your Node**:
     ```bash
     docker run -d -p 8543:8543 -p 8544:8544 -v epress-data:/app/data --name my-epress-node ghcr.io/epressworld/epress
     ```
 
-3. **Complete Setup via Web Interface**:
+2. **Complete Setup via Web Interface**:
     Open your browser and navigate to `http://localhost:8543`. You'll be automatically redirected to the installation wizard where you can configure your node through a beautiful, user-friendly interface.
 
-For advanced Docker options (e.g., separating frontend/backend or custom builds), see [**`docs/en/INSTALLATION.md`**](/docs/en/INSTALLATION.md).
+For advanced Docker options (e.g., separating frontend/backend or custom builds), see [**`docs/en/SELF_HOSTING.md`**](/docs/en/SELF_HOSTING.md).
 
 #### Option 2: Run from Source
 
