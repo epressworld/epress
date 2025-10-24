@@ -25,28 +25,21 @@
 
 如果您无需特殊配置，推荐直接使用官方预构建的镜像 `ghcr.io/epressworld/epress:latest`，可以跳过构建步骤，直接运行节点。
 
-#### 2.1 创建数据卷
+#### 2.1 启动 epress 节点
 
-创建一个 Docker 数据卷来持久化您的节点数据：
-
-```bash
-docker volume create epress-data
-```
-
-#### 2.2 启动 epress 节点
-
-配置完成后，启动 `epress` 节点：
+使用以下命令启动您的节点。首次运行时，如果 `epress-data` 数据卷不存在，Docker 将自动创建它。
 
 ```bash
-docker run -d -p 8543:8543 -p 8544:8544 -v epress-data:/app/data --name my-epress-node ghcr.io/epressworld/epress:latest
+docker run -d -p 8543:8543 -p 8544:8544 -v epress-data:/app/data --name my-epress-node --restart=always ghcr.io/epressworld/epress:latest
 ```
 
 - `-d`：后台运行容器。
 - `-p 8543:8543` (前端) 和 `-p 8544:8544` (后端): 映射必要的容器端口到您的主机。
-- `-v epress-data:/app/data`：挂载数据卷以访问持久化配置。
+- `-v epress-data:/app/data`：挂载 `epress-data` 数据卷以持久化节点的数据库和配置。
 - `--name my-epress-node`：为容器命名，便于管理。
+- `--restart=always`: 确保节点在发生故障时自动重启。
 
-#### 2.3 通过 Web 界面完成设置
+#### 2.2 通过 Web 界面完成设置
 
 容器运行后，在浏览器中打开 `http://localhost:8543`。
 
@@ -90,18 +83,13 @@ docker build -t my-epress-custom:latest .
 
 #### 3.4 启动节点并通过 Web 配置
 
-1.  **创建数据卷**：
-    ```bash
-    docker volume create epress-data
-    ```
-
-2.  **启动您的自定义容器**：
+1.  **启动您的自定义容器**：
     ```bash
     docker run -d -p 8543:8543 -p 8544:8544 -v epress-data:/app/data --env-file .env --name my-epress-node my-epress-custom:latest
     ```
     - `--env-file .env`：将您的自定义基础架构变量传递给容器。
 
-3.  **完成设置**：
+2.  **完成设置**：
     在浏览器中打开 `http://localhost:8543` 以访问网页版安装向导。
 
 #### 3.5 启动 epress 节点（前后端分离）
@@ -128,7 +116,11 @@ docker run -d -p 8543:8543 -v epress-data:/app/data --name my-epress-client my-e
 - `start client`：仅启动前端应用程序（端口 8543）。
 - 确保 `EPRESS_API_URL` 已配置为 API 服务器地址。
 
-### 4. 管理 epress 节点（Docker）
+---
+
+## 管理和升级您的节点
+
+### 节点管理
 
 常用 Docker 命令：
 
@@ -156,7 +148,7 @@ docker run -d -p 8543:8543 -v epress-data:/app/data --name my-epress-client my-e
   ```bash
   docker rm my-epress-node
   ```
-- **删除数据卷（谨慎操作，删除所有节点数据）**：
+- **删除数据卷（谨慎操作，将删除所有节点数据）**：
   ```bash
   docker volume rm epress-data
   ```
@@ -165,9 +157,40 @@ docker run -d -p 8543:8543 -v epress-data:/app/data --name my-epress-client my-e
   docker exec -it my-epress-node sh
   ```
 
-### 5. 故障排除（Docker）
+### 节点升级
 
-检查容器日志以诊断问题：
+**强烈建议在升级前备份您的数据卷。**
+
+1.  **拉取最新镜像**
+    从 Docker Hub 拉取最新版本的 epress 镜像。
+    ```bash
+    docker pull ghcr.io/epressworld/epress:latest
+    ```
+
+2.  **停止并移除当前容器**
+    找到正在运行的容器名称或 ID，然后停止并移除它。此操作不会影响存储在 `epress-data` 数据卷中的数据。
+    ```bash
+    docker stop my-epress-node
+    docker rm my-epress-node
+    ```
+
+3.  **使用新镜像重启节点**
+    使用初次安装时的 `docker run` 命令启动一个新容器。Docker 会自动将现有的 `epress-data` 数据卷挂载到新容器上。
+    ```bash
+    docker run -d -p 8543:8543 -p 8544:8544 -v epress-data:/app/data --name my-epress-node --restart=always ghcr.io/epressworld/epress:latest
+    ```
+
+4.  **运行数据库迁移（如果需要）**
+    新容器运行后，执行数据库迁移命令以应用任何数据库结构更新。
+    ```bash
+    docker exec my-epress-node npm run migrate
+    ```
+
+现在您的节点已升级并运行最新版本。
+
+### 故障排除 (Docker)
+
+检查容器日志以获取诊断信息：
 
 ```bash
 docker logs my-epress-node
@@ -238,7 +261,30 @@ EPRESS_SERVER_PORT=8081
 - **停止节点**：在命令行窗口按 `Ctrl + C`。
 - **修改配置**：基础设施设置可以在 `.env.local` 文件中更改（需要重启服务器）。应用设置可以在 epress 应用内部的设置面板中更新。
 
-### 8. 故障排除（源码）
+### 8. 从源码升级
+
+如果您从源码运行，请按照以下步骤升级您的节点：
+
+1.  **停止服务器**：在运行服务器的命令行窗口按 `Ctrl + C`。
+2.  **获取最新代码**：
+    ```bash
+    git pull
+    ```
+3.  **安装或更新依赖**：
+    ```bash
+    npm install
+    ```
+4.  **运行数据库迁移**：
+    ```bash
+    npm run migrate
+    ```
+5.  **构建并重启服务器**：
+    ```bash
+    npm run build
+    npm run start
+    ```
+
+### 9. 故障排除（源码）
 
 检查命令行输出的日志信息以诊断问题。
 

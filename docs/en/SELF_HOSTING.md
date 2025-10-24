@@ -25,28 +25,21 @@ Before starting, ensure the following software is installed:
 
 For a quick setup without custom configurations, use the official pre-built image `ghcr.io/epressworld/epress:latest` to skip the build process.
 
-#### 2.1 Create a Data Volume
+#### 2.1 Start Your Node
 
-Create a Docker volume to persist your node’s data:
-
-```bash
-docker volume create epress-data
-```
-
-#### 2.2 Start Your Node
-
-Start your node using the following command:
+Start your node using the following command. Docker will automatically create the `epress-data` volume on the first run if it doesn't exist.
 
 ```bash
-docker run -d -p 8543:8543 -p 8544:8544 -v epress-data:/app/data --name my-epress-node ghcr.io/epressworld/epress:latest
+docker run -d -p 8543:8543 -p 8544:8544 -v epress-data:/app/data --name my-epress-node --restart=always ghcr.io/epressworld/epress:latest
 ```
 
 - `-d`: Runs the container in the background.
 - `-p 8543:8543` (frontend) and `-p 8544:8544` (backend): Maps the necessary container ports to your host.
-- `-v epress-data:/app/data`: Mounts the `epress-data` volume to persist your node's database and configuration.
+- `-v epress-data:/app/data`: Mounts the `epress-data` volume to persist your node’s database and configuration.
 - `--name my-epress-node`: Assigns a convenient name to your container.
+- `--restart=always`: Ensures the node automatically restarts if it goes down.
 
-#### 2.3 Complete Setup via Web Interface
+#### 2.2 Complete Setup via Web Interface
 
 Once the container is running, open your browser and navigate to `http://localhost:8543`.
 
@@ -90,18 +83,13 @@ docker build -t my-epress-custom:latest .
 
 #### 3.4 Start Your Node and Configure via Web
 
-1.  **Create a data volume**:
-    ```bash
-    docker volume create epress-data
-    ```
-
-2.  **Start your custom container**:
+1.  **Start your custom container**:
     ```bash
     docker run -d -p 8543:8543 -p 8544:8544 -v epress-data:/app/data --env-file .env --name my-epress-node my-epress-custom:latest
     ```
     - `--env-file .env`: Passes your custom infrastructure variables to the container.
 
-3.  **Complete Setup**:
+2.  **Complete Setup**:
     Open `http://localhost:8543` in your browser to access the web-based installation wizard.
 
 #### 3.5 Start the epress Node (Frontend-Backend Separation)
@@ -128,7 +116,11 @@ docker run -d -p 8543:8543 -v epress-data:/app/data --name my-epress-client my-e
 - `start client`: Runs only the frontend application (port 8543).
 - Ensure `EPRESS_API_URL` is set to the API server’s address.
 
-### 4. Managing an epress Node (Docker)
+---
+
+## Managing and Upgrading Your Node
+
+### Managing Your Node
 
 Common Docker commands:
 
@@ -165,7 +157,38 @@ Common Docker commands:
   docker exec -it my-epress-node sh
   ```
 
-### 5. Troubleshooting (Docker)
+### Upgrading Your Node
+
+**It is strongly recommended to back up your data volume before upgrading.**
+
+1.  **Pull the Latest Image**:
+    Pull the latest version of the epress image from Docker Hub.
+    ```bash
+    docker pull ghcr.io/epressworld/epress:latest
+    ```
+
+2.  **Stop and Remove the Current Container**:
+    Find your running container's name or ID and then stop and remove it. This action will not affect your data stored in the `epress-data` volume.
+    ```bash
+    docker stop my-epress-node
+    docker rm my-epress-node
+    ```
+
+3.  **Restart Your Node with the New Image**:
+    Start a new container using the same `docker run` command from the initial setup. Docker will automatically attach the existing `epress-data` volume to the new container.
+    ```bash
+    docker run -d -p 8543:8543 -p 8544:8544 -v epress-data:/app/data --name my-epress-node --restart=always ghcr.io/epressworld/epress:latest
+    ```
+
+4.  **Run Database Migrations (If Required)**:
+    After the new container is running, execute the database migration command to apply any schema updates.
+    ```bash
+    docker exec my-epress-node npm run migrate
+    ```
+
+Your node is now upgraded and running the latest version.
+
+### Troubleshooting (Docker)
 
 Check container logs for diagnostic information:
 
@@ -261,7 +284,30 @@ By default, epress uses SQLite for easy setup. For production environments, you 
 - **Stop the Node**: Press `Ctrl + C` in the terminal.
 - **Update Configuration**: Infrastructure settings can be changed in the `.env.local` file (requires a server restart). Application settings can be updated from the settings panel within the epress application itself.
 
-### 9. Troubleshooting (Source)
+### 9. Upgrading from Source
+
+To upgrade your node when running from source, follow these steps:
+
+1.  **Stop your server**: Press `Ctrl + C` in the terminal where it's running.
+2.  **Get the latest code**:
+    ```bash
+    git pull
+    ```
+3.  **Install/Update dependencies**:
+    ```bash
+    npm install
+    ```
+4.  **Run database migrations**:
+    ```bash
+    npm run migrate
+    ```
+5.  **Build and restart the server**:
+    ```bash
+    npm run build
+    npm run start
+    ```
+
+### 10. Troubleshooting (Source)
 
 Check the terminal output for logs to diagnose issues.
 

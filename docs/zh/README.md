@@ -12,7 +12,7 @@
     <a href="/README.md">English</a> •
     <a href="/docs/zh/WHITEPAPER.md">白皮书</a> •
     <a href="https://youtu.be/BB1Zn3oFDVc">视频演示</a> •
-    <a href="/docs/zh/INSTALLATION.md">安装说明</a>
+    <a href="/docs/zh/SELF_HOSTING.md">安装说明</a>
   </p>
 </div>
 
@@ -112,20 +112,15 @@ epress 通过几个关键的原创设计来实现彻底的去中心化，详情�
 
 这是最简单、最快捷的部署方式，使用官方预构建的镜像 `ghcr.io/epressworld/epress`。
 
-1. **创建数据卷**:
-    ```bash
-    docker volume create epress-data
-    ```
-
-2. **启动节点**:
+1. **启动节点**:
     ```bash
     docker run -d -p 8543:8543 -p 8544:8544 -v epress-data:/app/data --name my-epress-node ghcr.io/epressworld/epress
     ```
 
-3. **通过 Web 界面完成设置**:
+2. **通过 Web 界面完成设置**:
     在浏览器中打开 `http://localhost:8543`。您将被自动重定向到安装向导，在这里您可以通过一个美观、友好的用户界面来配置您的节点。
 
-更多 Docker 安装选项（例如前后端分离或自定义构建），请查阅 [**`docs/zh/INSTALLATION.md`**](/docs/zh/INSTALLATION.md)。
+更多 Docker 安装选项（例如前后端分离或自定义构建），请查阅 [**`docs/zh/SELF_HOSTING.md`**](/docs/zh/SELF_HOSTING.md)。
 
 #### 方式二: 从源码运行
 
