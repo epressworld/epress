@@ -1,7 +1,6 @@
 "use client"
 
 import {
-  Alert,
   Avatar,
   Box,
   Button,
@@ -74,15 +73,6 @@ export function ProfileFormSection({ onSuccess }) {
   return (
     <form onSubmit={form.handleSubmit(handleSubmit)}>
       <VStack gap={6} align="stretch">
-        <Alert.Root status="info" variant="subtle">
-          <Alert.Indicator />
-          <Alert.Content>
-            <Alert.Description>
-              {t("settings.modifyRequiresSignature")}
-            </Alert.Description>
-          </Alert.Content>
-        </Alert.Root>
-
         {/* 第一行：头像和基本信息 */}
         <Flex
           direction={{ base: "column", md: "row" }}
