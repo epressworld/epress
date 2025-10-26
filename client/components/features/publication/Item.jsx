@@ -441,88 +441,85 @@ export function PublicationItem({
       </UnifiedCard.Root>
 
       {/* 评论 Drawer - 从底部滑出，占据 70% 视口高度 */}
-      {showCommentIcon && (
-        <Drawer.Root
-          open={isCommentDrawerOpen}
-          onOpenChange={(e) => setIsCommentDrawerOpen(e.open)}
-          placement="bottom"
-          closeOnInteractOutside={true}
-          closeOnEscape={true}
-        >
-          <Portal>
-            <Drawer.Backdrop />
-            <Drawer.Positioner>
-              <Drawer.Content
-                roundedTop="l3"
-                height="70vh"
-                display="flex"
-                flexDirection="column"
-                overflow="hidden"
-              >
-                <Drawer.Header flexShrink={0}>
-                  <Container width="6xl">
-                    <Drawer.Title>
-                      {t("comment.publishComment")} ({commentCount})
-                    </Drawer.Title>
-                  </Container>
-                </Drawer.Header>
-
-                <Drawer.CloseTrigger
-                  asChild
-                  position="absolute"
-                  top="4"
-                  right="4"
-                >
-                  <IconButton size="sm" variant="ghost">
-                    <Text fontSize="xl">×</Text>
-                  </IconButton>
-                </Drawer.CloseTrigger>
-
-                <Drawer.Body
-                  flex="1"
-                  overflow="auto"
+      <Drawer.Root
+        open={shouldShowComments && isCommentDrawerOpen}
+        onOpenChange={(e) => setIsCommentDrawerOpen(e.open)}
+        placement="bottom"
+        closeOnInteractOutside={true}
+        closeOnEscape={true}
+      >
+        <Portal>
+          <Drawer.Backdrop />
+          <Drawer.Positioner>
+            <Drawer.Content
+              roundedTop="l3"
+              height="70vh"
+              display="flex"
+              flexDirection="column"
+              overflow="hidden"
+            >
+              <Drawer.Header flexShrink={0}>
+                <Container
+                  width="6xl"
                   display="flex"
-                  flexDirection="column"
-                  gap={6}
-                  px={6}
-                  py={4}
+                  justifyContent="space-between"
+                  alignItems="center"
                 >
-                  <Container width="6xl">
-                    {/* 评论列表 */}
-                    <VStack align="stretch">
-                      <CommentList
-                        publicationId={publication.id}
-                        onCommentDeleted={handleCommentDeleted}
-                        localPendingComment={localPendingComment}
-                        onRetrySignature={
-                          localPendingComment?.retryFn || undefined
-                        }
-                        onSetRefetch={setCommentRefetch}
-                        suspense={false}
-                      />
-                    </VStack>
+                  <Drawer.Title flex="0 1 auto" display="block">
+                    {t("comment.publishComment")} ({commentCount})
+                  </Drawer.Title>
+                  <Drawer.CloseTrigger asChild pos="initial">
+                    <IconButton size="sm" variant="ghost">
+                      <Text fontSize="xl">×</Text>
+                    </IconButton>
+                  </Drawer.CloseTrigger>
+                </Container>
+              </Drawer.Header>
 
-                    {/* 评论表单 */}
-                    <VStack
-                      align="stretch"
-                      flexShrink={0}
-                      borderTop="1px"
-                      borderColor="gray.100"
-                      pt={4}
-                    >
-                      <CommentForm
-                        publicationId={publication.id}
-                        onCommentCreated={handleCommentCreated}
-                        onPendingCommentChange={handlePendingCommentChange}
-                      />
-                    </VStack>
-                  </Container>
-                </Drawer.Body>
-              </Drawer.Content>
-            </Drawer.Positioner>
-          </Portal>
-        </Drawer.Root>
-      )}
+              <Drawer.Body
+                flex="1"
+                overflow="auto"
+                flexDirection="column"
+                gap={6}
+                px={6}
+                py={4}
+              >
+                <Container width="6xl">
+                  {/* 评论列表 */}
+                  <VStack align="stretch">
+                    <CommentList
+                      publicationId={publication.id}
+                      onCommentDeleted={handleCommentDeleted}
+                      localPendingComment={localPendingComment}
+                      onRetrySignature={
+                        localPendingComment?.retryFn || undefined
+                      }
+                      onSetRefetch={setCommentRefetch}
+                      suspense={false}
+                    />
+                  </VStack>
+
+                  {/* 评论表单 */}
+                  <VStack
+                    align="stretch"
+                    flexShrink={0}
+                    borderTop="1px"
+                    borderColor="gray.100"
+                    pt={6}
+                  >
+                    <CommentForm
+                      key={`commentForm-${publication.id}-${commentCount}`}
+                      publicationId={publication.id}
+                      onCommentCreated={handleCommentCreated}
+                      onPendingCommentChange={handlePendingCommentChange}
+                    />
+                  </VStack>
+                </Container>
+              </Drawer.Body>
+            </Drawer.Content>
+          </Drawer.Positioner>
+        </Portal>
+      </Drawer.Root>
     </>
   )
 }
