@@ -42,12 +42,6 @@ export default {
       },
     ]
   },
-  webpack: (config) => {
-    // 客户端构建时，忽略 react-native 模块
-    config.resolve.alias["@react-native-async-storage/async-storage"] = false
-
-    return config
-  },
   async rewrites() {
     return [
       {
