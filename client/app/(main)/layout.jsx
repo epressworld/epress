@@ -76,23 +76,14 @@ export default async function RootLayout({ children }) {
     // 如果检查接口失败，尝试继续加载（可能是临时网络问题）
   }
 
-  // 获取 profile 信息
-  const response = await fetch(`${process.env.EPRESS_API_URL}/ewp/profile`, {
-    cache: "no-store",
-  })
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch profile: ${response.status}`)
-  }
-
-  const profile = await response.json()
-
   // 直接查询 PAGE_DATA（会被缓存）
   let locale = "en"
   let messages = null
+  let url = ""
 
   try {
     const { data } = await query({ query: PAGE_DATA })
+    url = data?.profile?.url || ""
     const defaultLanguage = data?.settings?.defaultLanguage
 
     if (
@@ -140,7 +131,7 @@ export default async function RootLayout({ children }) {
     <html lang={locale} suppressHydrationWarning>
       <body suppressHydrationWarning>
         <PwaRegistry />
-        <ApolloProvider url={profile.url}>
+        <ApolloProvider url={url}>
           <PreloadQuery query={PAGE_DATA}>
             <Page
               intl={{ locale, messages }}
