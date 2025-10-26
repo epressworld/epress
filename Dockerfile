@@ -35,6 +35,7 @@ RUN npm ci --omit=dev
 COPY --from=builder /app/client/.next ./client/.next
 COPY --from=builder /app/client/public ./client/public
 COPY --from=builder /app/client/next.config.mjs ./client/next.config.mjs
+COPY --from=builder /app/knexfile.mjs ./knexfile.mjs
 COPY --from=builder /app/server ./server
 COPY --from=builder /app/config ./config
 COPY --from=builder /app/commands ./commands
