@@ -1,5 +1,5 @@
 import { config } from "dotenv"
-import { validateInfrastructureConfig } from "./validation.mjs"
+import { validateConfig } from "./validation.mjs"
 
 /**
  * ePress Configuration Management
@@ -20,8 +20,8 @@ config({
 
 // Validate infrastructure configuration only (allows pre-install mode)
 // Application-level settings will be loaded from database after installation
-export const appConfig = validateInfrastructureConfig()
+export const appConfig = validateConfig()
 
 // Export configuration descriptions (for documentation generation)
 // Export validation functions (for testing)
-export { validateInfrastructureConfig } from "./validation.mjs"
+export { validateConfig } from "./validation.mjs"

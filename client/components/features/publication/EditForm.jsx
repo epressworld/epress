@@ -96,7 +96,7 @@ export const PublicationEditForm = ({
   }
 
   return (
-    <UnifiedCard.Root mb={6} overflow="hidden">
+    <UnifiedCard.Root overflow="hidden">
       {/* 现有文件显示（不可编辑） */}
       {publication.content?.type === "FILE" && (
         <FileRenderer

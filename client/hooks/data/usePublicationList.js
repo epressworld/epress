@@ -151,13 +151,51 @@ export function usePublicationList({ variables, keyword: _keyword }) {
         // 普通文本发布，使用常规GraphQL请求
         await createPublication({
           variables: { input },
-          refetchQueries: [
-            {
+          update: (cache, { data }) => {
+            if (!data?.createPublication) return
+
+            const newPublication = data.createPublication
+
+            // 读取现有缓存
+            const existingData = cache.readQuery({
               query: SEARCH_PUBLICATIONS,
               variables,
-            },
-          ],
-          awaitRefetchQueries: true,
+            })
+
+            if (existingData) {
+              // 在列表开头插入新内容
+              cache.writeQuery({
+                query: SEARCH_PUBLICATIONS,
+                variables,
+                data: {
+                  search: {
+                    ...existingData.search,
+                    edges: [
+                      {
+                        node: {
+                          __typename: "Publication",
+                          ...newPublication,
+                          author: {
+                            __typename: "Node",
+                            ...newPublication.author,
+                          },
+                          content: {
+                            __typename: "Content",
+                            ...newPublication.content,
+                          },
+                        },
+                        cursor: Buffer.from(newPublication.id).toString(
+                          "base64",
+                        ),
+                        __typename: "SearchItemEdge",
+                      },
+                      ...existingData.search.edges, // 保留所有已加载的数据
+                    ],
+                  },
+                },
+              })
+            }
+          },
         })
       }
 

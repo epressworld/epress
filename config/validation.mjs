@@ -9,7 +9,7 @@ import * as yup from "yup"
  * Infrastructure-level configuration schema
  * These settings are required for the server to start and connect to the database
  */
-export const EPRESS_INFRASTRUCTURE_SCHEMA = yup.object({
+export const EPRESS_CONFIG_SCHEMA = yup.object({
   // ===========================================
   // Server Configuration
   // ===========================================
@@ -69,76 +69,13 @@ export const EPRESS_INFRASTRUCTURE_SCHEMA = yup.object({
 })
 
 /**
- * Application-level configuration schema (stored in database after installation)
- * These settings are optional during pre-install state
- */
-export const EPRESS_APPLICATION_SCHEMA = yup.object({
-  // ===========================================
-  // Client Configuration (will be stored in database)
-  // ===========================================
-  EPRESS_CLIENT_DEFAULT_LANGUAGE: yup
-    .string()
-    .oneOf(["en", "zh"], "Language must be en or zh")
-    .optional(),
-
-  EPRESS_CLIENT_DEFAULT_THEME: yup
-    .string()
-    .oneOf(["light", "dark", "system"], "Theme must be light, dark, or system")
-    .optional(),
-
-  EPRESS_WALLETCONNECT_PROJECTID: yup.string().optional(),
-
-  // ===========================================
-  // Authentication Configuration (will be stored in database)
-  // ===========================================
-  EPRESS_AUTH_JWT_SECRET: yup
-    .string()
-    .min(32, "JWT secret must be at least 32 characters")
-    .optional(),
-
-  EPRESS_AUTH_JWT_EXPIRES_IN: yup.string().optional(),
-
-  // ===========================================
-  // Node Configuration (will be stored in database)
-  // ===========================================
-  EPRESS_NODE_ADDRESS: yup
-    .string()
-    .matches(/^0x[a-fA-F0-9]{40}$/, "Must be a valid Ethereum address format")
-    .optional(),
-
-  EPRESS_NODE_URL: yup
-    .string()
-    .matches(/^https?:\/\/.+/, "Must be a valid HTTP or HTTPS URL")
-    .optional(),
-
-  EPRESS_NODE_TITLE: yup.string().optional(),
-
-  EPRESS_NODE_DESCRIPTION: yup.string().optional(),
-
-  // ===========================================
-  // Email Configuration (will be stored in database)
-  // ===========================================
-  EPRESS_MAIL_TRANSPORT: yup.string().optional(),
-
-  EPRESS_MAIL_FROM: yup.string().optional(),
-})
-
-/**
- * Full configuration schema (for backward compatibility)
- * Combines infrastructure and application schemas
- */
-export const EPRESS_CONFIG_SCHEMA = EPRESS_INFRASTRUCTURE_SCHEMA.concat(
-  EPRESS_APPLICATION_SCHEMA,
-)
-
-/**
  * Validate infrastructure configuration (required for server startup)
  * @param {Object} env - Environment variable object
  * @returns {Object} Validated configuration object
  */
-export function validateInfrastructureConfig(env = process.env) {
+export function validateConfig(env = process.env) {
   try {
-    return EPRESS_INFRASTRUCTURE_SCHEMA.validateSync(env, {
+    return EPRESS_CONFIG_SCHEMA.validateSync(env, {
       abortEarly: false,
       stripUnknown: true,
     })

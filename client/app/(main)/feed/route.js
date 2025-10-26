@@ -1,5 +1,6 @@
 import { marked } from "marked"
 import { NextResponse } from "next/server"
+import formatFileSize from "pretty-bytes"
 
 // Constants
 const RSS_CACHE_MAX_AGE = 300 // 5 minutes
@@ -8,14 +9,6 @@ const MAX_PUBLICATIONS = 20
 const TITLE_MAX_LENGTH = 100
 const DESCRIPTION_MAX_LENGTH = 300
 const FILE_DESCRIPTION_MAX_LENGTH = 200
-
-// Function to format file size
-function formatFileSize(bytes) {
-  if (!bytes) return ""
-  const sizes = ["B", "KB", "MB", "GB"]
-  const i = Math.floor(Math.log(bytes) / Math.log(1024))
-  return `${Math.round((bytes / 1024 ** i) * 100) / 100} ${sizes[i]}`
-}
 
 // Function to clean markdown formatting for title extraction (lightweight)
 function cleanMarkdownForTitle(text) {
@@ -57,20 +50,14 @@ function markdownToHtml(markdown) {
 
 // Function to generate RSS XML
 function generateRSS(publications, nodeInfo, fullContent = false) {
-  // EPRESS_NODE_URL should be the frontend URL directly
-  const baseUrl = process.env.EPRESS_NODE_URL
-  if (!baseUrl) {
-    throw new Error("EPRESS_NODE_URL environment variable is not set")
-  }
-
   const nodeTitle = nodeInfo?.title || "ePress Node"
   const nodeDescription = nodeInfo?.description || "Personal publishing node"
-  const nodeUrl = nodeInfo?.url || baseUrl
+  const nodeUrl = nodeInfo?.url
   const currentDate = new Date().toUTCString()
 
   const rssItems = publications
     .map((pub) => {
-      const pubUrl = `${baseUrl}/publications/${pub.id}`
+      const pubUrl = `${nodeUrl}/publications/${pub.id}`
       const pubDate = new Date(pub.created_at).toUTCString()
       const authorName = pub.author?.title || "Unknown Author"
 
@@ -174,7 +161,7 @@ function generateRSS(publications, nodeInfo, fullContent = false) {
     <link>${nodeUrl}</link>
     <language>en</language>
     <lastBuildDate>${currentDate}</lastBuildDate>
-    <atom:link href="${baseUrl}/feed${fullContent ? "?full=true" : ""}" rel="self" type="application/rss+xml"/>
+    <atom:link href="${nodeUrl}/feed${fullContent ? "?full=true" : ""}" rel="self" type="application/rss+xml"/>
     ${rssItems}
   </channel>
 </rss>`
@@ -326,13 +313,12 @@ export async function GET(request) {
     }
 
     // For other errors, return an empty RSS feed (RSS spec compliant)
-    const baseUrl = process.env.EPRESS_NODE_URL || "http://localhost:8543"
     const emptyRss = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
     <title>ePress Feed</title>
     <description>No publications available</description>
-    <link>${baseUrl}</link>
+    <link>https://epress.blog</link>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
   </channel>
 </rss>`

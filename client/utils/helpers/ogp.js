@@ -29,7 +29,7 @@ export async function getPageData() {
 
 /**
  * 从 Markdown 内容中提取纯文本
- * 使用 remark 和 strip-markdown 来移除 Markdown 语法
+ *
  * @param {string} markdown - Markdown 格式的内容
  * @param {number} maxLength - 最大长度，默认 200
  * @returns {Promise<string>} 纯文本内容
