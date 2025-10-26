@@ -1,6 +1,7 @@
 "use client"
 
 import { Box, VStack } from "@chakra-ui/react"
+import { useMemo } from "react"
 import { FileUploadZone } from "@/components/ui"
 
 export function FileModeForm({
@@ -11,6 +12,19 @@ export function FileModeForm({
   maxFileSize,
   disabled = false,
 }) {
+  const memoizedFileUpload = useMemo(
+    () => (
+      <FileUploadZone
+        selectedFile={selectedFile}
+        filePreview={filePreview}
+        onFileSelect={onFileSelect}
+        onRemoveFile={onRemoveFile}
+        maxSize={maxFileSize}
+        disabled={disabled}
+      />
+    ),
+    [selectedFile, filePreview, maxFileSize, disabled],
+  )
   return (
     <VStack gap={4} align="stretch">
       <Box
@@ -27,14 +41,7 @@ export function FileModeForm({
           bg: "gray.700",
         }}
       >
-        <FileUploadZone
-          selectedFile={selectedFile}
-          filePreview={filePreview}
-          onFileSelect={onFileSelect}
-          onRemoveFile={onRemoveFile}
-          maxSize={maxFileSize}
-          disabled={disabled}
-        />
+        {memoizedFileUpload}
       </Box>
     </VStack>
   )

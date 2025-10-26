@@ -12,6 +12,7 @@ import {
   VStack,
 } from "@chakra-ui/react"
 import { useCopyToClipboard } from "@uidotdev/usehooks"
+import formatFileSize from "pretty-bytes"
 import { useEffect, useState } from "react"
 import { FiEdit3, FiMessageCircle, FiTrash2 } from "react-icons/fi"
 import { LuQuote, LuSend } from "react-icons/lu"
@@ -58,25 +59,12 @@ export function PublicationItem({
   const [commentRefetch, setCommentRefetch] = useState(null)
   const [localPendingComment, setLocalPendingComment] = useState(null)
 
-  // 格式化文件大小
-  const formatFileSize = (bytes) => {
-    if (!bytes) return ""
-    const sizes = ["B", "KB", "MB", "GB"]
-    const i = Math.floor(Math.log(bytes) / Math.log(1024))
-    return `${Math.round((bytes / 1024 ** i) * 100) / 100} ${sizes[i]}`
-  }
-
   // 生成引用文本
   const generateQuote = () => {
     const authorTitle = publication.author?.title || "Unknown Author"
     const authorUrl = publication.author?.url || ""
     const createdAt = formatDate(publication.created_at)
     const contentHash = publication.content?.content_hash || ""
-    const createdAtUnix = Math.floor(
-      new Date(publication.created_at).getTime() / 1000,
-    )
-    const isExternal = publication.author?.is_self !== true
-    const baseUrl = isExternal ? authorUrl : ""
 
     let contentSection
 
@@ -90,10 +78,9 @@ export function PublicationItem({
       const isImage = mimetype.startsWith("image/")
 
       if (isImage) {
-        const altText = (publication.description || filename).split("\n")[0]
-        const imgUrl = `${baseUrl}/ewp/contents/${contentHash}?timestamp=${createdAtUnix}`
+        const imgUrl = `${authorUrl}/ewp/contents/${contentHash}?thumb=md`
         const lines = [
-          `> ![${altText}](${imgUrl})`,
+          `> ![${filename}](${imgUrl})`,
           ...(publication.description || "")
             .split("\n")
             .filter((line) => line.trim().length > 0)
@@ -101,10 +88,9 @@ export function PublicationItem({
         ]
         contentSection = lines.join("\n")
       } else {
-        const fileUrl = `${baseUrl}/ewp/contents/${contentHash}?timestamp=${createdAtUnix}`
+        const fileUrl = `${authorUrl}/ewp/contents/${contentHash}`
         contentSection = [
-          `> 📎 ${t("publication.fileMode")}: ${filename}${fileInfo}`,
-          `> [${filename}](${fileUrl})`,
+          `> 📎 ${t("publication.fileMode")}: [${filename}](${fileUrl}) ${fileInfo}`,
           `> `,
           ...(publication.description || "")
             .split("\n")
@@ -131,14 +117,13 @@ export function PublicationItem({
 
   // 处理引用按钮点击
   const handleQuote = async () => {
-    const quoteText = generateQuote()
-
     if (isNodeOwner && isAuthenticated) {
       setIsQuoteDialogOpen(true)
       return
     }
 
     try {
+      const quoteText = generateQuote()
       await copyToClipboard(quoteText)
 
       toaster.create({
@@ -169,6 +154,7 @@ export function PublicationItem({
     if (isQuoteDialogOpen) {
       const quoteText = generateQuote()
       const contentWithPlaceholder = `&nbsp;\n\n${quoteText}`
+      console.log(contentWithPlaceholder, "============")
       setQuoteInitialContent(contentWithPlaceholder)
 
       setTimeout(() => {
