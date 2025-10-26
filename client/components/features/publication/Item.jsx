@@ -154,7 +154,6 @@ export function PublicationItem({
     if (isQuoteDialogOpen) {
       const quoteText = generateQuote()
       const contentWithPlaceholder = `&nbsp;\n\n${quoteText}`
-      console.log(contentWithPlaceholder, "============")
       setQuoteInitialContent(contentWithPlaceholder)
 
       setTimeout(() => {

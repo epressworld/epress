@@ -58,7 +58,6 @@ export function TokenGenerator() {
   const [generatedToken, setGeneratedToken] = useState("")
 
   const handleGenerate = async () => {
-    console.log("Selected permissions:", selectedPermissions)
     if (!selectedPermissions || selectedPermissions.length === 0) {
       toaster.create({
         description: t("settings.selectAtLeastOnePermission"),
@@ -124,7 +123,6 @@ export function TokenGenerator() {
           value={selectedPermissions || []}
           collection={PERMISSIONS}
           onValueChange={(details) => {
-            console.log("Value change details:", details)
             setSelectedPermissions(details.value || [])
           }}
         >

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-export async function middleware(request) {
+export async function proxy(request) {
   const token = request.cookies.get("authToken")?.value
 
   // 没有 token 直接放行
