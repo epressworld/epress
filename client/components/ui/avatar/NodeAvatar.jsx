@@ -1,6 +1,6 @@
 "use client"
 
-import { Avatar, Circle, Float } from "@chakra-ui/react"
+import { Avatar, Circle, Float, Link } from "@chakra-ui/react"
 
 /**
  * NodeAvatar - 节点头像组件
@@ -39,15 +39,8 @@ export function NodeAvatar({
   const nodeUrl = node?.url
   const nodeTitle = node?.title || node?.address || "Node"
   const avatarUrl = nodeUrl ? `${nodeUrl}/ewp/avatar` : undefined
-
-  return (
-    <Avatar.Root
-      size={size}
-      onClick={onClick}
-      className={className}
-      cursor={onClick ? "pointer" : "default"}
-      {...props}
-    >
+  const renderAvatar = () => (
+    <>
       <Avatar.Image src={avatarUrl} alt={nodeTitle} />
       {showFallback && (
         <Avatar.Fallback>{nodeTitle.charAt(0).toUpperCase()}</Avatar.Fallback>
@@ -62,6 +55,24 @@ export function NodeAvatar({
             outlineColor="bg"
           />
         </Float>
+      )}
+    </>
+  )
+
+  return (
+    <Avatar.Root
+      size={size}
+      onClick={onClick}
+      className={className}
+      cursor={onClick ? "pointer" : "default"}
+      {...props}
+    >
+      {nodeUrl ? (
+        <Link href={nodeUrl} target="_blank">
+          {renderAvatar()}
+        </Link>
+      ) : (
+        renderAvatar()
       )}
     </Avatar.Root>
   )

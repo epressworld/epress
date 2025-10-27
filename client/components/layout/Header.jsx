@@ -49,27 +49,25 @@ const HeaderNodeInfo = ({
 }) => {
   return (
     <HStack gap={4} align="center" flex="1" minW={0}>
-      <Link href="/" _hover={{ textDecoration: "none" }}>
-        <Box position="relative">
-          <NodeAvatar
-            node={profile}
-            size="lg"
-            className="header-avatar"
-            cursor="pointer"
-          />
-          {/* 节点所有者在线状态指示器 */}
-          {profile.address && isAddressOnline(profile.address) && (
-            <Float placement="bottom-end" offsetX="1" offsetY="1">
-              <Circle
-                bg="green.500"
-                size="12px"
-                outline="0.2em solid"
-                outlineColor="bg"
-              />
-            </Float>
-          )}
-        </Box>
-      </Link>
+      <Box position="relative">
+        <NodeAvatar
+          node={profile}
+          size="lg"
+          className="header-avatar"
+          cursor="pointer"
+        />
+        {/* 节点所有者在线状态指示器 */}
+        {profile.address && isAddressOnline(profile.address) && (
+          <Float placement="bottom-end" offsetX="1" offsetY="1">
+            <Circle
+              bg="green.500"
+              size="12px"
+              outline="0.2em solid"
+              outlineColor="bg"
+            />
+          </Float>
+        )}
+      </Box>
 
       <VStack gap={0} align="start" flex="1" minW={0} maxW="100%">
         {isLoading ? (

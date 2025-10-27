@@ -1,6 +1,6 @@
 "use client"
 
-import { Heading, HStack, Text } from "@chakra-ui/react"
+import { Badge, HStack, Text } from "@chakra-ui/react"
 import { UnifiedCard } from "@/components/ui"
 
 /**
@@ -32,25 +32,21 @@ export function ConnectionList({
 }) {
   return (
     <UnifiedCard.Root {...props}>
-      <UnifiedCard.Header pb={2} {...headerProps}>
-        <HStack justify="space-between" align="center">
+      <UnifiedCard.Header
+        {...headerProps}
+        borderBottom="1px solid"
+        borderColor="gray.100"
+        _dark={{ borderColor: "gray.800" }}
+      >
+        <HStack gap={2} justify="space-between">
           <HStack gap={2}>
-            {icon}
-            <Heading size="lg" color="gray.700" _dark={{ color: "gray.300" }}>
-              {title}
-            </Heading>
-          </HStack>
-          {total !== undefined && (
-            <Text
-              fontSize="lg"
-              fontWeight="bold"
-              fontStyle="italic"
-              color="gray.400"
-              _dark={{ color: "gray.600" }}
-            >
-              {total}
+            <Text fontSize="xl" fontWeight="semibold">
+              {icon} {title}
             </Text>
-          )}
+          </HStack>
+          <Badge colorPalette="green" variant="solid">
+            {total}
+          </Badge>
         </HStack>
       </UnifiedCard.Header>
       <UnifiedCard.Body pt={0} {...bodyProps}>
