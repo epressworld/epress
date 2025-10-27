@@ -96,7 +96,6 @@ export function FileRenderer({
               onClick={() => setLightboxOpen(true)}
               bg="gray.100"
               _dark={{ bg: "gray.800" }}
-              borderRadius="md"
             />
             {showDownload && (
               <FileInfo

@@ -1,6 +1,7 @@
 "use client"
 
 import Lightbox from "yet-another-react-lightbox"
+import Zoom from "yet-another-react-lightbox/plugins/zoom"
 import "yet-another-react-lightbox/styles.css"
 
 /**
@@ -29,6 +30,7 @@ export function ImageLightbox({ open, onClose, src, alt }) {
           alt: alt || "Image",
         },
       ]}
+      plugins={[Zoom]}
       carousel={{ finite: true }}
       render={{
         buttonPrev: () => null,
