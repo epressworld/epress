@@ -288,6 +288,7 @@ export function PublicationItem({
               ...publication.content,
               url: `${publication.author.url}/ewp/contents/${publication.content.content_hash}`,
             }}
+            description={publication.description}
             showDownload={false}
           />
         )}
