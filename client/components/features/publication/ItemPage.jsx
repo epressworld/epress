@@ -91,7 +91,7 @@ export function PublicationItemPage({ variables }) {
 
   return (
     <>
-      <VStack gap={4} align="stretch">
+      <VStack spacing={6} align="stretch">
         {/* Publication detail - edit mode or view mode */}
         {isEditMode ? (
           <PublicationEditForm
