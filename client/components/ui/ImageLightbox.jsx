@@ -1,7 +1,10 @@
 "use client"
 
 import Lightbox from "yet-another-react-lightbox"
+import Captions from "yet-another-react-lightbox/plugins/captions"
+import Zoom from "yet-another-react-lightbox/plugins/zoom"
 import "yet-another-react-lightbox/styles.css"
+import "yet-another-react-lightbox/plugins/captions.css"
 
 /**
  * ImageLightbox - 图片 Lightbox 组件
@@ -18,18 +21,20 @@ import "yet-another-react-lightbox/styles.css"
  * @example
  * <ImageLightbox open={true} onClose={() => {}} src="/image.jpg" alt="Image" />
  */
-export function ImageLightbox({ open, onClose, src, alt }) {
+export function ImageLightbox({ open, onClose, src, alt, description }) {
   return (
     <Lightbox
       open={open}
       close={onClose}
+      plugins={[Zoom, Captions]}
+      carousel={{ finite: true }}
       slides={[
         {
           src: src,
           alt: alt || "Image",
+          description,
         },
       ]}
-      carousel={{ finite: true }}
       render={{
         buttonPrev: () => null,
         buttonNext: () => null,

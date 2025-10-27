@@ -65,6 +65,7 @@ function addThumbnailParam(url, size) {
  */
 export function FileRenderer({
   content,
+  description,
   showDownload = true,
   onDownload,
   ...props
@@ -96,7 +97,6 @@ export function FileRenderer({
               onClick={() => setLightboxOpen(true)}
               bg="gray.100"
               _dark={{ bg: "gray.800" }}
-              borderRadius="md"
             />
             {showDownload && (
               <FileInfo
@@ -117,6 +117,7 @@ export function FileRenderer({
               onClose={() => setLightboxOpen(false)}
               src={url}
               alt={filename || "Image"}
+              description={description}
             />
           )}
         </>
