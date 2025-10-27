@@ -126,14 +126,12 @@ export function useProfileForm() {
       const updatedProfile = updateResult.data.updateProfile
 
       // 第二步：使用最新的数据生成EIP-712请求用户签名
-      const timestamp = Math.floor(Date.now() / 1000)
       const typedData = nodeProfileUpdateTypedData(
         updatedProfile.address,
         updatedProfile.url,
         updatedProfile.title,
         updatedProfile.description,
-        updatedProfile.profile_version,
-        timestamp,
+        Math.floor(new Date(updatedProfile.updated_at).getTime() / 1000),
       )
 
       // 获取签名

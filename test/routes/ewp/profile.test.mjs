@@ -34,7 +34,6 @@ test.serial(
       title: TEST_NODE_A.title,
       description: TEST_NODE_A.description,
       is_self: true,
-      profile_version: 0,
     })
 
     // Action: Send GET request to /profile
@@ -45,6 +44,7 @@ test.serial(
 
     // Expected result
     t.is(response.statusCode, 200, "should return 200 OK")
+    const nodeA = await Node.query().findById(TEST_NODE_A.address)
     t.deepEqual(
       response.json(),
       {
@@ -52,6 +52,8 @@ test.serial(
         url: TEST_NODE_A.url,
         title: TEST_NODE_A.title,
         description: TEST_NODE_A.description,
+        created_at: new Date(nodeA.created_at).toISOString(),
+        updated_at: new Date(nodeA.updated_at).toISOString(),
       },
       "should return the correct self node profile",
     )

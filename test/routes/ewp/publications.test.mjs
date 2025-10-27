@@ -298,7 +298,6 @@ test.serial(
       title: "Other Node",
       description: "Other Description",
       is_self: false,
-      profile_version: 0,
     })
 
     // 创建自节点的 publication

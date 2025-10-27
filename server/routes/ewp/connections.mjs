@@ -49,7 +49,6 @@ router.post("/connections", async (request, reply) => {
 
     // Get self node's address first (Node B, the receiver)
     const selfNode = await request.config.getSelfNode()
-    const profileVersion = selfNode ? selfNode.profile_version : 0
 
     try {
       const result = await verifyTypedData({
@@ -109,11 +108,7 @@ router.post("/connections", async (request, reply) => {
     // 6. Fetch followee's profile (Node A) and validate identity
     let followeeProfile
     try {
-      const profileResponse = await fetch(`${followeeUrl}/ewp/profile`, {
-        headers: {
-          "X-Epress-Profile-Version": profileVersion.toString(),
-        },
-      })
+      const profileResponse = await fetch(`${followeeUrl}/ewp/profile`)
       if (!profileResponse.ok) {
         // Failed to fetch profile
         // If profile fetch fails, it's an issue with the provided followeeUrl or the remote node.
@@ -149,7 +144,6 @@ router.post("/connections", async (request, reply) => {
         title: followeeProfile.title,
         description: followeeProfile.description,
         is_self: false,
-        profile_version: 0,
       })
     }
 

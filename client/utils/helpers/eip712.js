@@ -180,7 +180,6 @@ export const nodeProfileUpdateTypedData = (
   url,
   title,
   description,
-  profileVersion,
   timestamp,
 ) => {
   return {
@@ -201,7 +200,6 @@ export const nodeProfileUpdateTypedData = (
         { name: "url", type: "string" },
         { name: "title", type: "string" },
         { name: "description", type: "string" },
-        { name: "profileVersion", type: "uint256" },
         { name: "timestamp", type: "uint256" },
       ],
     },
@@ -210,7 +208,6 @@ export const nodeProfileUpdateTypedData = (
       url,
       title,
       description,
-      profileVersion,
       timestamp,
     },
   }

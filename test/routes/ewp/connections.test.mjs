@@ -439,7 +439,6 @@ test.serial(
         title: TEST_NODE_B.title,
         description: TEST_NODE_B.description,
         is_self: false,
-        profile_version: 0,
       })
     }
 
@@ -643,7 +642,6 @@ test.serial(
       title: "Test Node",
       description: "Test Description",
       is_self: false,
-      profile_version: 0,
     })
     const connection = await Connection.query().insert({
       follower_address: selfNode.address, // Follower node (current node)
@@ -743,7 +741,6 @@ test.serial(
       title: "Test Node",
       description: "Test Description",
       is_self: false,
-      profile_version: 0,
     })
     const connection = await Connection.query().insert({
       follower_address: selfNode.address, // Follower node (current node)
@@ -800,7 +797,6 @@ test.serial(
       title: "Test Node",
       description: "Test Description",
       is_self: false,
-      profile_version: 0,
     })
 
     const connection = await Connection.query().insert({
@@ -859,7 +855,6 @@ test.serial(
       title: "Test Node",
       description: "Test Description",
       is_self: false,
-      profile_version: 0,
     })
     const connection = await Connection.query().insert({
       follower_address: followerNode.address, // Follower node
@@ -960,7 +955,6 @@ test.serial(
       title: "Test Node",
       description: "Test Description",
       is_self: false,
-      profile_version: 0,
     })
     const connection = await Connection.query().insert({
       follower_address: followerNode.address, // Follower node

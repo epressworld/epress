@@ -4,33 +4,46 @@ import { Node } from "../../models/index.mjs"
 
 const router = new Router()
 
-router.post("/nodes/updates", async (request, reply) => {
+router.patch("/nodes/:address", async (request, reply) => {
+  const { address } = request.params
+
   request.log.debug(
     {
+      addressParam: address,
       publisherAddress: request.body?.typedData?.message?.publisherAddress,
-      profileVersion: request.body?.typedData?.message?.profileVersion,
+      timestamp: request.body?.typedData?.message?.timestamp,
     },
-    "POST /nodes/updates endpoint accessed",
+    "PATCH /nodes/:address endpoint accessed",
   )
 
   const { typedData, signature } = request.body || {}
 
   // 1. Basic Payload Validation
   if (!typedData || !signature || !typedData.message) {
-    request.log.warn("Invalid payload structure in POST /nodes/updates")
+    request.log.warn("Invalid payload structure in PATCH /nodes/:address")
     return reply.code(400).send({ error: "INVALID_PAYLOAD" })
   }
 
-  const {
-    publisherAddress,
-    url,
-    title,
-    description,
-    profileVersion,
-    timestamp,
-  } = typedData.message
+  const { publisherAddress, url, title, description, timestamp } =
+    typedData.message
 
-  // 2. Recover Signer and Validate Signature
+  // 2. Validate address parameter matches publisherAddress
+  try {
+    if (getAddress(address) !== getAddress(publisherAddress)) {
+      request.log.warn(
+        "Address parameter does not match publisherAddress in PATCH /nodes/:address",
+      )
+      return reply.code(400).send({ error: "ADDRESS_MISMATCH" })
+    }
+  } catch (e) {
+    request.log.warn(
+      "Invalid address format in PATCH /nodes/:address:",
+      e.message,
+    )
+    return reply.code(400).send({ error: "INVALID_ADDRESS" })
+  }
+
+  // 3. Recover Signer and Validate Signature
   let signerAddress
   try {
     signerAddress = await recoverTypedDataAddress({
@@ -39,56 +52,54 @@ router.post("/nodes/updates", async (request, reply) => {
     })
   } catch (e) {
     request.log.warn(
-      "Signature recovery failed in POST /nodes/updates:",
+      "Signature recovery failed in PATCH /nodes/:address:",
       e.message,
     )
     return reply.code(400).send({ error: "INVALID_SIGNATURE" })
   }
 
   if (getAddress(signerAddress) !== getAddress(publisherAddress)) {
-    request.log.warn("Signature mismatch in POST /nodes/updates")
+    request.log.warn("Signature mismatch in PATCH /nodes/:address")
     return reply.code(400).send({ error: "INVALID_SIGNATURE" })
   }
 
-  // 3. Validate Timestamp (within 1 hour)
-  const currentTime = Math.floor(Date.now() / 1000)
-  if (Math.abs(currentTime - timestamp) > 3600) {
-    request.log.warn("Invalid timestamp in POST /nodes/updates")
-    return reply.code(400).send({ error: "INVALID_TIMESTAMP" })
-  }
-
-  // 4. Find the node and check the version
+  // 4. Find the node and check timestamp against updated_at
   const nodeToUpdate = await Node.query().findOne({
     address: getAddress(publisherAddress),
   })
 
   if (nodeToUpdate) {
-    if (profileVersion > nodeToUpdate.profile_version) {
-      // 5. Update the node if the new version is higher
+    // Convert updated_at to Unix timestamp (seconds)
+    const nodeUpdatedAtTimestamp = Math.floor(
+      new Date(nodeToUpdate.updated_at).getTime() / 1000,
+    )
+
+    if (timestamp > nodeUpdatedAtTimestamp) {
+      // 5. Update the node if the new timestamp is more recent
       await nodeToUpdate.$query().patch({
         url,
         title,
         description,
-        profile_version: profileVersion,
+        updated_at: timestamp * 1000,
       })
 
       request.log.info(
         {
           nodeAddress: publisherAddress,
-          oldVersion: nodeToUpdate.profile_version,
-          newVersion: profileVersion,
+          oldTimestamp: nodeUpdatedAtTimestamp,
+          newTimestamp: timestamp,
           updatedFields: { url, title, description },
         },
-        "Node profile updated successfully in POST /nodes/updates",
+        "Node profile updated successfully in PATCH /nodes/:address",
       )
     } else {
       request.log.debug(
         {
           nodeAddress: publisherAddress,
-          currentVersion: nodeToUpdate.profile_version,
-          receivedVersion: profileVersion,
+          nodeUpdatedAt: nodeUpdatedAtTimestamp,
+          receivedTimestamp: timestamp,
         },
-        "Node profile update skipped - version not higher",
+        "Node profile update skipped - timestamp not newer",
       )
     }
   } else {
@@ -96,7 +107,7 @@ router.post("/nodes/updates", async (request, reply) => {
       {
         nodeAddress: publisherAddress,
       },
-      "Node not found in POST /nodes/updates - silently ignoring",
+      "Node not found in PATCH /nodes/:address - silently ignoring",
     )
   }
   // If node doesn't exist, we silently ignore. The connection process is responsible for creating nodes.

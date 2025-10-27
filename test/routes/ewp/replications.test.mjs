@@ -37,7 +37,6 @@ test.beforeEach(async (t) => {
     title: "Test Node",
     description: "Test Description",
     is_self: false,
-    profile_version: 0,
   })
   t.context.followeeNode = followeeNode
 
@@ -277,7 +276,6 @@ test("Failure: should reject replication from an unfollowed node", async (t) => 
     url: "https://node-c.com",
     title: "Node C",
     is_self: false,
-    profile_version: 0,
   })
 
   const mockContent = "# Malicious Content"
@@ -496,12 +494,10 @@ test("Failure: should reject replication if file content is missing Content-Desc
   t.falsy(publication, "Publication should not be created")
 })
 
-test("Success: should trigger profile sync if X-Epress-Profile-Version is higher", async (t) => {
+test("Success: should trigger profile sync if X-Epress-Profile-Updated is higher", async (t) => {
   const { app, testAccount, followeeNode } = t.context
 
-  // 1. Set up publisherNode with an initial profile_version
-  const initialProfileVersion = 1
-  await followeeNode.$query().patch({ profile_version: initialProfileVersion })
+  // 1. Set up publisherNode
 
   const mockContent = "# Content for profile sync test"
   const contentHash = `0x${await hash.sha256(mockContent)}`
@@ -513,13 +509,12 @@ test("Success: should trigger profile sync if X-Epress-Profile-Version is higher
     .reply(200, mockContent, { "Content-Type": "text/markdown" })
 
   // 3. Mock the GET /ewp/profile call that syncProfile will make
-  const newProfileVersion = 2
+
   nock(followeeNode.url).get("/ewp/profile").reply(200, {
     address: followeeNode.address,
     url: followeeNode.url,
     title: "Updated Title",
     description: "Updated Description",
-    profile_version: newProfileVersion, // This is the version syncProfile will fetch
   })
 
   // 4. Create and sign the replication request from Node B
@@ -529,12 +524,13 @@ test("Success: should trigger profile sync if X-Epress-Profile-Version is higher
   )
   const signature = await generateSignature(testAccount, typedData, "typedData")
 
-  // 5. Send the replication request to our server with a higher X-Epress-Profile-Version header
+  // 5. Send the replication request to our server with a higher X-Epress-Profile-Updated header
+  const newUpdated = new Date()
   const response = await app.inject({
     method: "POST",
     url: "/ewp/replications",
     headers: {
-      "X-Epress-Profile-Version": newProfileVersion.toString(),
+      "X-Epress-Profile-Updated": newUpdated.toISOString(),
     },
     payload: {
       typedData,
@@ -548,12 +544,12 @@ test("Success: should trigger profile sync if X-Epress-Profile-Version is higher
   // Wait a bit for the async syncProfile to complete
   await new Promise((resolve) => setTimeout(resolve, 100))
 
-  // 7. Assert that the publisherNode's profile_version has been updated
+  // 7. Assert that the publisherNode's updated_at has been updated
   const updatedPublisherNode = await Node.query().findById(followeeNode.address)
   t.is(
-    updatedPublisherNode.profile_version,
-    newProfileVersion,
-    "Publisher node profile_version should be updated",
+    new Date(updatedPublisherNode.updated_at).toISOString(),
+    newUpdated.toISOString(),
+    "Publisher node profile should be updated",
   )
   t.is(
     updatedPublisherNode.title,

@@ -109,7 +109,8 @@ export const UPDATE_PROFILE = gql`
       url
       title
       description
-      profile_version
+      created_at
+      updated_at
     }
   }
 `

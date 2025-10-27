@@ -1,5 +1,4 @@
 import { graphql } from "swiftify"
-import { Node } from "../../models/index.mjs"
 
 // Define the GraphQL Profile type manually, as it's a subset of the Node model
 const ProfileType = graphql.type("ObjectType", {
@@ -9,8 +8,8 @@ const ProfileType = graphql.type("ObjectType", {
     url: { type: graphql.type("NonNull", graphql.type("String")) },
     title: { type: graphql.type("String") },
     description: { type: graphql.type("String") },
-    profile_version: { type: graphql.type("Int") },
     created_at: { type: graphql.type("NonNull", graphql.type("String")) },
+    updated_at: { type: graphql.type("NonNull", graphql.type("String")) },
   },
 })
 
@@ -23,7 +22,7 @@ const profileQuery = {
 
       request.log.debug("Fetching profile")
 
-      const node = await Node.query().findOne({ is_self: true })
+      const node = await request.config.getSelfNode()
 
       if (!node) {
         request.log.error("Self node not found")
@@ -33,8 +32,8 @@ const profileQuery = {
       request.log.debug(
         {
           address: node.address,
-          profile_version: node.profile_version,
           created_at: node.created_at,
+          updated_at: node.updated_at,
         },
         "Profile fetched successfully",
       )
@@ -44,8 +43,8 @@ const profileQuery = {
         url: node.url,
         title: node.title,
         description: node.description,
-        profile_version: node.profile_version,
         created_at: new Date(node.created_at).toISOString(),
+        updated_at: new Date(node.updated_at).toISOString(),
       }
     },
   },

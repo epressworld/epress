@@ -233,7 +233,6 @@ test.serial(
     t.is(selfNode.url, "https://test-node.example.com")
     t.is(selfNode.title, "Test Node")
     t.truthy(selfNode.is_self)
-    t.is(selfNode.profile_version, 0)
 
     // Verify settings (including all optional ones)
     const jwtSecret = await Setting.get("jwt_secret")

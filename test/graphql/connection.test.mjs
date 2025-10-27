@@ -316,17 +316,16 @@ test.serial(
     // Mock EWP protocol callback
     const _createProfileScope = nock(TEST_NODE_B.url)
       .get("/ewp/profile")
-      .matchHeader("X-Epress-Profile-Version", "0")
       .reply(200, {
         address: TEST_NODE_B.address,
         title: TEST_NODE_B.title,
         url: TEST_NODE_B.url,
         description: TEST_NODE_B.description,
+        updated_at: TEST_NODE_B.updated_at,
       })
 
     const _createScope = nock(TEST_NODE_B.url)
       .post("/ewp/connections")
-      .matchHeader("X-Epress-Profile-Version", "0")
       .reply(201, { status: "created" })
 
     // Create connection
@@ -362,7 +361,6 @@ test.serial(
     // Step 2: Mock EWP DELETE /connections call
     const deleteScope = nock(TEST_NODE_B.url)
       .delete("/ewp/connections")
-      .matchHeader("X-Epress-Profile-Version", "0")
       .reply(204)
 
     // Step 3: Prepare EIP-712 signature data for DeleteConnection
@@ -680,7 +678,6 @@ test.serial(
     // Mock EWP protocol callback
     const _createProfileScope = nock(TEST_NODE_B.url)
       .get("/ewp/profile")
-      .matchHeader("X-Epress-Profile-Version", "0")
       .reply(200, {
         address: TEST_NODE_B.address,
         title: TEST_NODE_B.title,
@@ -690,7 +687,6 @@ test.serial(
 
     const _createScope = nock(TEST_NODE_B.url)
       .post("/ewp/connections")
-      .matchHeader("X-Epress-Profile-Version", "0")
       .reply(201, { status: "created" })
 
     // Create connection
@@ -716,7 +712,6 @@ test.serial(
       title: TEST_NODE_B.title,
       description: TEST_NODE_B.description,
       is_self: false,
-      profile_version: 0,
     })
 
     // Manually create connection record (because createConnection won't create connection record on current node)
@@ -733,7 +728,6 @@ test.serial(
     // Step 2: Mock EWP DELETE /connections call (send to followee node)
     const deleteScope = nock(TEST_NODE_B.url)
       .delete("/ewp/connections")
-      .matchHeader("X-Epress-Profile-Version", "0")
       .reply(204)
 
     // Step 3: Prepare scenario 1 DeleteConnection signature data
@@ -918,19 +912,15 @@ test.serial(
     })
 
     // Step 2: Mock EWP protocol callback (same as test case 1)
-    const profileScope = nock(TEST_NODE_B.url)
-      .get("/ewp/profile")
-      .matchHeader("X-Epress-Profile-Version", "0")
-      .reply(200, {
-        address: TEST_NODE_B.address,
-        title: TEST_NODE_B.title,
-        url: TEST_NODE_B.url,
-        description: TEST_NODE_B.description,
-      })
+    const profileScope = nock(TEST_NODE_B.url).get("/ewp/profile").reply(200, {
+      address: TEST_NODE_B.address,
+      title: TEST_NODE_B.title,
+      url: TEST_NODE_B.url,
+      description: TEST_NODE_B.description,
+    })
 
     const scope = nock(TEST_NODE_B.url)
       .post("/ewp/connections")
-      .matchHeader("X-Epress-Profile-Version", "0")
       .reply(201, { status: "created" })
 
     // Step 3: Prepare EIP-712 signature data (same as test case 1)
@@ -1000,19 +990,15 @@ test.serial(
     // This is already handled by beforeEach cleanup
 
     // Step 2: Mock EWP protocol callback
-    const profileScope = nock(TEST_NODE_B.url)
-      .get("/ewp/profile")
-      .matchHeader("X-Epress-Profile-Version", "0")
-      .reply(200, {
-        address: TEST_NODE_B.address,
-        title: TEST_NODE_B.title,
-        url: TEST_NODE_B.url,
-        description: TEST_NODE_B.description,
-      })
+    const profileScope = nock(TEST_NODE_B.url).get("/ewp/profile").reply(200, {
+      address: TEST_NODE_B.address,
+      title: TEST_NODE_B.title,
+      url: TEST_NODE_B.url,
+      description: TEST_NODE_B.description,
+    })
 
     const scope = nock(TEST_NODE_B.url)
       .post("/ewp/connections")
-      .matchHeader("X-Epress-Profile-Version", "0")
       .reply(201, { status: "created" })
 
     // Step 3: Prepare EIP-712 signature data

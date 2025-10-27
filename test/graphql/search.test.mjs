@@ -17,7 +17,6 @@ test.serial.before(async (t) => {
     title: TEST_NODE_B.title,
     description: TEST_NODE_B.description,
     is_self: false,
-    profile_version: 0,
   })
 
   // Create test node C (for testing connection relationships)
@@ -27,7 +26,6 @@ test.serial.before(async (t) => {
     title: "Test Node C",
     description: "Another test node for connection testing.",
     is_self: false,
-    profile_version: 0,
   })
 
   // Create connection: Node C follows Node A (our node)

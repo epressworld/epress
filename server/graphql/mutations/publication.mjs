@@ -11,9 +11,6 @@ const { ErrorWithProps } = mercurius
  */
 async function distributeToFollowers({ publication, signature, request }) {
   try {
-    const selfNode = await Node.query().findOne({ is_self: true })
-    const profileVersion = selfNode ? selfNode.profile_version : 0
-
     const followers = await Node.query()
       .joinRelated("followers")
       .where("followers.followee_address", publication.author.address)
@@ -28,7 +25,9 @@ async function distributeToFollowers({ publication, signature, request }) {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-Epress-Profile-Version": profileVersion.toString(),
+            "X-Epress-Profile-Updated": new Date(
+              publication.author.updated_at,
+            ).toISOString(),
           },
           body: JSON.stringify({
             typedData: publication.statementOfSource,

@@ -42,7 +42,6 @@ test.serial(
       title: "Test Node",
       description: "Test Description",
       is_self: false,
-      profile_version: 0,
     })
 
     const textContent = "# Test Post\n\nThis is a test post."
@@ -151,7 +150,6 @@ test.serial(
       title: "Test Node",
       description: "Test Description",
       is_self: false,
-      profile_version: 0,
     })
 
     const fileName = "test.txt"
@@ -243,7 +241,6 @@ test.serial(
       title: "Test Node",
       description: "Test Description",
       is_self: false,
-      profile_version: 0,
     })
 
     const textContent = "# Test Post\n\nThis is a test post."
@@ -314,7 +311,6 @@ test.serial(
       title: "Test Node",
       description: "Test Description",
       is_self: false,
-      profile_version: 0,
     })
 
     const textContent1 = "# Test Post 1\n\nThis is test post 1."
@@ -443,7 +439,6 @@ test.serial(
       title: "Test Node",
       description: "Test Description",
       is_self: false,
-      profile_version: 0,
     })
 
     const textContent1 = "# Test Post 1\n\nThis is test post 1."
@@ -540,7 +535,6 @@ test.serial(
       title: "Test Node",
       description: "Test Description",
       is_self: false,
-      profile_version: 0,
     })
 
     const textContent = "# Test Post\n\nThis is a test post."
@@ -613,7 +607,6 @@ test.serial("Node.sync.publication should skip existing content", async (t) => {
     title: "Test Node",
     description: "Test Description",
     is_self: false,
-    profile_version: 0,
   })
 
   const textContent = "# Test Post\n\nThis is a test post."
@@ -665,7 +658,6 @@ test.serial(
       title: "Test Node",
       description: "Test Description",
       is_self: false,
-      profile_version: 0,
     })
 
     const contentHash = await calculateContentHash("test content")
@@ -702,7 +694,6 @@ test.serial(
       title: "Test Node",
       description: "Test Description",
       is_self: false,
-      profile_version: 0,
     })
 
     const contentHash = await calculateContentHash("test content")
@@ -739,7 +730,6 @@ test.serial(
       title: "Test Node",
       description: "Test Description",
       is_self: false,
-      profile_version: 0,
     })
 
     const contentHash = await calculateContentHash("test content")
@@ -805,7 +795,6 @@ test.serial(
       title: "Test Node",
       description: "Test Description",
       is_self: false,
-      profile_version: 0,
     })
 
     // Mock 网络错误
@@ -839,7 +828,6 @@ test.serial(
       title: "Test Node A",
       description: "Local epress instance we are testing.",
       is_self: true,
-      profile_version: 0,
     })
     const isInstalled = await Node.isInstalled()
     t.true(isInstalled, "Should be installed after setup")
@@ -853,7 +841,6 @@ test.serial("Node.getSelf returns the self-node record", async (t) => {
     title: "Test Node A",
     description: "Local epress instance we are testing.",
     is_self: true,
-    profile_version: 0,
   })
   const selfNode = await Node.getSelf()
   t.truthy(selfNode, "Self-node should exist")
