@@ -2,7 +2,8 @@
 import { useMutation, useSuspenseQuery } from "@apollo/client/react"
 import { Box, Button, Icon, Spinner, Text, VStack } from "@chakra-ui/react"
 import { useState, useTransition } from "react"
-import { LuUsers } from "react-icons/lu"
+import { FaMinus } from "react-icons/fa"
+import { LuUserRoundCheck } from "react-icons/lu"
 import {
   ConfirmDialog,
   EmptyState,
@@ -145,7 +146,11 @@ export const FollowingList = () => {
   // 加载状态
   if (loading && !data) {
     return (
-      <ConnectionList title={t("connection.following")} total={total}>
+      <ConnectionList
+        title={t("connection.following")}
+        icon={<LuUserRoundCheck />}
+        total={total}
+      >
         <VStack colorPalette="orange">
           <Spinner color="colorPalette.600" />
           <Text color="colorPalette.600">Loading...</Text>
@@ -157,7 +162,11 @@ export const FollowingList = () => {
   // 错误状态
   if (error) {
     return (
-      <ConnectionList title={t("connection.following")} total={total}>
+      <ConnectionList
+        title={t("connection.following")}
+        icon={<Icon as={LuUserRoundCheck} />}
+        total={total}
+      >
         <Box p={4}>
           <Text color="red.500">
             {t("common.loadFailed")}: {error.message}
@@ -170,19 +179,27 @@ export const FollowingList = () => {
   // 空状态
   if (following.length === 0 && !loading) {
     return (
-      <ConnectionList title={t("connection.following")} total={0}>
+      <ConnectionList
+        title={t("connection.following")}
+        icon={<Icon as={LuUserRoundCheck} />}
+        total={0}
+      >
         <EmptyState
           title={t("connection.noFollowing")}
           description={t("connection.noFollowingDescription")}
-          icon={<Icon as={LuUsers} />}
+          icon={<Icon as={LuUserRoundCheck} />}
         />
       </ConnectionList>
     )
   }
 
   return (
-    <ConnectionList title={t("connection.following")} total={total}>
-      <VStack gap={4} align="stretch">
+    <ConnectionList
+      title={t("connection.following")}
+      icon={<Icon as={LuUserRoundCheck} />}
+      total={total}
+    >
+      <VStack gap={4} py={4} align="stretch">
         {following.map((node) => (
           <ConnectionItem
             key={`following-${node.address}`}
@@ -191,11 +208,12 @@ export const FollowingList = () => {
               isNodeOwner && (
                 <Button
                   size="xs"
-                  variant="outline"
-                  colorPalette="red"
+                  variant="plain"
+                  height="auto"
                   onClick={() => handleUnfollow(node)}
                   loading={isDestroying}
                 >
+                  <Icon as={FaMinus} />
                   {t("connection.unfollow")}
                 </Button>
               )

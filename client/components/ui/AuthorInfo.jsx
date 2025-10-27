@@ -137,8 +137,10 @@ export function AuthorInfo({
   // 渲染节点信息
   const renderInfo = () => (
     <VStack gap={0} align="start" flex={1} minW={0}>
-      {renderTitle()}
-
+      <HStack align="start" gap={1} justify="space-between" w="full">
+        {renderTitle()}
+        {actions && actions}
+      </HStack>
       {showAddress && nodeAddress && (
         <Text
           fontSize={config.addressSize}
@@ -155,7 +157,6 @@ export function AuthorInfo({
           {nodeAddress}
         </Text>
       )}
-
       {showDescription && nodeDescription && (
         <Text
           fontSize={config.descriptionSize}
@@ -173,10 +174,15 @@ export function AuthorInfo({
   // 水平布局
   if (layout === "horizontal") {
     return (
-      <HStack gap={config.gap} align="start" className={className} {...props}>
+      <HStack
+        gap={config.gap}
+        align="start"
+        w="full"
+        className={className}
+        {...props}
+      >
         <NodeAvatar node={node} size={config.avatar} isOnline={isOnline} />
         {renderInfo()}
-        {actions && <Box flexShrink={0}>{actions}</Box>}
       </HStack>
     )
   }
