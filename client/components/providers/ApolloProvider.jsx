@@ -31,6 +31,7 @@ export function ApolloProvider({ children, url }) {
     try {
       await fetch("/api/auth/token", { method: "DELETE" })
       console.log("Auth cookie cleared successfully")
+      window.location.reload()
     } catch (error) {
       console.error("Failed to clear auth cookie:", error)
     }
@@ -43,9 +44,9 @@ export function ApolloProvider({ children, url }) {
     })
 
     // 错误处理链接
-    const errorLink = onError(({ graphQLErrors, networkError }) => {
-      if (graphQLErrors) {
-        for (const err of graphQLErrors) {
+    const errorLink = onError(({ error }) => {
+      if (error?.errors) {
+        for (const err of error.errors) {
           // 只在UNAUTHENTICATED时触发自动登出
           // UNAUTHORIZED表示已认证但权限不够,不应该触发登出
           if (err.extensions?.code === "UNAUTHENTICATED") {
@@ -55,10 +56,6 @@ export function ApolloProvider({ children, url }) {
             break
           }
         }
-      }
-
-      if (networkError) {
-        console.error(`[Network error]: ${networkError}`)
       }
     })
 
