@@ -235,21 +235,27 @@ export const CommentItem = ({
       >
         <VStack align="stretch">
           {/* 用户信息和操作按钮 */}
-          <HStack justify="space-between" align="center">
-            <HStack gap={3}>{renderUserInfo()}</HStack>
+          <HStack gap={3}>{renderUserInfo()}</HStack>
 
-            {/* 悬停显示：本地待确认显示重试，其他显示删除 */}
-            <Box
-              opacity={0}
-              pointerEvents="none"
-              _groupHover={{ opacity: 1, pointerEvents: "auto" }}
-              transition="opacity 0.2s ease-in-out"
-            >
+          {/* 评论内容 */}
+          <CommentRenderer>{comment.body}</CommentRenderer>
+
+          {/* 时间和状态 */}
+          <HStack gap={2} align="center" justify="space-between">
+            <Text color="gray.500" fontSize="sm">
+              {formatRelativeTime(comment.created_at)}
+            </Text>
+
+            {/* 评论状态（所有用户可见） */}
+            <HStack gap={1} align="center">
               {isLocalPending && onRetrySignature ? (
                 <IconButton
                   size="sm"
                   variant="ghost"
-                  colorPalette="orange"
+                  colorPalette="green"
+                  opacity={0}
+                  _groupHover={{ opacity: 1, pointerEvents: "auto" }}
+                  transition="opacity 0.2s ease-in-out"
                   aria-label={t("common.reSign")}
                   title={t("common.reSign")}
                   onClick={(e) => {
@@ -263,6 +269,10 @@ export const CommentItem = ({
               ) : (
                 <IconButton
                   size="sm"
+                  opacity={0}
+                  pointerEvents="none"
+                  _groupHover={{ opacity: 1, pointerEvents: "auto" }}
+                  transition="opacity 0.2s ease-in-out"
                   variant="ghost"
                   colorPalette="red"
                   onClick={handleDeleteClick}
@@ -270,20 +280,6 @@ export const CommentItem = ({
                   <FiTrash2 />
                 </IconButton>
               )}
-            </Box>
-          </HStack>
-
-          {/* 评论内容 */}
-          <CommentRenderer>{comment.body}</CommentRenderer>
-
-          {/* 时间和状态 */}
-          <HStack gap={2} align="center" justify="space-between">
-            <Text color="gray.500" fontSize="sm">
-              {formatRelativeTime(comment.created_at)}
-            </Text>
-
-            {/* 评论状态（所有用户可见） */}
-            <HStack gap={2} align="center">
               <Badge
                 size="sm"
                 colorPalette={

@@ -2,12 +2,12 @@
 
 import {
   Button,
-  Container,
   Dialog,
   Drawer,
   HStack,
   IconButton,
   Portal,
+  Separator,
   Text,
   VStack,
 } from "@chakra-ui/react"
@@ -460,62 +460,33 @@ export function PublicationItem({
               overflow="hidden"
             >
               <Drawer.Header flexShrink={0}>
-                <Container
-                  width="6xl"
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="center"
-                >
-                  <Drawer.Title flex="0 1 auto" display="block">
-                    {t("comment.publishComment")} ({commentCount})
-                  </Drawer.Title>
-                  <Drawer.CloseTrigger asChild pos="initial">
-                    <IconButton size="sm" variant="ghost">
-                      <Text fontSize="xl">×</Text>
-                    </IconButton>
-                  </Drawer.CloseTrigger>
-                </Container>
+                <Drawer.Title flex="0 1 auto" display="block">
+                  {t("comment.publishComment")} ({commentCount})
+                </Drawer.Title>
               </Drawer.Header>
+              <Drawer.CloseTrigger asChild>
+                <IconButton size="sm" variant="ghost">
+                  <Text fontSize="xl">×</Text>
+                </IconButton>
+              </Drawer.CloseTrigger>
 
-              <Drawer.Body
-                flex="1"
-                overflow="auto"
-                flexDirection="column"
-                gap={6}
-                px={6}
-                py={4}
-              >
-                <Container width="6xl">
-                  {/* 评论列表 */}
-                  <VStack align="stretch">
-                    <CommentList
-                      publicationId={publication.id}
-                      onCommentDeleted={handleCommentDeleted}
-                      localPendingComment={localPendingComment}
-                      onRetrySignature={
-                        localPendingComment?.retryFn || undefined
-                      }
-                      onSetRefetch={setCommentRefetch}
-                      suspense={false}
-                    />
-                  </VStack>
-
-                  {/* 评论表单 */}
-                  <VStack
-                    align="stretch"
-                    flexShrink={0}
-                    borderTop="1px"
-                    borderColor="gray.100"
-                    pt={6}
-                  >
-                    <CommentForm
-                      key={`commentForm-${publication.id}-${commentCount}`}
-                      publicationId={publication.id}
-                      onCommentCreated={handleCommentCreated}
-                      onPendingCommentChange={handlePendingCommentChange}
-                    />
-                  </VStack>
-                </Container>
+              <Drawer.Body flex="1" overflow="auto" flexDirection="column">
+                {/* 评论列表 */}
+                <CommentForm
+                  key={`commentForm-${publication.id}-${commentCount}`}
+                  publicationId={publication.id}
+                  onCommentCreated={handleCommentCreated}
+                  onPendingCommentChange={handlePendingCommentChange}
+                />
+                <Separator my={5} />
+                <CommentList
+                  publicationId={publication.id}
+                  onCommentDeleted={handleCommentDeleted}
+                  localPendingComment={localPendingComment}
+                  onRetrySignature={localPendingComment?.retryFn || undefined}
+                  onSetRefetch={setCommentRefetch}
+                  suspense={false}
+                />
               </Drawer.Body>
             </Drawer.Content>
           </Drawer.Positioner>

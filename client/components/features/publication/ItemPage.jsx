@@ -1,5 +1,5 @@
 "use client"
-import { Alert, Separator, Text, VStack } from "@chakra-ui/react"
+import { Alert, Badge, HStack, Separator, Text, VStack } from "@chakra-ui/react"
 import { useState } from "react"
 import { CommentForm, CommentList } from "@/components/features/comment"
 import {
@@ -118,31 +118,24 @@ export function PublicationItemPage({ variables }) {
         {/* Comments section - only show when comments are allowed */}
         {settings?.allowComment && (
           <UnifiedCard.Root>
-            <UnifiedCard.Header>
-              <Text fontSize="xl" fontWeight="semibold">
-                {t("common.comments")} ({publication?.comment_count || 0})
-              </Text>
+            <UnifiedCard.Header
+              borderBottom="1px solid"
+              borderColor="gray.100"
+              _dark={{ borderColor: "gray.800" }}
+            >
+              <HStack gap={2} justify="space-between">
+                <HStack gap={2}>
+                  <Text fontSize="xl" fontWeight="semibold">
+                    {t("common.comments")}
+                  </Text>
+                </HStack>
+                <Badge colorPalette="green" variant="solid">
+                  {publication?.comment_count || 0}
+                </Badge>
+              </HStack>
             </UnifiedCard.Header>
 
             <UnifiedCard.Body>
-              {/* Comment list - above the form */}
-              <CommentList
-                publicationId={publicationId}
-                onCommentDeleted={() => {
-                  // Refresh comment list and update publication comment count
-                  if (typeof commentRefetch === "function") {
-                    commentRefetch()
-                  }
-                  handleCommentCreated()
-                }}
-                localPendingComment={localPendingComment}
-                onRetrySignature={retrySignatureFn}
-                onSetRefetch={setCommentRefetch}
-              />
-
-              {/* Separator */}
-              <Separator my={6} />
-
               {/* Comment form */}
               <CommentForm
                 publicationId={publicationId}
@@ -157,6 +150,21 @@ export function PublicationItemPage({ variables }) {
                   setLocalPendingComment(pending)
                   setRetrySignatureFn(() => retryFn)
                 }}
+              />
+              <Separator my={6} />
+              {/* Comment list - above the form */}
+              <CommentList
+                publicationId={publicationId}
+                onCommentDeleted={() => {
+                  // Refresh comment list and update publication comment count
+                  if (typeof commentRefetch === "function") {
+                    commentRefetch()
+                  }
+                  handleCommentCreated()
+                }}
+                localPendingComment={localPendingComment}
+                onRetrySignature={retrySignatureFn}
+                onSetRefetch={setCommentRefetch}
               />
             </UnifiedCard.Body>
           </UnifiedCard.Root>
