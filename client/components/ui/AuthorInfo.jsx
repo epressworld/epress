@@ -147,6 +147,10 @@ export function AuthorInfo({
           fontFamily="mono"
           noOfLines={1}
           mt={0.5}
+          overflow="hidden"
+          textOverflow="ellipsis"
+          whiteSpace="nowrap"
+          maxW="100%"
         >
           {nodeAddress}
         </Text>
@@ -191,6 +195,10 @@ export function AuthorInfo({
             fontFamily="mono"
             noOfLines={1}
             textAlign="center"
+            overflow="hidden"
+            textOverflow="ellipsis"
+            whiteSpace="nowrap"
+            maxW="100%"
           >
             {nodeAddress}
           </Text>
