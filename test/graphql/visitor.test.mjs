@@ -22,7 +22,6 @@ test.serial(
       title: "Visitor Node",
       description: "Test visitor",
       is_self: false,
-      profile_version: 0,
     })
 
     // Get self node
@@ -71,7 +70,6 @@ test.serial(
       title: "Visitor Node",
       description: "Test visitor",
       is_self: false,
-      profile_version: 0,
     })
 
     // Get self node
@@ -120,7 +118,6 @@ test.serial(
       title: "Visitor Node",
       description: "Test visitor",
       is_self: false,
-      profile_version: 0,
     })
 
     // Get self node
@@ -200,7 +197,6 @@ test.serial(
       title: "Visitor Node",
       description: "Test visitor",
       is_self: false,
-      profile_version: 0,
     })
 
     const query = `
@@ -265,7 +261,6 @@ test.serial("visitor: Should normalize address case correctly", async (t) => {
     title: "Visitor Node",
     description: "Test visitor",
     is_self: false,
-    profile_version: 0,
   })
 
   // Get self node

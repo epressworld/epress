@@ -6,7 +6,8 @@ const segments = {
     url
     title
     description
-    profile_version
+    created_at
+    updated_at
   `,
   node: `
     address
@@ -245,7 +246,7 @@ export const PROFILE = gql`
       url
       title
       description
-      profile_version
+      updated_at
       created_at
     }
   }
@@ -312,7 +313,7 @@ export const PAGE_DATA = gql`
       url
       title
       description
-      profile_version
+      updated_at
       created_at
     }
     nodeStatus {

@@ -10,7 +10,6 @@ export const up = async (knex) => {
     table.string("title").notNullable()
     table.string("description")
     table.boolean("is_self").notNullable().defaultTo(false)
-    table.integer("profile_version").notNullable().defaultTo(0)
     table.timestamp("created_at").defaultTo(knex.fn.now())
     table.timestamp("updated_at").defaultTo(knex.fn.now())
   })

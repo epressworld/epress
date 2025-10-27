@@ -43,7 +43,6 @@ test.before(async (t) => {
     title: "Other User Node",
     description: "A node for testing ownership permissions.",
     is_self: false,
-    profile_version: 0,
   })
 
   t.context.selfNode = selfNode

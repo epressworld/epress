@@ -28,7 +28,6 @@ const PROFILE_UPDATE_TYPES = {
     { name: "url", type: "string" },
     { name: "title", type: "string" },
     { name: "description", type: "string" },
-    { name: "profileVersion", type: "uint256" },
     { name: "timestamp", type: "uint256" },
   ],
 }
@@ -41,7 +40,6 @@ test.afterEach.always(async () => {
       title: TEST_NODE_A.title,
       description: TEST_NODE_A.description,
       url: TEST_NODE_A.url,
-      profile_version: 0,
     })
   }
   // Clean up any other nodes and connections created in tests
@@ -51,6 +49,7 @@ test.afterEach.always(async () => {
 
 test("Success: profile query should return the self node public info", async (t) => {
   const { graphqlClient, selfNode } = t.context
+  const latest = await selfNode.$query()
 
   const query = `
     query GetProfile {
@@ -59,8 +58,8 @@ test("Success: profile query should return the self node public info", async (t)
         url
         title
         description
-        profile_version
         created_at
+        updated_at
       }
     }
   `
@@ -83,9 +82,9 @@ test("Success: profile query should return the self node public info", async (t)
     "Description should match",
   )
   t.is(
-    data.profile.profile_version,
-    selfNode.profile_version,
-    "Profile version should match",
+    data.profile.updated_at,
+    new Date(latest.updated_at).toISOString(),
+    "updated_at should match",
   )
 
   // Assertions for the new field
@@ -116,7 +115,7 @@ test.serial(
         description
         address
         url
-        profile_version
+        updated_at
       }
     }
   `
@@ -149,10 +148,9 @@ test.serial(
       variables.input.url,
       "Returned URL should be updated",
     )
-    t.is(
-      data.updateProfile.profile_version,
-      selfNode.profile_version + 1,
-      "Returned version should be updated",
+    t.truthy(
+      new Date(data.updateProfile.updated_at) > new Date(selfNode.updated_at),
+      "updated_at should be updated",
     )
 
     const _selfNode = await Node.query().findOne({ is_self: true })
@@ -259,7 +257,7 @@ test.serial(
         description
         address
         url
-        profile_version
+        updated_at
       }
     }
   `
@@ -292,9 +290,8 @@ test.serial(
       variables.input.url,
       "Returned URL should be updated",
     )
-    t.is(
-      data.updateProfile.profile_version,
-      selfNode.profile_version + 1,
+    t.truthy(
+      new Date(data.updateProfile.updated_at) > new Date(selfNode.updated_at),
       "Returned version should be updated",
     )
 
@@ -494,7 +491,6 @@ test.serial(
       url: "http://follower-node.test",
       title: "Follower Node",
       is_self: false,
-      profile_version: 0,
     })
     await Connection.query().insert({
       follower_address: followerNode.address,
@@ -510,7 +506,6 @@ test.serial(
         url: selfNode.url,
         title: selfNode.title,
         description: selfNode.description,
-        profileVersion: selfNode.profile_version,
         timestamp: Math.floor(Date.now() / 1000),
       },
     }
@@ -525,7 +520,7 @@ test.serial(
 
     // 4. Mock the follower node's receiving endpoint
     const nockScope = nock(followerNode.url)
-      .post("/ewp/nodes/updates", (body) => {
+      .patch(`/ewp/nodes/${selfNode.address}`, (body) => {
         t.deepEqual(
           body.typedData,
           typedData,
@@ -564,7 +559,7 @@ test.serial(
 
     t.true(
       nockScope.isDone(),
-      "Follower node /ewp/nodes/updates endpoint must be called",
+      `Follower node /ewp/nodes/${selfNode.address} endpoint must be called`,
     )
 
     // Cleanup

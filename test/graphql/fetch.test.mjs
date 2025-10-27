@@ -14,7 +14,6 @@ test.serial.before(async (t) => {
     title: TEST_NODE_B.title,
     description: TEST_NODE_B.description,
     is_self: false,
-    profile_version: 0,
   })
 })
 

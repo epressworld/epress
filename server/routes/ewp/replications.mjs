@@ -49,51 +49,46 @@ router.post("/replications", async (request, reply) => {
     return reply.code(409).send({ error: "REPLICATION_ALREADY_EXISTS" })
   }
 
-  // Check X-Epress-Profile-Version header and trigger async profile update if needed
-  const profileVersionHeader = request.headers["x-epress-profile-version"]
-  if (profileVersionHeader) {
-    const remoteProfileVersion = parseInt(profileVersionHeader, 10)
-    if (!Number.isNaN(remoteProfileVersion)) {
-      if (publisherNode) {
-        try {
-          const syncResult =
-            await publisherNode.sync.profile(remoteProfileVersion)
-          if (syncResult.success) {
-            if (syncResult.skipped) {
-              request.log.debug(
-                {
-                  nodeAddress: syncResult.nodeAddress,
-                  currentVersion: syncResult.currentVersion,
-                  remoteVersion: syncResult.remoteVersion,
-                  reason: syncResult.reason,
-                },
-                "Profile sync not needed",
-              )
-            } else {
-              request.log.info(
-                {
-                  nodeAddress: syncResult.nodeAddress,
-                  newVersion: syncResult.newVersion,
-                  syncedData: syncResult.syncedData,
-                },
-                "Profile sync completed successfully",
-              )
-            }
-          }
-        } catch (syncError) {
-          request.log.error(
+  // Check X-Epress-Profile-Updated header and trigger async profile update if needed
+  const profileUpdatedHeader = request.headers["x-epress-profile-updated"]
+  if (profileUpdatedHeader) {
+    const remoteUpdatedAt = new Date(profileUpdatedHeader)
+    try {
+      const syncResult = await publisherNode.sync.profile(remoteUpdatedAt)
+      if (syncResult.success) {
+        if (syncResult.skipped) {
+          request.log.debug(
             {
-              nodeAddress: syncError.nodeAddress,
-              currentVersion: syncError.currentVersion,
-              remoteVersion: syncError.remoteVersion,
-              error: syncError.message,
-              originalError: syncError.originalError?.message,
+              nodeAddress: syncResult.nodeAddress,
+              oldUpdatedAt: syncResult.oldUpdatedAt,
+              newUpdatedAt: syncResult.newUpdatedAt,
+              reason: syncResult.reason,
             },
-            "Profile sync failed",
+            "Profile sync not needed",
           )
-          // 不中断复制流程，继续处理
+        } else {
+          request.log.info(
+            {
+              nodeAddress: syncResult.nodeAddress,
+              newUpdatedAt: syncResult.newUpdatedAt,
+              syncedData: syncResult.syncedData,
+            },
+            "Profile sync completed successfully",
+          )
         }
       }
+    } catch (syncError) {
+      request.log.error(
+        {
+          nodeAddress: syncError.nodeAddress,
+          localUpdatedAt: syncError.localUpdatedAt,
+          remoteUpdatedAt: syncError.remoteUpdatedAt,
+          error: syncError.message,
+          originalError: syncError.originalError?.message,
+        },
+        "Profile sync failed",
+      )
+      // 不中断复制流程，继续处理
     }
   }
 

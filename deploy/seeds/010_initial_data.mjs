@@ -14,7 +14,6 @@ export const seed = async (knex) => {
       process.env.INITIAL_DATA_NODE_DESCRIPTION ||
       "rebuild the entire internet",
     is_self: true,
-    profile_version: 0,
     created_at: new Date(),
     updated_at: new Date(),
   })

@@ -107,7 +107,6 @@ const updateProfileMutation = {
         if (typeof url === "string") patchData.url = url
 
         if (Object.keys(patchData).length > 0) {
-          patchData.profile_version = selfNode.profile_version + 1
           updatedNode = await selfNode.$query(trx).patchAndFetch(patchData)
         } else {
           updatedNode = selfNode
@@ -142,7 +141,6 @@ const updateProfileMutation = {
       request.log.info(
         {
           user: user.sub,
-          profile_version: updatedNode.profile_version,
           updated_fields: Object.keys(input).filter(
             (key) => input[key] !== undefined,
           ),
@@ -155,7 +153,8 @@ const updateProfileMutation = {
         url: updatedNode.url,
         title: updatedNode.title,
         description: updatedNode.description,
-        profile_version: updatedNode.profile_version,
+        created_at: new Date(updatedNode.created_at).toISOString(),
+        updated_at: new Date(updatedNode.updated_at).toISOString(),
       }
     },
   },
@@ -198,9 +197,6 @@ const updateProfileMutation = {
         })
       }
 
-      const selfNode = await Node.query().findOne({ is_self: true })
-      const profileVersion = selfNode ? selfNode.profile_version : 0
-
       const nodesToUpdate = await Node.query().where({ is_self: false })
 
       if (nodesToUpdate.length > 0) {
@@ -208,11 +204,10 @@ const updateProfileMutation = {
           `Broadcasting profile update to ${nodesToUpdate.length} nodes.`,
         )
         for (const node of nodesToUpdate) {
-          fetch(`${node.url}/ewp/nodes/updates`, {
-            method: "POST",
+          fetch(`${node.url}/ewp/nodes/${typedData.message.publisherAddress}`, {
+            method: "PATCH",
             headers: {
               "Content-Type": "application/json",
-              "X-Epress-Profile-Version": profileVersion.toString(),
             },
             body: JSON.stringify({ typedData, signature }),
           }).catch((err) => {

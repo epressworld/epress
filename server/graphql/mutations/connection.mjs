@@ -35,8 +35,7 @@ const connectionMutations = {
       }
 
       // 2. 获取自节点 (被关注方，即 Node A)
-      const selfNode = await Node.query().findOne({ is_self: true })
-      const profileVersion = selfNode ? selfNode.profile_version : 0
+      const selfNode = await request.config.getSelfNode()
 
       // 3. 验证载荷结构
       if (!typedData || !signature || !typedData.message) {
@@ -129,11 +128,7 @@ const connectionMutations = {
       // 8. 验证签名者地址与 followerUrl 的 profile 地址匹配
       let fetchedFollowerProfile
       try {
-        const profileResponse = await fetch(`${followerUrl}/ewp/profile`, {
-          headers: {
-            "X-Epress-Profile-Version": profileVersion.toString(),
-          },
-        })
+        const profileResponse = await fetch(`${followerUrl}/ewp/profile`)
         if (!profileResponse.ok) {
           throw new Error(
             `Failed to fetch follower profile from ${followerUrl}: ${profileResponse.status}`,
@@ -163,7 +158,6 @@ const connectionMutations = {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-Epress-Profile-Version": profileVersion.toString(),
           },
           body: JSON.stringify({ typedData, signature }), // 发送原始签名载荷
         })
@@ -203,6 +197,7 @@ const connectionMutations = {
           url: fetchedFollowerProfile.url,
           title: fetchedFollowerProfile.title,
           description: fetchedFollowerProfile.description,
+          updated_at: fetchedFollowerProfile.updated_at,
         })
       } else {
         // 创建新节点
@@ -212,7 +207,7 @@ const connectionMutations = {
           title: fetchedFollowerProfile.title,
           description: fetchedFollowerProfile.description,
           is_self: false,
-          profile_version: 0,
+          updated_at: fetchedFollowerProfile.updated_at,
         })
       }
 
@@ -254,8 +249,7 @@ const connectionMutations = {
     },
     resolve: async (_parent, { typedData, signature }, context) => {
       const { request } = context
-      const selfNode = await Node.query().findOne({ is_self: true })
-      const profileVersion = selfNode ? selfNode.profile_version : 0
+      const selfNode = await request.config.getSelfNode()
 
       const { followeeAddress, followerAddress, timestamp } = typedData.message
 
@@ -388,7 +382,6 @@ const connectionMutations = {
               method: "DELETE",
               headers: {
                 "Content-Type": "application/json",
-                "X-Epress-Profile-Version": profileVersion.toString(),
               },
               body: JSON.stringify({ typedData, signature }),
             },
@@ -447,7 +440,6 @@ const connectionMutations = {
               method: "DELETE",
               headers: {
                 "Content-Type": "application/json",
-                "X-Epress-Profile-Version": profileVersion.toString(),
               },
               body: JSON.stringify({ typedData, signature }),
             },

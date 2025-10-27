@@ -7,7 +7,6 @@ import { extractFileNameFromContentDisposition } from "../utils/helper.mjs"
 import { Connection } from "./connection.mjs"
 import { Content } from "./content.mjs"
 import { Publication } from "./publication.mjs"
-// 移除日志导入 - Model 层不记录日志
 
 export class Node extends Model {
   // 定义模型对应的数据库表名
@@ -47,13 +46,6 @@ export class Node extends Model {
       constraints: {
         notNullable: true,
         defaultsTo: false,
-      },
-    },
-    profile_version: {
-      type: "integer",
-      constraints: {
-        notNullable: true,
-        defaultsTo: 0,
       },
     },
     created_at: {
@@ -102,34 +94,44 @@ export class Node extends Model {
       return false
     }
   }
+
   get sync() {
     return {
-      profile: async (remoteProfileVersion) => {
-        if (remoteProfileVersion > this.profile_version) {
+      /**
+       * 同步节点的 profile 信息
+       * @param {Date} remoteUpdatedAt - 远程节点的 updated_at 时间戳（ISO 字符串或 Date 对象）
+       * @returns {Promise<Object>} 同步结果
+       */
+      profile: async (remoteUpdatedAt) => {
+        if (remoteUpdatedAt > new Date(this.updated_at)) {
           try {
             const response = await fetch(`${this.url}/ewp/profile`)
             if (!response.ok) {
               throw new Error(`HTTP ${response.status}: ${response.statusText}`)
             }
             const updatedProfile = await response.json()
-
-            // Update the node in the database
-            await this.$query().patch({
-              url: updatedProfile.url,
-              title: updatedProfile.title,
-              description: updatedProfile.description,
-              profile_version: remoteProfileVersion, // Use the version from the header, as it's confirmed higher
-            })
-
-            return {
-              success: true,
-              nodeAddress: this.address,
-              newVersion: remoteProfileVersion,
-              syncedData: {
+            if (
+              new Date(updatedProfile.updated_at) > new Date(this.updated_at)
+            ) {
+              // 更新节点信息到数据库
+              await this.$query().patch({
                 url: updatedProfile.url,
                 title: updatedProfile.title,
                 description: updatedProfile.description,
-              },
+                updated_at: remoteUpdatedAt,
+              })
+
+              return {
+                success: true,
+                nodeAddress: this.address,
+                oldUpdatedAt: this.updated_at,
+                newUpdatedAt: remoteUpdatedAt,
+                syncedData: {
+                  url: updatedProfile.url,
+                  title: updatedProfile.title,
+                  description: updatedProfile.description,
+                },
+              }
             }
           } catch (err) {
             // 重新抛出错误供上层处理，但添加更多上下文
@@ -138,18 +140,18 @@ export class Node extends Model {
             )
             error.originalError = err
             error.nodeAddress = this.address
-            error.remoteVersion = remoteProfileVersion
-            error.currentVersion = this.profile_version
+            error.remoteUpdatedAt = remoteUpdatedAt
+            error.localUpdatedAt = this.updated_at
             throw error
           }
         } else {
           return {
             success: true,
             nodeAddress: this.address,
-            currentVersion: this.profile_version,
-            remoteVersion: remoteProfileVersion,
+            localUpdatedAt: this.updated_at,
+            remoteUpdatedAt: remoteUpdatedAt,
             skipped: true,
-            reason: "Remote version not newer than current version",
+            reason: "Remote updated_at is not newer than local updated_at",
           }
         }
       },

@@ -529,7 +529,6 @@ test.serial(
       address: otherAccount.address,
       url: `https://other.com`,
       is_self: false,
-      profile_version: 0,
       title: "other node",
     })
     const { publication } = await createTestPublication(
@@ -825,7 +824,10 @@ test("signPublication: Success path - should sign and push content to all follow
       t.is(body.signature, signature, "Pushed signature should be correct")
       return true
     })
-    .matchHeader("X-Epress-Profile-Version", "0")
+    .matchHeader(
+      "X-Epress-Profile-Updated",
+      new Date(selfNode.updated_at).toISOString(),
+    )
     .reply(201, { status: "replicated" })
   // Check nock status
 
@@ -891,7 +893,10 @@ test.serial(
     // 2. Mock follower's endpoint, expecting it not to be called
     const nockScope = nock(otherUserNode.url)
       .post("/ewp/replications")
-      .matchHeader("X-Epress-Profile-Version", "0")
+      .matchHeader(
+        "X-Epress-Profile-Updated",
+        new Date(selfNode.updated_at).toISOString(),
+      )
       .reply(201)
 
     // 3. Attempt to sign again

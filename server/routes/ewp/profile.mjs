@@ -25,6 +25,8 @@ router.get("/profile", async (request, reply) => {
       title: selfNode.title,
       url: selfNode.url,
       description: selfNode.description,
+      created_at: new Date(selfNode.created_at).toISOString(),
+      updated_at: new Date(selfNode.updated_at).toISOString(),
     }
 
     request.log.info(
