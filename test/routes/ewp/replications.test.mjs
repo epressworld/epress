@@ -510,11 +510,13 @@ test("Success: should trigger profile sync if X-Epress-Profile-Updated is higher
 
   // 3. Mock the GET /ewp/profile call that syncProfile will make
 
+  const newUpdated = new Date()
   nock(followeeNode.url).get("/ewp/profile").reply(200, {
     address: followeeNode.address,
     url: followeeNode.url,
     title: "Updated Title",
     description: "Updated Description",
+    updated_at: newUpdated.toISOString(),
   })
 
   // 4. Create and sign the replication request from Node B
@@ -525,7 +527,6 @@ test("Success: should trigger profile sync if X-Epress-Profile-Updated is higher
   const signature = await generateSignature(testAccount, typedData, "typedData")
 
   // 5. Send the replication request to our server with a higher X-Epress-Profile-Updated header
-  const newUpdated = new Date()
   const response = await app.inject({
     method: "POST",
     url: "/ewp/replications",

@@ -103,40 +103,35 @@ export class Node extends Model {
        * @returns {Promise<Object>} 同步结果
        */
       profile: async (remoteUpdatedAt) => {
-        // 将远程 updated_at 转换为 Unix 时间戳（秒）
-        const remoteTimestamp = Math.floor(remoteUpdatedAt.getTime() / 1000)
-
-        // 将本地 updated_at 转换为 Unix 时间戳（秒）
-        const localTimestamp = Math.floor(
-          new Date(this.updated_at).getTime() / 1000,
-        )
-
-        if (remoteTimestamp > localTimestamp) {
+        if (remoteUpdatedAt > new Date(this.updated_at)) {
           try {
             const response = await fetch(`${this.url}/ewp/profile`)
             if (!response.ok) {
               throw new Error(`HTTP ${response.status}: ${response.statusText}`)
             }
             const updatedProfile = await response.json()
-
-            // 更新节点信息到数据库
-            await this.$query().patch({
-              url: updatedProfile.url,
-              title: updatedProfile.title,
-              description: updatedProfile.description,
-              updated_at: remoteUpdatedAt,
-            })
-
-            return {
-              success: true,
-              nodeAddress: this.address,
-              oldUpdatedAt: this.updated_at,
-              newUpdatedAt: remoteUpdatedAt,
-              syncedData: {
+            if (
+              new Date(updatedProfile.updated_at) > new Date(this.updated_at)
+            ) {
+              // 更新节点信息到数据库
+              await this.$query().patch({
                 url: updatedProfile.url,
                 title: updatedProfile.title,
                 description: updatedProfile.description,
-              },
+                updated_at: remoteUpdatedAt,
+              })
+
+              return {
+                success: true,
+                nodeAddress: this.address,
+                oldUpdatedAt: this.updated_at,
+                newUpdatedAt: remoteUpdatedAt,
+                syncedData: {
+                  url: updatedProfile.url,
+                  title: updatedProfile.title,
+                  description: updatedProfile.description,
+                },
+              }
             }
           } catch (err) {
             // 重新抛出错误供上层处理，但添加更多上下文

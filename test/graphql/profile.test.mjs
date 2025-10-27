@@ -148,8 +148,8 @@ test.serial(
       variables.input.url,
       "Returned URL should be updated",
     )
-    t.true(
-      data.updateProfile.updated_at > selfNode.updated_at,
+    t.truthy(
+      new Date(data.updateProfile.updated_at) > new Date(selfNode.updated_at),
       "updated_at should be updated",
     )
 
@@ -291,7 +291,7 @@ test.serial(
       "Returned URL should be updated",
     )
     t.truthy(
-      data.updateProfile.updated_at > selfNode.updated_at,
+      new Date(data.updateProfile.updated_at) > new Date(selfNode.updated_at),
       "Returned version should be updated",
     )
 
