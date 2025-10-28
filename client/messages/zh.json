@@ -10,6 +10,8 @@
     "download": "下载",
     "enterKeyword": "输入关键词",
     "searchResults": "搜索结果",
+    "refreshSuccess": "Refresh successful",
+    "refreshFailed": "Refresh failed",
     "searchResultsCount": "找到 {count} 条关于 \"{keyword}\" 的结果",
     "clearSearch": "清除搜索",
     "back": "返回",
