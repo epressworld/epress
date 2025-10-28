@@ -1,46 +1,31 @@
 import { PublicationListPage } from "@/components/features/publication"
 import { SEARCH_PUBLICATIONS } from "@/lib/apollo"
 import { PreloadQuery } from "@/lib/apollo/client"
-import {
-  addImagesToMetadata,
-  generateBaseMetadata,
-  getFullUrl,
-  getPageData,
-} from "@/utils/helpers/ogp"
+import { generatePageMetadata, getPageData } from "@/utils/helpers/ogp"
 
 export async function generateMetadata({ searchParams }) {
   const params = await searchParams
   const keyword = params?.q || ""
 
-  try {
-    // 从缓存中获取 PAGE_DATA（layout 已经查询过）
-    const { profile, defaultLanguage } = await getPageData()
-
-    // 生成基础 metadata
-    let metadata = generateBaseMetadata({
-      title: profile.title,
-      description: profile.description,
-      url: getFullUrl(profile.url, "/publications", { q: keyword }),
-      locale: defaultLanguage,
-      type: "website",
+  if (keyword) {
+    // 如果有搜索关键词，自定义标题和描述
+    const { profile } = await getPageData()
+    return generatePageMetadata({
+      title: `${keyword} - ${profile.title || "Publications"}`,
+      description: `Search results for "${keyword}"`,
+      path: "/publications",
+      searchParams: { q: keyword },
+      fallbackTitle: `Publications - ${keyword}`,
+      fallbackDescription: `Search results for "${keyword}"`,
     })
-
-    // 添加节点头像
-    const avatarUrl = `${profile.url}/ewp/avatar`
-    metadata = addImagesToMetadata(
-      metadata,
-      avatarUrl,
-      profile.title || "Node Avatar",
-    )
-
-    return metadata
-  } catch (error) {
-    console.error("Error generating metadata:", error)
-    return {
-      title: keyword ? `Publications - ${keyword}` : "Publications",
-      description: "Browse publications",
-    }
   }
+
+  // 没有搜索关键词，使用默认
+  return generatePageMetadata({
+    path: "/publications",
+    fallbackTitle: "Publications",
+    fallbackDescription: "Browse publications",
+  })
 }
 
 export default async function PublicationsServerPage({ searchParams }) {
