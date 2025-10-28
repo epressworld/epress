@@ -21,6 +21,27 @@ export function usePublicationList({ variables, keyword: _keyword }) {
   // GraphQL mutations
   const [createPublication] = useMutation(CREATE_PUBLICATION)
 
+  // 处理下拉刷新
+  const handleRefresh = async () => {
+    try {
+      // 使用 Apollo Client 的 refetch 来刷新数据
+      await client.refetchQueries({
+        include: [SEARCH_PUBLICATIONS],
+      })
+
+      toaster.create({
+        description: t("common.refreshSuccess") || "刷新成功",
+        type: "success",
+      })
+    } catch (error) {
+      console.error("刷新失败:", error)
+      toaster.create({
+        description: t("common.refreshFailed") || "刷新失败",
+        type: "error",
+      })
+    }
+  }
+
   // 处理编辑
   const handleEdit = (publication) => {
     router.push(`/publications/${publication.id}?edit=true`)
@@ -28,7 +49,7 @@ export function usePublicationList({ variables, keyword: _keyword }) {
 
   // 处理内容变化
   const handleContentChange = () => {
-    // 可以在这里处理内容变化，比如保存草稿等
+    // 可以在这里处理内容变化,比如保存草稿等
   }
 
   // 处理文件选择
@@ -59,7 +80,7 @@ export function usePublicationList({ variables, keyword: _keyword }) {
 
     setIsLoading(true)
     try {
-      // 确保mode是字符串，处理可能的对象情况
+      // 确保mode是字符串,处理可能的对象情况
       let mode = formData.mode
       if (typeof mode === "object" && mode !== null) {
         mode = mode.value || mode.toString() || "post"
@@ -71,9 +92,9 @@ export function usePublicationList({ variables, keyword: _keyword }) {
         body: formData.content,
       }
 
-      // 如果有文件，需要特殊处理
+      // 如果有文件,需要特殊处理
       if (formData.file) {
-        // 对于文件上传，使用FormData格式
+        // 对于文件上传,使用FormData格式
         const formDataToSend = new FormData()
         formDataToSend.append(
           "operations",
@@ -110,7 +131,7 @@ export function usePublicationList({ variables, keyword: _keyword }) {
           throw new Error("发布失败")
         }
 
-        // 文件上传成功后，手动更新缓存
+        // 文件上传成功后,手动更新缓存
         const newPublication = result.data.createPublication
         if (newPublication) {
           client.cache.updateQuery(
@@ -148,7 +169,7 @@ export function usePublicationList({ variables, keyword: _keyword }) {
           )
         }
       } else {
-        // 普通文本发布，使用常规GraphQL请求
+        // 普通文本发布,使用常规GraphQL请求
         await createPublication({
           variables: { input },
           update: (cache, { data }) => {
@@ -231,5 +252,6 @@ export function usePublicationList({ variables, keyword: _keyword }) {
     handleFileSelect,
     handleFileRemove,
     handleSubmit,
+    handleRefresh,
   }
 }

@@ -9,6 +9,8 @@
     "keyword": "Keyword",
     "download": "Download",
     "enterKeyword": "Input Keyword",
+    "refreshSuccess": "Refresh successful",
+    "refreshFailed": "Refresh failed",
     "searchResults": "Search Results",
     "searchResultsCount": "Found {count} results for \"{keyword}\"",
     "clearSearch": "Clear Search",

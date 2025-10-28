@@ -20,6 +20,7 @@ export * from "./editor"
 export * from "./form"
 export * from "./LanguageSelect"
 export * from "./Link"
+export * from "./PullToRefresh"
 export * from "./PwaRegistry"
 // Skeleton 组件
 export * as Skeletons from "./Skeletons"
