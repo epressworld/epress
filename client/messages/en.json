@@ -192,6 +192,7 @@
     "unsigned": "Unsigned",
     "sign": "Sign",
     "signedCannotEditMessage": "Signed content cannot be edited",
+    "shareUrlCopied": "Share link copied",
     "noContent": "No content",
     "loadFailed": "Load failed",
     "enterFullscreen": "Enter Fullscreen",

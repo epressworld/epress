@@ -1,2 +1,3 @@
-export { ConnectWalletButton } from "./ConnectWalletButton"
+export * from "./ConnectWalletButton"
 export * from "./LoadMoreButton"
+export * from "./ShareButton"

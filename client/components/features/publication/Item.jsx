@@ -24,6 +24,7 @@ import {
   FileRenderer,
   Link,
   RichTextEditor,
+  ShareButton,
   SignatureDialog,
   SignedMark,
   Tooltip,
@@ -383,6 +384,15 @@ export function PublicationItem({
                     </Tooltip>
                   </>
                 )}
+                <ShareButton
+                  url={`${publication.author.url}/publications/${publication.id}`}
+                  onCopied={() =>
+                    toaster.create({
+                      description: t("publication.shareUrlCopied"),
+                      type: "success",
+                    })
+                  }
+                />
               </HStack>
             </HStack>
           </VStack>
