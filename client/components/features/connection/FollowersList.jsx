@@ -129,7 +129,7 @@ export function FollowersList({ onRefetch }) {
       title={t("connection.followers")}
       total={total}
     >
-      <VStack gap={2} align="stretch">
+      <VStack gap={4} py={4} align="stretch">
         {followers.map(({ node }) => (
           <ConnectionItem key={`follower-${node.address}`} node={node} />
         ))}
