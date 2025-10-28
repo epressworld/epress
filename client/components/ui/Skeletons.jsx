@@ -66,14 +66,14 @@ export function PublicationDetail() {
       <PublicationPost />
       <UnifiedCard.Root w="full">
         <UnifiedCard.Body>
+          <Skeleton height="32px" width="100%" />
+          <Skeleton mt={2} height="80px" />
+          <Separator my={6} />
           <HStack width="full">
             <SkeletonCircle size="10" />
             <SkeletonText width="50%" noOfLines={2} />
           </HStack>
           <Skeleton mt={2} height="20px" />
-          <Separator my={6} />
-          <Skeleton height="32px" width="100%" />
-          <Skeleton mt={2} height="80px" />
         </UnifiedCard.Body>
       </UnifiedCard.Root>
     </VStack>
