@@ -69,11 +69,7 @@ export function FollowersList({ onRefetch }) {
   // 加载状态
   if (loading && !data) {
     return (
-      <ConnectionList
-        icon={<Icon as={LuUsers} />}
-        title={t("connection.followers")}
-        total={total}
-      >
+      <ConnectionList title={t("connection.followers")} total={total}>
         <VStack colorPalette="orange">
           <Spinner color="colorPalette.600" />
           <Text color="colorPalette.600">Loading...</Text>
@@ -85,11 +81,7 @@ export function FollowersList({ onRefetch }) {
   // 错误状态
   if (error) {
     return (
-      <ConnectionList
-        title={t("connection.followers")}
-        icon={<Icon as={LuUsers} />}
-        total={total}
-      >
+      <ConnectionList title={t("connection.followers")} total={total}>
         <Box textAlign="center" py={12}>
           <Icon as={LuUsers} boxSize={12} color="red.500" mb={4} />
           <Text color="red.500" fontSize="lg" mb={2}>
@@ -109,11 +101,7 @@ export function FollowersList({ onRefetch }) {
   // 空状态
   if (followers.length === 0 && !loading) {
     return (
-      <ConnectionList
-        title={t("connection.followers")}
-        icon={<Icon as={LuUsers} />}
-        total={0}
-      >
+      <ConnectionList title={t("connection.followers")} total={0}>
         <EmptyState
           title={t("connection.noFollowers")}
           description={t("connection.noFollowersDescription")}
@@ -124,11 +112,7 @@ export function FollowersList({ onRefetch }) {
   }
 
   return (
-    <ConnectionList
-      icon={<Icon as={LuUsers} />}
-      title={t("connection.followers")}
-      total={total}
-    >
+    <ConnectionList title={t("connection.followers")} total={total}>
       <VStack gap={4} py={4} align="stretch">
         {followers.map(({ node }) => (
           <ConnectionItem key={`follower-${node.address}`} node={node} />

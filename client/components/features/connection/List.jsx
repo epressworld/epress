@@ -11,7 +11,6 @@ import { UnifiedCard } from "@/components/ui"
  * @param {Object} props
  * @param {string} props.title - 列表标题
  * @param {number} [props.total] - 总数
- * @param {React.ReactNode} [props.icon] - 标题图标
  * @param {React.ReactNode} props.children - 列表内容
  * @param {Object} [props.headerProps] - Header 额外属性
  * @param {Object} [props.bodyProps] - Body 额外属性
@@ -24,7 +23,6 @@ import { UnifiedCard } from "@/components/ui"
 export function ConnectionList({
   title,
   total,
-  icon,
   children,
   headerProps = {},
   bodyProps = {},
@@ -41,7 +39,7 @@ export function ConnectionList({
         <HStack gap={2} justify="space-between">
           <HStack gap={2}>
             <Text fontSize="xl" fontWeight="semibold">
-              {icon} {title}
+              {title}
             </Text>
           </HStack>
           <Badge colorPalette="green" variant="solid">
