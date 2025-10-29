@@ -9,8 +9,8 @@ function isMainModule(meta) {
   return process.argv[1] === fileURLToPath(meta.url)
 }
 
-// 同步状态文件路径
-const SYNC_STATE_FILE = join(process.cwd(), "data", "sync-state.json")
+const DEFAULT_SYNC_STATE_FILE = join(process.cwd(), "data", "sync-state.json")
+const DEFAULT_START_DATE = "2025-09-15T00:00:00.000Z"
 
 export class SyncCommand extends Command {
   name = "sync"
@@ -42,16 +42,41 @@ export class SyncCommand extends Command {
       help: "Number of nodes to process in each batch (default: 5)",
       default: 5,
     },
+    retryFailed: {
+      flag: "-r",
+      type: "boolean",
+      optional: true,
+      help: "Retry previously failed nodes (default: true)",
+      default: true,
+    },
+    maxRetries: {
+      flag: "-m",
+      type: "input",
+      placeholder: "maxRetries",
+      optional: true,
+      help: "Maximum retry attempts for failed nodes (default: 3)",
+      default: 3,
+    },
+    stateFile: {
+      flag: "-s",
+      type: "input",
+      placeholder: "stateFile",
+      optional: true,
+      help: "Path to sync state file (default: data/sync-state.json)",
+      default: null,
+    },
   }
 
-  constructor() {
+  constructor(stateFilePath = null) {
     super()
+    this.stateFilePath = stateFilePath || DEFAULT_SYNC_STATE_FILE
     this.syncState = this.loadSyncState()
     this.stats = {
       totalNodes: 0,
       processedNodes: 0,
       successfulNodes: 0,
       failedNodes: 0,
+      skippedNodes: 0,
       totalPublications: 0,
       totalContents: 0,
       startTime: null,
@@ -60,45 +85,48 @@ export class SyncCommand extends Command {
   }
 
   /**
-   * Load sync state
+   * Load sync state from disk
    */
   loadSyncState() {
-    if (existsSync(SYNC_STATE_FILE)) {
+    if (existsSync(this.stateFilePath)) {
       try {
-        const data = readFileSync(SYNC_STATE_FILE, "utf8")
-        return JSON.parse(data)
-      } catch {
-        console.warn("⚠️  Unable to load sync state file, will restart sync")
+        const data = readFileSync(this.stateFilePath, "utf8")
+        const state = JSON.parse(data)
+        console.log(
+          `✅ Loaded sync state (${Object.keys(state).length} node records)`,
+        )
+        return state
+      } catch (_error) {
+        console.warn("⚠️  Unable to load sync state file, starting fresh")
         return {}
       }
     }
+    console.log("ℹ️  No sync state file found, creating new sync records")
     return {}
   }
 
   /**
-   * Save sync state
+   * Save sync state to disk
    */
   saveSyncState() {
     try {
-      writeFileSync(SYNC_STATE_FILE, JSON.stringify(this.syncState, null, 2))
+      writeFileSync(this.stateFilePath, JSON.stringify(this.syncState, null, 2))
     } catch (error) {
       console.error("❌ Failed to save sync state:", error.message)
     }
   }
 
   /**
-   * Get nodes that need to be synced
+   * Get list of nodes that need synchronization
    */
   async getNodesToSync() {
     try {
-      // Get current node (self node)
       const selfNode = await Node.query().findOne({ is_self: true })
       if (!selfNode) {
         console.log("ℹ️  Current node not found")
         return []
       }
 
-      // Get all followed nodes (non-self nodes)
       const nodes = await Node.query()
         .joinRelated("following")
         .where("following.follower_address", selfNode.address)
@@ -113,22 +141,87 @@ export class SyncCommand extends Command {
   }
 
   /**
+   * Calculate sync start time for a node
+   * Core logic: Use last successful sync time, not last attempt time
+   */
+  getSyncStartTime(nodeId) {
+    const nodeState = this.syncState[nodeId]
+
+    if (!nodeState) {
+      // New node, start from default date
+      return new Date(DEFAULT_START_DATE)
+    }
+
+    // Use last successful sync time
+    // If never succeeded, use default start date
+    const lastSuccessTime = nodeState.lastSuccess || DEFAULT_START_DATE
+    return new Date(lastSuccessTime)
+  }
+
+  /**
+   * Check if node should be skipped based on retry policy
+   */
+  shouldSkipNode(nodeId, maxRetries) {
+    const nodeState = this.syncState[nodeId]
+
+    if (!nodeState || !nodeState.consecutiveFailures) {
+      return false
+    }
+
+    // Skip if consecutive failures exceed max retries
+    if (nodeState.consecutiveFailures >= maxRetries) {
+      const lastAttempt = new Date(nodeState.lastAttempt)
+      const hoursSinceLastAttempt =
+        (Date.now() - lastAttempt) / (1000 * 60 * 60)
+
+      // Give retry opportunity if more than 24 hours since last attempt
+      if (hoursSinceLastAttempt < 24) {
+        return true
+      }
+    }
+
+    return false
+  }
+
+  /**
+   * Initialize node state if not exists
+   */
+  initNodeState(nodeId) {
+    if (!this.syncState[nodeId]) {
+      this.syncState[nodeId] = {
+        totalPublications: 0,
+        totalContents: 0,
+        consecutiveFailures: 0,
+        totalAttempts: 0,
+      }
+    }
+  }
+
+  /**
    * Sync a single node
    */
   async syncNode(node, maxPages, timeout) {
     const nodeId = node.address
     const nodeTitle = node.title || node.address
 
-    console.log(`\n🔄 Starting to sync node: ${nodeTitle} (${node.url})`)
+    console.log(`\n🔄 Starting sync for node: ${nodeTitle}`)
+    console.log(`   🌐 URL: ${node.url}`)
+
+    this.initNodeState(nodeId)
 
     try {
-      // Get last sync time
-      const lastSync = this.syncState[nodeId]?.lastSync
-      const since = lastSync
-        ? new Date(lastSync)
-        : new Date("2024-01-01T00:00:00.000Z")
+      // Calculate sync start time (using last success time)
+      const since = this.getSyncStartTime(nodeId)
+      const now = new Date()
 
-      console.log(`   📅 Sync time range: ${since.toISOString()} to now`)
+      console.log(
+        `   📅 Sync time range: ${since.toISOString()} → ${now.toISOString()}`,
+      )
+
+      // Record attempt
+      this.syncState[nodeId].lastAttempt = now.toISOString()
+      this.syncState[nodeId].totalAttempts =
+        (this.syncState[nodeId].totalAttempts || 0) + 1
 
       // Execute sync
       const result = await node.sync.publications(since, {
@@ -136,81 +229,132 @@ export class SyncCommand extends Command {
         timeout,
       })
 
-      // Update statistics
-      this.stats.totalPublications += result.syncedPublications
-      this.stats.totalContents += result.syncedContents
-
-      if (result.success) {
-        console.log(
-          `   ✅ Sync successful: ${result.syncedPublications} contents, ${result.syncedContents} files`,
-        )
-        this.stats.successfulNodes++
-      } else if (result.partialSuccess) {
-        console.log(
-          `   ⚠️  Partial sync success: ${result.syncedPublications} contents, ${result.syncedContents} files`,
-        )
-        this.stats.successfulNodes++
-      } else {
-        console.log(`   ❌ Sync failed`)
-        this.stats.failedNodes++
-      }
-
-      // Record errors
-      if (result.errors && result.errors.length > 0) {
-        console.log(`   ⚠️  Found ${result.errors.length} errors:`)
-        result.errors.forEach((error, index) => {
-          console.log(`      ${index + 1}. ${error.type}: ${error.error}`)
-        })
-      }
-
-      // Update sync state
-      this.syncState[nodeId] = {
-        lastSync: new Date().toISOString(),
-        lastSuccess: result.success
-          ? new Date().toISOString()
-          : this.syncState[nodeId]?.lastSuccess,
-        totalPublications:
-          (this.syncState[nodeId]?.totalPublications || 0) +
-          result.syncedPublications,
-        totalContents:
-          (this.syncState[nodeId]?.totalContents || 0) + result.syncedContents,
-        errorCount:
-          (this.syncState[nodeId]?.errorCount || 0) +
-          (result.errors?.length || 0),
-      }
-
-      // Save state
-      this.saveSyncState()
-
-      return result
+      // Handle sync result
+      return await this.handleSyncResult(nodeId, nodeTitle, result, now)
     } catch (error) {
-      console.error(`   ❌ Failed to sync node: ${error.message}`)
-      this.stats.failedNodes++
-
-      // Update error state
-      this.syncState[nodeId] = {
-        ...this.syncState[nodeId],
-        lastError: error.message,
-        errorCount: (this.syncState[nodeId]?.errorCount || 0) + 1,
-      }
-
-      this.saveSyncState()
-      throw error
+      return await this.handleSyncError(nodeId, nodeTitle, error)
     }
   }
 
   /**
-   * Batch sync nodes
+   * Handle sync result and update state accordingly
    */
-  async syncNodesBatch(nodes, maxPages, timeout, batchSize) {
-    const batches = []
+  async handleSyncResult(nodeId, _nodeTitle, result, syncTime) {
+    const nodeState = this.syncState[nodeId]
 
-    for (let i = 0; i < nodes.length; i += batchSize) {
-      batches.push(nodes.slice(i, i + batchSize))
+    // Update statistics
+    this.stats.totalPublications += result.syncedPublications || 0
+    this.stats.totalContents += result.syncedContents || 0
+
+    // Determine if sync is fully successful
+    const isFullSuccess =
+      result.success && (!result.errors || result.errors.length === 0)
+
+    if (isFullSuccess) {
+      // Full success: update success time and counters
+      console.log(
+        `   ✅ Sync successful: ${result.syncedPublications} publications, ${result.syncedContents} files`,
+      )
+
+      nodeState.lastSuccess = syncTime.toISOString()
+      nodeState.consecutiveFailures = 0
+      nodeState.totalPublications += result.syncedPublications
+      nodeState.totalContents += result.syncedContents
+      delete nodeState.lastError
+
+      this.stats.successfulNodes++
+    } else if (result.partialSuccess) {
+      // Partial success: don't update success time, but record synced items
+      console.log(
+        `   ⚠️  Partial success: ${result.syncedPublications} publications, ${result.syncedContents} files`,
+      )
+      console.log(`   ⚠️  Errors detected, will retry failed parts next time`)
+
+      nodeState.consecutiveFailures = (nodeState.consecutiveFailures || 0) + 1
+      nodeState.totalPublications += result.syncedPublications
+      nodeState.totalContents += result.syncedContents
+
+      // Record error information
+      if (result.errors && result.errors.length > 0) {
+        nodeState.lastError = result.errors[0].error
+        console.log(`   ⚠️  Found ${result.errors.length} errors:`)
+        result.errors.slice(0, 3).forEach((err, idx) => {
+          console.log(`      ${idx + 1}. ${err.type}: ${err.error}`)
+        })
+        if (result.errors.length > 3) {
+          console.log(`      ... and ${result.errors.length - 3} more errors`)
+        }
+      }
+
+      this.stats.failedNodes++
+    } else {
+      // Complete failure
+      console.log(`   ❌ Sync failed`)
+
+      nodeState.consecutiveFailures = (nodeState.consecutiveFailures || 0) + 1
+
+      if (result.errors && result.errors.length > 0) {
+        nodeState.lastError = result.errors[0].error
+        console.log(`   ❌ Error: ${result.errors[0].error}`)
+      }
+
+      this.stats.failedNodes++
+    }
+
+    // Save state
+    this.saveSyncState()
+
+    return result
+  }
+
+  /**
+   * Handle sync error and update state
+   */
+  async handleSyncError(nodeId, _nodeTitle, error) {
+    console.error(`   ❌ Failed to sync node: ${error.message}`)
+
+    const nodeState = this.syncState[nodeId]
+    nodeState.consecutiveFailures = (nodeState.consecutiveFailures || 0) + 1
+    nodeState.lastError = error.message
+
+    this.stats.failedNodes++
+    this.saveSyncState()
+
+    throw error
+  }
+
+  /**
+   * Sync nodes in batches
+   */
+  async syncNodesBatch(nodes, maxPages, timeout, batchSize, maxRetries) {
+    // Filter nodes that should be skipped
+    const nodesToSync = nodes.filter((node) => {
+      if (this.shouldSkipNode(node.address, maxRetries)) {
+        const failures = this.syncState[node.address].consecutiveFailures
+        console.log(
+          `⏭️  Skipping node ${node.title || node.address} (${failures} consecutive failures)`,
+        )
+        this.stats.skippedNodes++
+        return false
+      }
+      return true
+    })
+
+    if (nodesToSync.length === 0) {
+      console.log(
+        "⚠️  All nodes skipped, check sync state or increase maxRetries",
+      )
+      return
+    }
+
+    // Split into batches
+    const batches = []
+    for (let i = 0; i < nodesToSync.length; i += batchSize) {
+      batches.push(nodesToSync.slice(i, i + batchSize))
     }
 
     console.log(
-      `📦 Will process in ${batches.length} batches, ${batchSize} nodes per batch`,
+      `📦 Processing ${batches.length} batches, ${batchSize} nodes per batch (${nodesToSync.length} total)`,
     )
 
     for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
@@ -228,6 +372,7 @@ export class SyncCommand extends Command {
             `❌ Node ${node.title || node.address} sync failed:`,
             error.message,
           )
+          // Continue to next node
         }
       }
 
@@ -240,7 +385,7 @@ export class SyncCommand extends Command {
   }
 
   /**
-   * Show sync statistics
+   * Display sync statistics
    */
   showStats() {
     const duration = this.stats.endTime - this.stats.startTime
@@ -250,31 +395,58 @@ export class SyncCommand extends Command {
     console.log(`   📋 Total nodes: ${this.stats.totalNodes}`)
     console.log(`   ✅ Successful nodes: ${this.stats.successfulNodes}`)
     console.log(`   ❌ Failed nodes: ${this.stats.failedNodes}`)
-    console.log(`   📄 Synced contents: ${this.stats.totalPublications}`)
+    console.log(`   ⏭️  Skipped nodes: ${this.stats.skippedNodes}`)
+    console.log(`   📄 Synced publications: ${this.stats.totalPublications}`)
     console.log(`   📁 Synced files: ${this.stats.totalContents}`)
     console.log(`   ⏱️  Total time: ${durationMinutes} minutes`)
-    if (durationMinutes > 0) {
-      console.log(
-        `   📈 Average speed: ${Math.round(this.stats.totalPublications / durationMinutes)} contents/minute`,
-      )
+
+    if (durationMinutes > 0 && this.stats.totalPublications > 0) {
+      const speed = Math.round(this.stats.totalPublications / durationMinutes)
+      console.log(`   📈 Average speed: ${speed} publications/minute`)
+    }
+
+    // Show failed node details
+    if (this.stats.failedNodes > 0) {
+      console.log("\n⚠️  Failed Node Details:")
+      Object.entries(this.syncState).forEach(([nodeId, state]) => {
+        if (state.consecutiveFailures > 0) {
+          console.log(
+            `   - ${nodeId}: ${state.consecutiveFailures} consecutive failures`,
+          )
+          if (state.lastError) {
+            console.log(`     Error: ${state.lastError}`)
+          }
+        }
+      })
     }
   }
 
+  /**
+   * Main action function
+   */
   async action(options) {
-    // Extract parameters from options or use defaults
     const maxPages = parseInt(options.maxPages, 10) || 10
     const timeout = parseInt(options.timeout, 10) || 30000
     const batchSize = parseInt(options.batchSize, 10) || 5
+    const maxRetries = parseInt(options.maxRetries, 10) || 3
 
-    console.log("🚀 Starting node sync...")
-    console.log(
-      `⚙️  Configuration: maxPages=${maxPages}, timeout=${timeout}ms, batchSize=${batchSize}`,
-    )
+    // Override state file path if provided in options
+    if (options.stateFile) {
+      this.stateFilePath = options.stateFile
+      this.syncState = this.loadSyncState()
+    }
+
+    console.log("🚀 Starting node synchronization...")
+    console.log(`⚙️  Configuration:`)
+    console.log(`   - maxPages: ${maxPages}`)
+    console.log(`   - timeout: ${timeout}ms`)
+    console.log(`   - batchSize: ${batchSize}`)
+    console.log(`   - maxRetries: ${maxRetries}`)
+    console.log(`   - stateFile: ${this.stateFilePath}`)
 
     this.stats.startTime = new Date()
 
     try {
-      // Get nodes that need to be synced
       const nodes = await this.getNodesToSync()
       this.stats.totalNodes = nodes.length
 
@@ -283,20 +455,22 @@ export class SyncCommand extends Command {
         return
       }
 
-      // Execute sync
-      await this.syncNodesBatch(nodes, maxPages, timeout, batchSize)
+      await this.syncNodesBatch(nodes, maxPages, timeout, batchSize, maxRetries)
 
       this.stats.endTime = new Date()
       this.showStats()
 
-      console.log("\n🎉 Sync completed!")
+      if (this.stats.failedNodes === 0) {
+        console.log("\n🎉 Sync completed successfully!")
+      } else {
+        console.log("\n⚠️  Sync completed with some failures")
+        console.log("💡 Tip: Failed nodes will be retried on next sync")
+      }
     } catch (error) {
-      console.error("❌ Error occurred during sync:", error.message)
+      console.error("❌ Error during sync:", error.message)
+      console.error(error.stack)
       throw error
     } finally {
-      // Note: Don't destroy database connection when called from start.mjs
-      // as it's running in the main process and other services need the connection
-      // Only destroy when running as standalone command
       if (isMainModule(import.meta) && Model.knex()) {
         await Model.knex().destroy()
       }
