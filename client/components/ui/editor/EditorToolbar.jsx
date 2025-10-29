@@ -7,7 +7,6 @@ import {
   IconButton,
   Input,
   Popover,
-  Portal,
   Text,
   VStack,
 } from "@chakra-ui/react"
@@ -54,7 +53,6 @@ export function EditorToolbar({ editor }) {
 
   const handleImageSubmit = () => {
     if (imageUrl.trim()) {
-      // 获取选中的文字作为 alt 文本
       const selectedText = editor.state.doc.textBetween(
         editor.state.selection.from,
         editor.state.selection.to,
@@ -88,9 +86,8 @@ export function EditorToolbar({ editor }) {
     setIsCodeBlockOpen(false)
   }
 
-  // 编程语言列表
   const programmingLanguages = [
-    { value: "", label: "无语言" },
+    { value: "", label: "No Language" },
     { value: "javascript", label: "JavaScript" },
     { value: "typescript", label: "TypeScript" },
     { value: "python", label: "Python" },
@@ -116,12 +113,11 @@ export function EditorToolbar({ editor }) {
     { value: "markdown", label: "Markdown" },
   ]
 
-  // 定义所有工具按钮
   const allTools = [
     {
       id: "bold",
       icon: <FiBold />,
-      label: "粗体",
+      label: "Bold",
       onClick: () => editor.chain().focus().toggleBold().run(),
       isActive: () => editor.isActive("bold"),
       needsPopover: false,
@@ -129,7 +125,7 @@ export function EditorToolbar({ editor }) {
     {
       id: "italic",
       icon: <FiItalic />,
-      label: "斜体",
+      label: "Italic",
       onClick: () => editor.chain().focus().toggleItalic().run(),
       isActive: () => editor.isActive("italic"),
       needsPopover: false,
@@ -137,7 +133,7 @@ export function EditorToolbar({ editor }) {
     {
       id: "heading",
       icon: <FiHash />,
-      label: "标题",
+      label: "Heading",
       onClick: () => editor.chain().focus().toggleHeading({ level: 1 }).run(),
       isActive: () => editor.isActive("heading"),
       needsPopover: false,
@@ -145,7 +141,7 @@ export function EditorToolbar({ editor }) {
     {
       id: "code",
       icon: <FiCode />,
-      label: "行内代码",
+      label: "Inline Code",
       onClick: () => editor.chain().focus().toggleCode().run(),
       isActive: () => editor.isActive("code"),
       needsPopover: false,
@@ -153,7 +149,7 @@ export function EditorToolbar({ editor }) {
     {
       id: "strike",
       icon: <LuStrikethrough />,
-      label: "删除线",
+      label: "Strikethrough",
       onClick: () => editor.chain().focus().toggleStrike().run(),
       isActive: () => editor.isActive("strike"),
       needsPopover: false,
@@ -161,7 +157,7 @@ export function EditorToolbar({ editor }) {
     {
       id: "bulletList",
       icon: <FiList />,
-      label: "无序列表",
+      label: "Bullet List",
       onClick: () => editor.chain().focus().toggleBulletList().run(),
       isActive: () => editor.isActive("bulletList"),
       needsPopover: false,
@@ -169,7 +165,7 @@ export function EditorToolbar({ editor }) {
     {
       id: "orderedList",
       icon: <FiList />,
-      label: "有序列表",
+      label: "Ordered List",
       onClick: () => editor.chain().focus().toggleOrderedList().run(),
       isActive: () => editor.isActive("orderedList"),
       needsPopover: false,
@@ -177,7 +173,7 @@ export function EditorToolbar({ editor }) {
     {
       id: "blockquote",
       icon: <LuQuote />,
-      label: "引用",
+      label: "Blockquote",
       onClick: () => editor.chain().focus().toggleBlockquote().run(),
       isActive: () => editor.isActive("blockquote"),
       needsPopover: false,
@@ -185,7 +181,7 @@ export function EditorToolbar({ editor }) {
     {
       id: "link",
       icon: <FiLink />,
-      label: "链接",
+      label: "Link",
       onClick: () => {
         if (editor.isActive("link")) {
           handleLinkEdit()
@@ -201,7 +197,7 @@ export function EditorToolbar({ editor }) {
     {
       id: "codeBlock",
       icon: <LuFileCode2 />,
-      label: "代码块",
+      label: "Code Block",
       onClick: () => setIsCodeBlockOpen(true),
       isActive: () => editor.isActive("codeBlock"),
       needsPopover: true,
@@ -211,7 +207,7 @@ export function EditorToolbar({ editor }) {
     {
       id: "image",
       icon: <FiImage />,
-      label: "图片",
+      label: "Image",
       onClick: () => setIsImageOpen(true),
       isActive: () => editor.isActive("image"),
       needsPopover: true,
@@ -235,15 +231,14 @@ export function EditorToolbar({ editor }) {
       overflowX="auto"
       overflowY="hidden"
     >
-      {/* 渲染所有工具按钮 */}
       {allTools.map((tool) => {
-        // 如果需要 Popover，使用 Popover 包装
         if (tool.needsPopover) {
           return (
             <Popover.Root
               key={tool.id}
               open={tool.popoverState}
               onOpenChange={tool.setPopoverState}
+              portalled={false}
             >
               <Popover.Trigger asChild>
                 <IconButton
@@ -258,157 +253,153 @@ export function EditorToolbar({ editor }) {
                   {tool.icon}
                 </IconButton>
               </Popover.Trigger>
-              <Portal>
-                <Popover.Positioner>
-                  <Popover.Content maxW="sm">
-                    <Popover.Arrow />
-                    <Popover.Body>
-                      {tool.id === "link" && (
-                        <VStack gap={3} align="stretch">
-                          <Text fontSize="sm" fontWeight="medium">
-                            {editor.isActive("link") ? "编辑链接" : "添加链接"}
-                          </Text>
-                          <Input
-                            placeholder="输入URL地址"
-                            value={linkUrl}
-                            onChange={(e) => setLinkUrl(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                handleLinkSubmit()
-                              }
-                            }}
-                            autoFocus
-                          />
-                          <HStack gap={2} justify="flex-end">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => tool.setPopoverState(false)}
-                            >
-                              取消
-                            </Button>
-                            {editor.isActive("link") && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                colorPalette="red"
-                                onClick={handleLinkRemove}
-                              >
-                                删除
-                              </Button>
-                            )}
-                            <Button
-                              size="sm"
-                              colorPalette="orange"
-                              onClick={handleLinkSubmit}
-                            >
-                              {editor.isActive("link") ? "更新" : "确定"}
-                            </Button>
-                          </HStack>
-                        </VStack>
-                      )}
-                      {tool.id === "codeBlock" && (
-                        <VStack gap={3} align="stretch">
-                          <Text fontSize="sm" fontWeight="medium">
-                            插入代码块
-                          </Text>
-                          <Box
-                            as="select"
-                            w="full"
-                            p={2}
-                            border="1px solid"
-                            borderColor="gray.300"
-                            borderRadius="md"
-                            bg="white"
-                            _dark={{
-                              borderColor: "gray.600",
-                              bg: "gray.700",
-                              color: "white",
-                            }}
-                            value={codeBlockLanguage}
-                            onChange={(e) =>
-                              setCodeBlockLanguage(e.target.value)
+              <Popover.Positioner>
+                <Popover.Content maxW="sm" zIndex={10000}>
+                  <Popover.Arrow />
+                  <Popover.Body>
+                    {tool.id === "link" && (
+                      <VStack gap={3} align="stretch">
+                        <Text fontSize="sm" fontWeight="medium">
+                          {editor.isActive("link") ? "Edit Link" : "Add Link"}
+                        </Text>
+                        <Input
+                          placeholder="Enter URL"
+                          value={linkUrl}
+                          onChange={(e) => setLinkUrl(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              handleLinkSubmit()
                             }
+                          }}
+                          autoFocus
+                        />
+                        <HStack gap={2} justify="flex-end">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => tool.setPopoverState(false)}
                           >
-                            <option value="">选择编程语言（可选）</option>
-                            {programmingLanguages.map((lang) => (
-                              <option key={lang.value} value={lang.value}>
-                                {lang.label}
-                              </option>
-                            ))}
-                          </Box>
-                          <HStack gap={2} justify="flex-end">
+                            Cancel
+                          </Button>
+                          {editor.isActive("link") && (
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => tool.setPopoverState(false)}
+                              colorPalette="red"
+                              onClick={handleLinkRemove}
                             >
-                              取消
+                              Remove
                             </Button>
-                            <Button
-                              size="sm"
-                              colorPalette="orange"
-                              onClick={handleCodeBlockSubmit}
-                            >
-                              插入
-                            </Button>
-                          </HStack>
-                        </VStack>
-                      )}
-                      {tool.id === "image" && (
-                        <VStack gap={3} align="stretch">
-                          <Text fontSize="sm" fontWeight="medium">
-                            插入图片
-                          </Text>
-                          <Input
-                            placeholder="输入图片URL地址"
-                            value={imageUrl}
-                            onChange={(e) => setImageUrl(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                handleImageSubmit()
-                              }
-                            }}
-                            autoFocus
-                          />
-                          {(() => {
-                            const selectedText = editor.state.doc.textBetween(
-                              editor.state.selection.from,
-                              editor.state.selection.to,
-                            )
-                            return selectedText ? (
-                              <Text fontSize="xs" color="gray.500">
-                                选中文字将作为图片描述: "{selectedText}"
-                              </Text>
-                            ) : null
-                          })()}
-                          <HStack gap={2} justify="flex-end">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => tool.setPopoverState(false)}
-                            >
-                              取消
-                            </Button>
-                            <Button
-                              size="sm"
-                              colorPalette="orange"
-                              onClick={handleImageSubmit}
-                            >
-                              确定
-                            </Button>
-                          </HStack>
-                        </VStack>
-                      )}
-                    </Popover.Body>
-                  </Popover.Content>
-                </Popover.Positioner>
-              </Portal>
+                          )}
+                          <Button
+                            size="sm"
+                            colorPalette="orange"
+                            onClick={handleLinkSubmit}
+                          >
+                            {editor.isActive("link") ? "Update" : "Confirm"}
+                          </Button>
+                        </HStack>
+                      </VStack>
+                    )}
+                    {tool.id === "codeBlock" && (
+                      <VStack gap={3} align="stretch">
+                        <Text fontSize="sm" fontWeight="medium">
+                          Insert Code Block
+                        </Text>
+                        <Box
+                          as="select"
+                          w="full"
+                          p={2}
+                          border="1px solid"
+                          borderColor="gray.300"
+                          borderRadius="md"
+                          bg="white"
+                          _dark={{
+                            borderColor: "gray.600",
+                            bg: "gray.700",
+                            color: "white",
+                          }}
+                          value={codeBlockLanguage}
+                          onChange={(e) => setCodeBlockLanguage(e.target.value)}
+                        >
+                          <option value="">Select language (optional)</option>
+                          {programmingLanguages.map((lang) => (
+                            <option key={lang.value} value={lang.value}>
+                              {lang.label}
+                            </option>
+                          ))}
+                        </Box>
+                        <HStack gap={2} justify="flex-end">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => tool.setPopoverState(false)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            size="sm"
+                            colorPalette="orange"
+                            onClick={handleCodeBlockSubmit}
+                          >
+                            Insert
+                          </Button>
+                        </HStack>
+                      </VStack>
+                    )}
+                    {tool.id === "image" && (
+                      <VStack gap={3} align="stretch">
+                        <Text fontSize="sm" fontWeight="medium">
+                          Insert Image
+                        </Text>
+                        <Input
+                          placeholder="Enter image URL"
+                          value={imageUrl}
+                          onChange={(e) => setImageUrl(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              handleImageSubmit()
+                            }
+                          }}
+                          autoFocus
+                        />
+                        {(() => {
+                          const selectedText = editor.state.doc.textBetween(
+                            editor.state.selection.from,
+                            editor.state.selection.to,
+                          )
+                          return selectedText ? (
+                            <Text fontSize="xs" color="gray.500">
+                              Selected text will be used as alt text: "
+                              {selectedText}"
+                            </Text>
+                          ) : null
+                        })()}
+                        <HStack gap={2} justify="flex-end">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => tool.setPopoverState(false)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            size="sm"
+                            colorPalette="orange"
+                            onClick={handleImageSubmit}
+                          >
+                            Confirm
+                          </Button>
+                        </HStack>
+                      </VStack>
+                    )}
+                  </Popover.Body>
+                </Popover.Content>
+              </Popover.Positioner>
             </Popover.Root>
           )
         }
 
-        // 普通工具按钮
         return (
           <IconButton
             key={tool.id}
