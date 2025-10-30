@@ -281,7 +281,7 @@ const HeaderTabs = ({ shouldShowTabs, currentTab, router, t, openSearch }) => {
       >
         <Container maxW="6xl">
           <Tabs.Root value={currentTab}>
-            <Tabs.List>
+            <Tabs.List borderBottom={0}>
               <Tabs.Trigger
                 value="content"
                 className="header-tab-button"

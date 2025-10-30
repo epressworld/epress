@@ -37,11 +37,9 @@ export function ConnectionList({
         _dark={{ borderColor: "gray.800" }}
       >
         <HStack gap={2} justify="space-between">
-          <HStack gap={2}>
-            <Text fontSize="xl" fontWeight="semibold">
-              {title}
-            </Text>
-          </HStack>
+          <Text fontSize="xl" fontWeight="semibold">
+            {title}
+          </Text>
           <Badge colorPalette="green" variant="solid">
             {total}
           </Badge>

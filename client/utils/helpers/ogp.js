@@ -135,18 +135,22 @@ export function addImagesToMetadata(
   alt = "",
   width = 1200,
   height = 630,
+  type,
 ) {
   if (!images) return metadata
 
   const imageArray = Array.isArray(images) ? images : [images]
 
-  const imageObjects = imageArray.map((url) => ({
-    url,
-    alt: alt || metadata.title || "Image",
-    width,
-    height,
-    type: "image/jpeg",
-  }))
+  const imageObjects = imageArray.map((url) => {
+    const img = {
+      url,
+      alt: alt || metadata.title || "Image",
+      width,
+      height,
+    }
+    if (type) img.type = type
+    return img
+  })
 
   return {
     ...metadata,
@@ -383,6 +387,7 @@ export async function generatePublicationMetadata({
         pageTitle,
         1200,
         630,
+        mimeType,
       )
     } else if (mediaType === "video" && fileUrl) {
       metadata = addVideosToMetadata(metadata, fileUrl, 1280, 720)
