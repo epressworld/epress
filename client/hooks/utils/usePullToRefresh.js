@@ -92,15 +92,24 @@ export const usePullToRefresh = ({
       setIsRefreshing(true)
       setPullPosition(0) // 松手后，pullPosition归零，但 isRefreshing 为 true
 
-      const refreshResult = onRefresh()
-
-      if (refreshResult && typeof refreshResult.finally === "function") {
-        // 如果是 Promise，等待结束
-        refreshResult.finally(() => setIsRefreshing(false))
-      } else {
-        // 如果不是 Promise，立即结束
-        setIsRefreshing(false)
+      // **【修复】**：
+      // 使用一个健壮的 async IIFE 来包装 onRefresh 调用。
+      // 这可以确保无论 onRefresh 是-否返回 promise，
+      // setIsRefreshing(false) 都会在 onRefresh 执行完毕后才被调用。
+      const runRefresh = async () => {
+        try {
+          // 等待 onRefresh 完成 (await 一个非 promise 值也可以正常工作)
+          await onRefresh()
+        } catch (error) {
+          // onRefresh 内部应该自己处理错误, 但这里也捕获一下以防万一
+          console.error("Error during onRefresh:", error)
+        } finally {
+          // 无论成功还是失败, 结束刷新状态
+          setIsRefreshing(false)
+        }
       }
+
+      runRefresh()
     } else {
       // 未达到阈值，平滑地弹回去 (拉力归零)
       setPullPosition(0)

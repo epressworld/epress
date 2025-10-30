@@ -1,9 +1,11 @@
 "use client"
+import { useApolloClient } from "@apollo/client/react"
 import { VStack } from "@chakra-ui/react"
 import { useRef } from "react"
 import { FollowersList, FollowingList } from "@/components/features/connection"
 import { PullToRefresh, toaster } from "@/components/ui"
 import { useIntl, usePageTitle, usePullToRefresh } from "@/hooks/utils"
+import { SEARCH_NODES } from "@/lib/apollo"
 
 /**
  * Connections page component
@@ -12,24 +14,16 @@ import { useIntl, usePageTitle, usePullToRefresh } from "@/hooks/utils"
 export function ConnectionPage() {
   const { t } = useIntl()
   const contentTriggerRef = useRef(null)
-  const followersRef = useRef(null)
-  const followingRef = useRef(null)
+  const client = useApolloClient()
 
   usePageTitle(t("common.pageTitle.connections"))
 
   // Handle refresh for both lists
   const handleRefresh = async () => {
-    // Wait for all refetch operations to complete
     try {
-      // Refetch followers if available
-      if (followersRef.current?.refetch) {
-        await followersRef.current.refetch()
-      }
-
-      // Refetch following if available
-      if (followingRef.current?.refetch) {
-        await followingRef.current.refetch()
-      }
+      await client.refetchQueries({
+        include: [SEARCH_NODES],
+      })
       toaster.create({
         description: t("common.refreshSuccess"),
         type: "success",
@@ -51,7 +45,6 @@ export function ConnectionPage() {
 
   return (
     <>
-      {/* Pull to refresh indicator */}
       <PullToRefresh
         isRefreshing={isRefreshing}
         pullPosition={pullPosition}
@@ -60,8 +53,8 @@ export function ConnectionPage() {
 
       {/* Attach ref to the main content wrapper */}
       <VStack ref={contentTriggerRef} spacing={6} align="stretch">
-        <FollowersList ref={followersRef} />
-        <FollowingList ref={followingRef} />
+        <FollowersList />
+        <FollowingList />
       </VStack>
     </>
   )

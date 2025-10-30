@@ -1,4 +1,5 @@
 "use client"
+import { useApolloClient } from "@apollo/client/react"
 import { Alert, Badge, HStack, Separator, Text, VStack } from "@chakra-ui/react"
 import { useRef, useState } from "react"
 import { CommentForm, CommentList } from "@/components/features/comment"
@@ -16,6 +17,7 @@ import {
 import { usePage } from "@/contexts/PageContext"
 import { usePublicationItem } from "@/hooks/data"
 import { useIntl, usePageTitle, usePullToRefresh } from "@/hooks/utils"
+import { FETCH, SEARCH_COMMENTS } from "@/lib/apollo"
 import { stripMarkdown, truncateText } from "@/utils/format"
 
 /**
@@ -27,7 +29,7 @@ export function PublicationItemPage({ variables }) {
   const { settings } = usePage()
   const [localPendingComment, setLocalPendingComment] = useState(null)
   const [retrySignatureFn, setRetrySignatureFn] = useState(null)
-  const [commentRefetch, setCommentRefetch] = useState(null)
+  const client = useApolloClient()
 
   // Pull to refresh trigger ref
   const contentTriggerRef = useRef(null)
@@ -51,7 +53,6 @@ export function PublicationItemPage({ variables }) {
     handleConfirmDelete,
     handleShowSignature,
     handleCommentCreated,
-    refetchPublication,
     setDeleteDialogOpen,
     handlePublish,
   } = usePublicationItem({ variables })
@@ -60,11 +61,10 @@ export function PublicationItemPage({ variables }) {
   const handleRefresh = async () => {
     try {
       // Refresh publication data
-      await refetchPublication()
-      // Refresh comments if refetch function is available
-      if (typeof commentRefetch === "function") {
-        await commentRefetch()
-      }
+      // await refetchPublication()
+      await client.refetchQueries({
+        include: [FETCH, SEARCH_COMMENTS],
+      })
 
       toaster.create({
         description: t("common.refreshSuccess"),
@@ -185,12 +185,11 @@ export function PublicationItemPage({ variables }) {
               {/* Comment form */}
               <CommentForm
                 publicationId={publicationId}
-                onCommentCreated={() => {
-                  // Refresh comment list and update publication comment count
-                  if (typeof commentRefetch === "function") {
-                    commentRefetch()
-                  }
-                  handleCommentCreated()
+                onCommentCreated={async () => {
+                  await client.refetchQueries({
+                    include: [SEARCH_COMMENTS],
+                  })
+                  await handleCommentCreated()
                 }}
                 onPendingCommentChange={(pending, retryFn) => {
                   setLocalPendingComment(pending)
@@ -201,16 +200,14 @@ export function PublicationItemPage({ variables }) {
               {/* Comment list - above the form */}
               <CommentList
                 publicationId={publicationId}
-                onCommentDeleted={() => {
-                  // Refresh comment list and update publication comment count
-                  if (typeof commentRefetch === "function") {
-                    commentRefetch()
-                  }
-                  handleCommentCreated()
+                onCommentDeleted={async () => {
+                  await client.refetchQueries({
+                    include: [SEARCH_COMMENTS],
+                  })
+                  await handleCommentCreated()
                 }}
                 localPendingComment={localPendingComment}
                 onRetrySignature={retrySignatureFn}
-                onSetRefetch={setCommentRefetch}
               />
             </UnifiedCard.Body>
           </UnifiedCard.Root>
