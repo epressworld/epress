@@ -1,14 +1,15 @@
 "use client"
 import { useSuspenseQuery } from "@apollo/client/react"
 import { Box, Button, Icon, Spinner, Text, VStack } from "@chakra-ui/react"
-import { useState, useTransition } from "react"
+import { forwardRef, useImperativeHandle, useState, useTransition } from "react"
 import { LuUsers } from "react-icons/lu"
 import { EmptyState, LoadMoreButton, toaster } from "@/components/ui"
 import { useIntl } from "@/hooks/utils"
 import { SEARCH_NODES } from "@/lib/apollo"
 import { ConnectionItem } from "./Item"
 import { ConnectionList } from "./List"
-export function FollowersList({ onRefetch }) {
+
+export const FollowersList = forwardRef((_props, ref) => {
   const { t } = useIntl()
   const [loading, setLoading] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -24,6 +25,15 @@ export function FollowersList({ onRefetch }) {
     fetchPolicy: "cache-and-network",
     nextFetchPolicy: "cache-and-network",
   })
+
+  // Expose refetch method to parent via ref
+  useImperativeHandle(
+    ref,
+    () => ({
+      refetch,
+    }),
+    [refetch],
+  )
 
   const hasMore = data?.search?.pageInfo?.hasNextPage
   const followers = data?.search?.edges || []
@@ -59,11 +69,7 @@ export function FollowersList({ onRefetch }) {
   }
 
   const handleRefresh = () => {
-    if (onRefetch) {
-      onRefetch()
-    } else {
-      refetch()
-    }
+    refetch()
   }
 
   // 加载状态
@@ -127,4 +133,4 @@ export function FollowersList({ onRefetch }) {
       </VStack>
     </ConnectionList>
   )
-}
+})

@@ -1,7 +1,7 @@
 "use client"
 import { useMutation, useSuspenseQuery } from "@apollo/client/react"
 import { Box, Button, Icon, Spinner, Text, VStack } from "@chakra-ui/react"
-import { useState, useTransition } from "react"
+import { forwardRef, useImperativeHandle, useState, useTransition } from "react"
 import { FaMinus } from "react-icons/fa"
 import { LuUserRoundCheck } from "react-icons/lu"
 import {
@@ -18,7 +18,7 @@ import { deleteConnectionTypedData } from "@/utils/helpers"
 import { ConnectionItem } from "./Item"
 import { ConnectionList } from "./List"
 
-export const FollowingList = () => {
+export const FollowingList = forwardRef((_props, ref) => {
   const [hasAttemptedLoadMore, setHasAttemptedLoadMore] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [selectedNode, setSelectedNode] = useState(null)
@@ -28,7 +28,7 @@ export const FollowingList = () => {
   const { address, signEIP712Data } = useWallet()
   const { t } = useIntl()
 
-  const { data, error, fetchMore } = useSuspenseQuery(SEARCH_NODES, {
+  const { data, error, fetchMore, refetch } = useSuspenseQuery(SEARCH_NODES, {
     variables: {
       filterBy: { type: "following" },
       orderBy: "-created_at",
@@ -38,6 +38,15 @@ export const FollowingList = () => {
     fetchPolicy: "cache-and-network",
     nextFetchPolicy: "cache-and-network",
   })
+
+  // Expose refetch method to parent via ref
+  useImperativeHandle(
+    ref,
+    () => ({
+      refetch,
+    }),
+    [refetch],
+  )
 
   const [destroyConnection, { loading: isDestroying }] =
     useMutation(DESTROY_CONNECTION)
@@ -231,4 +240,4 @@ export const FollowingList = () => {
       />
     </ConnectionList>
   )
-}
+})

@@ -84,7 +84,7 @@ export function usePublicationItem(options = {}) {
       // 如果有新文件，需要先上传文件
       if (file) {
         // TODO: 实现文件上传逻辑
-        // 这里需要调用文件上传API
+        // 这里需要调用文件上传 API
         toaster.create({
           title: "功能限制",
           description: t("common.fileUploadNotImplemented"),
@@ -240,7 +240,7 @@ export function usePublicationItem(options = {}) {
     refetchPublication().finally(() => setLoading(false))
   }
 
-  // 处理引用发布（仅文本发布）
+  // 处理引用发布(仅文本发布)
   const handlePublish = async (formData) => {
     if (authStatus !== AUTH_STATUS.AUTHENTICATED || !isNodeOwner) {
       toaster.create({
@@ -309,6 +309,7 @@ export function usePublicationItem(options = {}) {
     handleConfirmDelete,
     handleShowSignature,
     handleCommentCreated,
+    refetchPublication,
     setDeleteDialogOpen,
     setSignatureDialogOpen,
     handlePublish,

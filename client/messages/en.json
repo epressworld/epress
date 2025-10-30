@@ -143,6 +143,31 @@
       "verificationSuccess": "Verification Success"
     }
   },
+  "editor": {
+    "bold": "Bold",
+    "italic": "Italic",
+    "heading": "Heading",
+    "inlineCode": "Inline Code",
+    "strikethrough": "Strikethrough",
+    "bulletList": "Bullet List",
+    "orderedList": "Ordered List",
+    "blockquote": "Blockquote",
+    "link": "Link",
+    "codeBlock": "Code Block",
+    "image": "Image",
+    "addLink": "Add Link",
+    "editLink": "Edit Link",
+    "enterUrl": "Enter URL",
+    "remove": "Remove",
+    "update": "Update",
+    "insertCodeBlock": "Insert Code Block",
+    "selectLanguageOptional": "Select language (optional)",
+    "noLanguage": "No Language",
+    "insert": "Insert",
+    "insertImage": "Insert Image",
+    "enterImageUrl": "Enter image URL",
+    "selectedTextAsAlt": "Selected text will be used as alt text: \"{text}\""
+  },
   "navigation": {
     "content": "Contents",
     "connections": "Connections",

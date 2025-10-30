@@ -30,13 +30,13 @@ export function usePublicationList({ variables, keyword: _keyword }) {
       })
 
       toaster.create({
-        description: t("common.refreshSuccess") || "刷新成功",
+        description: t("common.refreshSuccess"),
         type: "success",
       })
-    } catch (error) {
-      console.error("刷新失败:", error)
+    } catch (_error) {
+      console.warn(_error)
       toaster.create({
-        description: t("common.refreshFailed") || "刷新失败",
+        description: t("common.refreshFailed"),
         type: "error",
       })
     }
