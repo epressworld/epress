@@ -94,7 +94,8 @@ export function Connections() {
             <SkeletonCircle size="12" />
             <Stack flex="1">
               <Skeleton height="5" width="128px" />
-              <Skeleton height="5" width="300px" />
+              {/* **【修复】**：使用相对宽度防止溢出 */}
+              <Skeleton height="5" width="90%" />
             </Stack>
           </HStack>
         </UnifiedCard.Body>
@@ -111,7 +112,8 @@ export function Connections() {
             <SkeletonCircle size="12" />
             <Stack flex="1">
               <Skeleton height="5" width="128px" />
-              <Skeleton height="5" width="300px" />
+              {/* **【修复】**：使用相对宽度防止溢出 */}
+              <Skeleton height="5" width="90%" />
             </Stack>
           </HStack>
         </UnifiedCard.Body>

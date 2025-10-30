@@ -13,7 +13,7 @@ import {
 } from "@chakra-ui/react"
 import { useCopyToClipboard } from "@uidotdev/usehooks"
 import formatFileSize from "pretty-bytes"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { FiEdit3, FiMessageCircle, FiTrash2 } from "react-icons/fi"
 import { LuQuote, LuSend } from "react-icons/lu"
 import { CommentForm, CommentList } from "@/components"
@@ -48,6 +48,7 @@ export function PublicationItem({
 }) {
   const [isSignatureDialogOpen, setIsSignatureDialogOpen] = useState(false)
   const [isQuoteDialogOpen, setIsQuoteDialogOpen] = useState(false)
+  const commentsRef = useRef(null)
   const [isPublishing, setIsPublishing] = useState(false)
   const [_copied, copyToClipboard] = useCopyToClipboard()
   const { t, formatDate, formatRelativeTime } = useIntl()
@@ -57,7 +58,6 @@ export function PublicationItem({
   const [commentCount, setCommentCount] = useState(
     publication.comment_count || 0,
   )
-  const [commentRefetch, setCommentRefetch] = useState(null)
   const [localPendingComment, setLocalPendingComment] = useState(null)
 
   // 生成引用文本
@@ -215,21 +215,18 @@ export function PublicationItem({
   const shouldShowComments = isOwnContent && showCommentIcon
 
   // 处理评论创建成功
-  const handleCommentCreated = () => {
+  const handleCommentCreated = async () => {
     // 刷新评论列表
-    if (commentRefetch) {
-      commentRefetch()
-    }
+    await commentsRef?.current?.refetch()
+
     // 更新评论数量
     setCommentCount((prev) => prev + 1)
   }
 
   // 处理评论删除成功
-  const handleCommentDeleted = () => {
+  const handleCommentDeleted = async () => {
     // 刷新评论列表
-    if (commentRefetch) {
-      commentRefetch()
-    }
+    await commentsRef?.current?.refetch()
     // 更新评论数量
     setCommentCount((prev) => Math.max(0, prev - 1))
   }
@@ -490,11 +487,11 @@ export function PublicationItem({
                 />
                 <Separator my={5} />
                 <CommentList
+                  ref={commentsRef}
                   publicationId={publication.id}
                   onCommentDeleted={handleCommentDeleted}
                   localPendingComment={localPendingComment}
                   onRetrySignature={localPendingComment?.retryFn || undefined}
-                  onSetRefetch={setCommentRefetch}
                   suspense={false}
                 />
               </Drawer.Body>
