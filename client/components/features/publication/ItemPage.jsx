@@ -124,11 +124,9 @@ export function PublicationItemPage({ variables }) {
               _dark={{ borderColor: "gray.800" }}
             >
               <HStack gap={2} justify="space-between">
-                <HStack gap={2}>
-                  <Text fontSize="xl" fontWeight="semibold">
-                    {t("common.comments")}
-                  </Text>
-                </HStack>
+                <Text fontSize="xl" fontWeight="semibold">
+                  {t("common.comments")}
+                </Text>
                 <Badge colorPalette="green" variant="solid">
                   {publication?.comment_count || 0}
                 </Badge>
