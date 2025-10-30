@@ -21,8 +21,10 @@ import {
   FiList,
 } from "react-icons/fi"
 import { LuFileCode2, LuQuote, LuStrikethrough } from "react-icons/lu"
+import { useIntl } from "@/hooks/utils"
 
 export function EditorToolbar({ editor }) {
+  const { t } = useIntl()
   const [linkUrl, setLinkUrl] = useState("")
   const [imageUrl, setImageUrl] = useState("")
   const [codeBlockLanguage, setCodeBlockLanguage] = useState("")
@@ -87,7 +89,7 @@ export function EditorToolbar({ editor }) {
   }
 
   const programmingLanguages = [
-    { value: "", label: "No Language" },
+    { value: "", label: t("editor.noLanguage") },
     { value: "javascript", label: "JavaScript" },
     { value: "typescript", label: "TypeScript" },
     { value: "python", label: "Python" },
@@ -117,7 +119,7 @@ export function EditorToolbar({ editor }) {
     {
       id: "bold",
       icon: <FiBold />,
-      label: "Bold",
+      label: t("editor.bold"),
       onClick: () => editor.chain().focus().toggleBold().run(),
       isActive: () => editor.isActive("bold"),
       needsPopover: false,
@@ -125,7 +127,7 @@ export function EditorToolbar({ editor }) {
     {
       id: "italic",
       icon: <FiItalic />,
-      label: "Italic",
+      label: t("editor.italic"),
       onClick: () => editor.chain().focus().toggleItalic().run(),
       isActive: () => editor.isActive("italic"),
       needsPopover: false,
@@ -133,7 +135,7 @@ export function EditorToolbar({ editor }) {
     {
       id: "heading",
       icon: <FiHash />,
-      label: "Heading",
+      label: t("editor.heading"),
       onClick: () => editor.chain().focus().toggleHeading({ level: 1 }).run(),
       isActive: () => editor.isActive("heading"),
       needsPopover: false,
@@ -141,7 +143,7 @@ export function EditorToolbar({ editor }) {
     {
       id: "code",
       icon: <FiCode />,
-      label: "Inline Code",
+      label: t("editor.inlineCode"),
       onClick: () => editor.chain().focus().toggleCode().run(),
       isActive: () => editor.isActive("code"),
       needsPopover: false,
@@ -149,7 +151,7 @@ export function EditorToolbar({ editor }) {
     {
       id: "strike",
       icon: <LuStrikethrough />,
-      label: "Strikethrough",
+      label: t("editor.strikethrough"),
       onClick: () => editor.chain().focus().toggleStrike().run(),
       isActive: () => editor.isActive("strike"),
       needsPopover: false,
@@ -157,7 +159,7 @@ export function EditorToolbar({ editor }) {
     {
       id: "bulletList",
       icon: <FiList />,
-      label: "Bullet List",
+      label: t("editor.bulletList"),
       onClick: () => editor.chain().focus().toggleBulletList().run(),
       isActive: () => editor.isActive("bulletList"),
       needsPopover: false,
@@ -165,7 +167,7 @@ export function EditorToolbar({ editor }) {
     {
       id: "orderedList",
       icon: <FiList />,
-      label: "Ordered List",
+      label: t("editor.orderedList"),
       onClick: () => editor.chain().focus().toggleOrderedList().run(),
       isActive: () => editor.isActive("orderedList"),
       needsPopover: false,
@@ -173,7 +175,7 @@ export function EditorToolbar({ editor }) {
     {
       id: "blockquote",
       icon: <LuQuote />,
-      label: "Blockquote",
+      label: t("editor.blockquote"),
       onClick: () => editor.chain().focus().toggleBlockquote().run(),
       isActive: () => editor.isActive("blockquote"),
       needsPopover: false,
@@ -181,7 +183,7 @@ export function EditorToolbar({ editor }) {
     {
       id: "link",
       icon: <FiLink />,
-      label: "Link",
+      label: t("editor.link"),
       onClick: () => {
         if (editor.isActive("link")) {
           handleLinkEdit()
@@ -197,7 +199,7 @@ export function EditorToolbar({ editor }) {
     {
       id: "codeBlock",
       icon: <LuFileCode2 />,
-      label: "Code Block",
+      label: t("editor.codeBlock"),
       onClick: () => setIsCodeBlockOpen(true),
       isActive: () => editor.isActive("codeBlock"),
       needsPopover: true,
@@ -207,7 +209,7 @@ export function EditorToolbar({ editor }) {
     {
       id: "image",
       icon: <FiImage />,
-      label: "Image",
+      label: t("editor.image"),
       onClick: () => setIsImageOpen(true),
       isActive: () => editor.isActive("image"),
       needsPopover: true,
@@ -260,10 +262,12 @@ export function EditorToolbar({ editor }) {
                     {tool.id === "link" && (
                       <VStack gap={3} align="stretch">
                         <Text fontSize="sm" fontWeight="medium">
-                          {editor.isActive("link") ? "Edit Link" : "Add Link"}
+                          {editor.isActive("link")
+                            ? t("editor.editLink")
+                            : t("editor.addLink")}
                         </Text>
                         <Input
-                          placeholder="Enter URL"
+                          placeholder={t("editor.enterUrl")}
                           value={linkUrl}
                           onChange={(e) => setLinkUrl(e.target.value)}
                           onKeyDown={(e) => {
@@ -279,7 +283,7 @@ export function EditorToolbar({ editor }) {
                             variant="ghost"
                             onClick={() => tool.setPopoverState(false)}
                           >
-                            Cancel
+                            {t("common.cancel")}
                           </Button>
                           {editor.isActive("link") && (
                             <Button
@@ -288,7 +292,7 @@ export function EditorToolbar({ editor }) {
                               colorPalette="red"
                               onClick={handleLinkRemove}
                             >
-                              Remove
+                              {t("editor.remove")}
                             </Button>
                           )}
                           <Button
@@ -296,7 +300,9 @@ export function EditorToolbar({ editor }) {
                             colorPalette="orange"
                             onClick={handleLinkSubmit}
                           >
-                            {editor.isActive("link") ? "Update" : "Confirm"}
+                            {editor.isActive("link")
+                              ? t("editor.update")
+                              : t("common.confirm")}
                           </Button>
                         </HStack>
                       </VStack>
@@ -304,7 +310,7 @@ export function EditorToolbar({ editor }) {
                     {tool.id === "codeBlock" && (
                       <VStack gap={3} align="stretch">
                         <Text fontSize="sm" fontWeight="medium">
-                          Insert Code Block
+                          {t("editor.insertCodeBlock")}
                         </Text>
                         <Box
                           as="select"
@@ -322,7 +328,9 @@ export function EditorToolbar({ editor }) {
                           value={codeBlockLanguage}
                           onChange={(e) => setCodeBlockLanguage(e.target.value)}
                         >
-                          <option value="">Select language (optional)</option>
+                          <option value="">
+                            {t("editor.selectLanguageOptional")}
+                          </option>
                           {programmingLanguages.map((lang) => (
                             <option key={lang.value} value={lang.value}>
                               {lang.label}
@@ -335,14 +343,14 @@ export function EditorToolbar({ editor }) {
                             variant="ghost"
                             onClick={() => tool.setPopoverState(false)}
                           >
-                            Cancel
+                            {t("common.cancel")}
                           </Button>
                           <Button
                             size="sm"
                             colorPalette="orange"
                             onClick={handleCodeBlockSubmit}
                           >
-                            Insert
+                            {t("editor.insert")}
                           </Button>
                         </HStack>
                       </VStack>
@@ -350,10 +358,10 @@ export function EditorToolbar({ editor }) {
                     {tool.id === "image" && (
                       <VStack gap={3} align="stretch">
                         <Text fontSize="sm" fontWeight="medium">
-                          Insert Image
+                          {t("editor.insertImage")}
                         </Text>
                         <Input
-                          placeholder="Enter image URL"
+                          placeholder={t("editor.enterImageUrl")}
                           value={imageUrl}
                           onChange={(e) => setImageUrl(e.target.value)}
                           onKeyDown={(e) => {
@@ -370,8 +378,9 @@ export function EditorToolbar({ editor }) {
                           )
                           return selectedText ? (
                             <Text fontSize="xs" color="gray.500">
-                              Selected text will be used as alt text: "
-                              {selectedText}"
+                              {t("editor.selectedTextAsAlt", {
+                                text: selectedText,
+                              })}
                             </Text>
                           ) : null
                         })()}
@@ -381,14 +390,14 @@ export function EditorToolbar({ editor }) {
                             variant="ghost"
                             onClick={() => tool.setPopoverState(false)}
                           >
-                            Cancel
+                            {t("common.cancel")}
                           </Button>
                           <Button
                             size="sm"
                             colorPalette="orange"
                             onClick={handleImageSubmit}
                           >
-                            Confirm
+                            {t("common.confirm")}
                           </Button>
                         </HStack>
                       </VStack>

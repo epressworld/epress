@@ -1,15 +1,21 @@
 "use client"
 import { Alert, Badge, HStack, Separator, Text, VStack } from "@chakra-ui/react"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { CommentForm, CommentList } from "@/components/features/comment"
 import {
   PublicationEditForm,
   PublicationItem,
 } from "@/components/features/publication"
-import { ConfirmDialog, Skeletons, UnifiedCard } from "@/components/ui"
+import {
+  ConfirmDialog,
+  PullToRefresh,
+  Skeletons,
+  toaster,
+  UnifiedCard,
+} from "@/components/ui"
 import { usePage } from "@/contexts/PageContext"
 import { usePublicationItem } from "@/hooks/data"
-import { useIntl, usePageTitle } from "@/hooks/utils"
+import { useIntl, usePageTitle, usePullToRefresh } from "@/hooks/utils"
 import { stripMarkdown, truncateText } from "@/utils/format"
 
 /**
@@ -22,6 +28,10 @@ export function PublicationItemPage({ variables }) {
   const [localPendingComment, setLocalPendingComment] = useState(null)
   const [retrySignatureFn, setRetrySignatureFn] = useState(null)
   const [commentRefetch, setCommentRefetch] = useState(null)
+
+  // Pull to refresh trigger ref
+  const contentTriggerRef = useRef(null)
+
   const {
     publicationId,
     isEditMode,
@@ -41,9 +51,39 @@ export function PublicationItemPage({ variables }) {
     handleConfirmDelete,
     handleShowSignature,
     handleCommentCreated,
+    refetchPublication,
     setDeleteDialogOpen,
     handlePublish,
   } = usePublicationItem({ variables })
+
+  // Combined refresh handler for both publication and comments
+  const handleRefresh = async () => {
+    try {
+      // Refresh publication data
+      await refetchPublication()
+      // Refresh comments if refetch function is available
+      if (typeof commentRefetch === "function") {
+        await commentRefetch()
+      }
+
+      toaster.create({
+        description: t("common.refreshSuccess"),
+        type: "success",
+      })
+    } catch (error) {
+      console.warn(error)
+      toaster.create({
+        description: t("common.refreshFailed"),
+        type: "error",
+      })
+    }
+  }
+
+  // Pull to refresh hook
+  const { isRefreshing, pullPosition, isPulling } = usePullToRefresh({
+    onRefresh: handleRefresh,
+    triggerRef: contentTriggerRef,
+  })
 
   // Generate page title
   const getPageTitle = () => {
@@ -91,7 +131,15 @@ export function PublicationItemPage({ variables }) {
 
   return (
     <>
-      <VStack spacing={6} align="stretch">
+      {/* Pull to refresh indicator */}
+      <PullToRefresh
+        isRefreshing={isRefreshing}
+        pullPosition={pullPosition}
+        isPulling={isPulling}
+      />
+
+      {/* Attach ref to the main content wrapper */}
+      <VStack ref={contentTriggerRef} spacing={6} align="stretch">
         {/* Publication detail - edit mode or view mode */}
         {isEditMode ? (
           <PublicationEditForm
