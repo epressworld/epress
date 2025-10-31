@@ -240,18 +240,17 @@ export function AuthProvider({ children, initialAuthState }) {
   ])
 
   // 登出逻辑(不影响钱包连接状态)
-  const logout = useCallback(() => {
-    // 清除 HttpOnly Cookie
-    fetch("/api/auth/token", { method: "DELETE" }).catch((e) =>
-      console.error("Failed to clear auth cookie:", e),
-    )
-    setToken(null)
-    setAuthStatus(AUTH_STATUS.UNAUTHENTICATED)
-    // 登出后清空缓存并重新获取活跃查询，回到匿名视图
-    apolloClient
-      .clearStore()
-      .then(() => apolloClient.refetchQueries({ include: "active" }))
-      .catch((e) => console.error("Apollo refetch after logout failed:", e))
+  const logout = useCallback(async () => {
+    try {
+      await fetch("/api/auth/token", { method: "DELETE" })
+      setToken(null)
+      setAuthStatus(AUTH_STATUS.UNAUTHENTICATED)
+      // 登出后清空缓存并重新获取活跃查询，回到匿名视图
+      await apolloClient.clearStore()
+      await apolloClient.refetchQueries({ include: "active" })
+    } catch (e) {
+      console.error("Failed to clear auth cookie:", e)
+    }
   }, [apolloClient])
 
   // 彻底断开连接
