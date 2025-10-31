@@ -59,7 +59,6 @@ export function Page({ children, intl, initialAuthState }) {
         locale={intl.locale}
         messages={intl.messages}
         timeZone={Intl.DateTimeFormat().resolvedOptions().timeZone}
-        now={new Date()}
       >
         <WagmiProvider
           walletConnectProjectId={value.settings.walletConnectProjectId}
