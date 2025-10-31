@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  Box,
   Button,
   Dialog,
   Drawer,
@@ -326,7 +327,40 @@ export function PublicationItem({
               </HStack>
 
               {/* 操作按钮 */}
-              <HStack gap={1} className="publication-item-actions">
+              <HStack gap={1}>
+                {/* 节点所有者操作 */}
+                {isNodeOwner && isAuthenticated && (
+                  <Box className="publication-item-actions">
+                    {!publication.signature && (
+                      <Tooltip
+                        content={
+                          publication.signature
+                            ? t("publication.signedCannotEditMessage")
+                            : t("publication.edit")
+                        }
+                      >
+                        <IconButton
+                          size="xs"
+                          variant="ghost"
+                          disabled={!!publication.signature}
+                          onClick={() => onEdit?.(publication)}
+                        >
+                          <FiEdit3 size={12} />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                    <Tooltip content={t("publication.delete")}>
+                      <IconButton
+                        size="xs"
+                        variant="ghost"
+                        colorPalette="red"
+                        onClick={() => onDelete(publication)}
+                      >
+                        <FiTrash2 size={12} />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                )}
                 {/* 评论按钮（显示数量）- 只有本节点内容才显示 */}
                 {shouldShowComments && (
                   <Tooltip content={t("publication.viewComments")}>
@@ -341,46 +375,12 @@ export function PublicationItem({
                     </Button>
                   </Tooltip>
                 )}
-
                 {/* 引用按钮 */}
                 <Tooltip content={t("publication.quote")}>
                   <IconButton size="xs" variant="ghost" onClick={handleQuote}>
                     <LuQuote size={12} />
                   </IconButton>
                 </Tooltip>
-
-                {/* 节点所有者操作 */}
-                {isNodeOwner && isAuthenticated && (
-                  <>
-                    <Tooltip
-                      content={
-                        publication.signature
-                          ? t("publication.signedCannotEditMessage")
-                          : t("publication.edit")
-                      }
-                    >
-                      <IconButton
-                        size="xs"
-                        variant="ghost"
-                        disabled={!!publication.signature}
-                        onClick={() => onEdit?.(publication)}
-                      >
-                        <FiEdit3 size={12} />
-                      </IconButton>
-                    </Tooltip>
-
-                    <Tooltip content={t("publication.delete")}>
-                      <IconButton
-                        size="xs"
-                        variant="ghost"
-                        colorPalette="red"
-                        onClick={() => onDelete(publication)}
-                      >
-                        <FiTrash2 size={12} />
-                      </IconButton>
-                    </Tooltip>
-                  </>
-                )}
                 <ShareButton
                   url={`${publication.author.url}/publications/${publication.id}`}
                   onCopied={() =>
