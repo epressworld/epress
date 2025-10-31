@@ -25,7 +25,9 @@ export function useIntl() {
   const format = useNextIntlFormatter()
   const locale = useLocale()
   const t = useTranslations()
-  const now = useNow()
+  const now = useNow({
+    updateInterval: 1000 * 10,
+  })
 
   /**
    * Translation function with namespace support

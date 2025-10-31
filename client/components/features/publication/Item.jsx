@@ -51,7 +51,7 @@ export function PublicationItem({
   const commentsRef = useRef(null)
   const [isPublishing, setIsPublishing] = useState(false)
   const [_copied, copyToClipboard] = useCopyToClipboard()
-  const { t, formatDate, formatRelativeTime } = useIntl()
+  const { t, formatDateTime, formatRelativeTime } = useIntl()
 
   // 评论 Drawer 状态
   const [isCommentDrawerOpen, setIsCommentDrawerOpen] = useState(false)
@@ -64,7 +64,7 @@ export function PublicationItem({
   const generateQuote = () => {
     const authorTitle = publication.author?.title || "Unknown Author"
     const authorUrl = publication.author?.url || ""
-    const createdAt = formatDate(publication.created_at)
+    const createdAt = formatDateTime(publication.created_at)
     const contentHash = publication.content?.content_hash || ""
 
     let contentSection
@@ -316,7 +316,7 @@ export function PublicationItem({
                 {/* 发布时间 */}
                 <Link
                   href={getDetailUrl()}
-                  title={formatDate(publication.created_at)}
+                  title={formatDateTime(publication.created_at)}
                   color="gray.500"
                   fontSize="sm"
                   suppressHydrationWarning
