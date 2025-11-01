@@ -78,7 +78,7 @@ export const searchQuery = {
       resolverOptions: {
         cursor: {
           type: "keyset",
-          column: "publications.id",
+          column: "id",
         },
         searchable: ["body", "publications.description"],
         filterable: [
