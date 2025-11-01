@@ -340,6 +340,120 @@ test("createPublication: Providing both body and file should return VALIDATION_F
   }
 })
 
+test.serial(
+  "createPublication: Should create publication with hashtags in body",
+  async (t) => {
+    const { graphqlClient, createClientJwt } = t.context
+    const authToken = await createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
+
+    const mutation = `
+    mutation CreatePublication($input: CreatePublicationInput!) {
+      createPublication(input: $input) {
+        id
+        content {
+          body
+        }
+        hashtags {
+          hashtag
+        }
+      }
+    }
+  `
+
+    const variables = {
+      input: {
+        type: "post",
+        body: "Testing GraphQL hashtags #api #graphql #test",
+      },
+    }
+
+    const { data, errors } = await graphqlClient.query(mutation, {
+      variables,
+      headers: { Authorization: `Bearer ${authToken}` },
+    })
+
+    t.falsy(errors, "Should not have GraphQL errors")
+    t.truthy(data.createPublication, "Should return created publication")
+    t.is(data.createPublication.hashtags.length, 3, "Should have 3 hashtags")
+
+    const hashtagTexts = data.createPublication.hashtags
+      .map((h) => h.hashtag)
+      .sort()
+    t.deepEqual(
+      hashtagTexts,
+      ["api", "graphql", "test"],
+      "Should have correct hashtags",
+    )
+  },
+)
+
+test.serial(
+  "createPublication: FILE type should process hashtags from description",
+  async (t) => {
+    const { app, createClientJwt } = t.context
+    const authToken = await createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
+
+    const fs = await import("node:fs")
+    const tempFilePath = "/tmp/test_hashtag_file.txt"
+    fs.writeFileSync(tempFilePath, "File content")
+
+    const { body, headers } = createGraphQLUploadRequest({
+      query: `
+      mutation CreatePublication($input: CreatePublicationInput!) {
+        createPublication(input: $input) {
+          id
+          description
+          hashtags {
+            hashtag
+          }
+        }
+      }
+    `,
+      filePath: tempFilePath,
+      variables: {
+        input: {
+          type: "file",
+          description: "File about #documentation and #tutorial",
+          file: null,
+        },
+      },
+      uploadFieldName: "input.file",
+      fileName: "test_hashtag_file.txt",
+    })
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/graphql",
+      payload: body,
+      headers: {
+        ...headers,
+        Authorization: `Bearer ${authToken}`,
+      },
+    })
+
+    const { data, errors } = JSON.parse(response.body)
+
+    t.falsy(errors, "Should not have GraphQL errors")
+    t.is(
+      data.createPublication.hashtags.length,
+      2,
+      "Should have 2 hashtags from description",
+    )
+
+    const hashtagTexts = data.createPublication.hashtags
+      .map((h) => h.hashtag)
+      .sort()
+    t.deepEqual(
+      hashtagTexts,
+      ["documentation", "tutorial"],
+      "Should extract hashtags from description",
+    )
+
+    // Cleanup
+    fs.unlinkSync(tempFilePath)
+  },
+)
+
 // --- Helper functions for testing (final version) ---
 async function createTestPublication(
   authorNode,
@@ -606,6 +720,65 @@ test("updatePublication: Updating non-existent post should fail", async (t) => {
   t.truthy(errors, "Should return GraphQL errors")
   t.is(errors[0].extensions.code, "NOT_FOUND", "Error code should be NOT_FOUND")
 })
+
+test.serial(
+  "updatePublication: Should update hashtags when body changes",
+  async (t) => {
+    const { graphqlClient, createClientJwt } = t.context
+    const selfNode = await Node.query().findOne({ is_self: true })
+    const authToken = await createClientJwt(selfNode.address)
+
+    // Create initial publication
+    const content = await Content.create({
+      type: "post",
+      body: "Original #initial",
+    })
+
+    const publication = await Publication.query().insert({
+      content_hash: content.content_hash,
+      author_address: selfNode.address,
+    })
+
+    // Update publication
+    const mutation = `
+    mutation UpdatePublication($input: UpdatePublicationInput!) {
+      updatePublication(input: $input) {
+        id
+        content {
+          body
+        }
+        hashtags {
+          hashtag
+        }
+      }
+    }
+  `
+
+    const variables = {
+      input: {
+        id: publication.id.toString(),
+        body: "Updated content with #updated #new",
+      },
+    }
+
+    const { data, errors } = await graphqlClient.query(mutation, {
+      variables,
+      headers: { Authorization: `Bearer ${authToken}` },
+    })
+
+    t.falsy(errors, "Should not have GraphQL errors")
+    t.is(
+      data.updatePublication.hashtags.length,
+      2,
+      "Should have updated hashtags",
+    )
+
+    const hashtagTexts = data.updatePublication.hashtags
+      .map((h) => h.hashtag)
+      .sort()
+    t.deepEqual(hashtagTexts, ["new", "updated"], "Should have new hashtags")
+  },
+)
 
 // =================================================================
 // The following code will be appended to the end of test/graphql/publication.test.mjs

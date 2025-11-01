@@ -1,16 +1,17 @@
 import "../../config/index.mjs"
 import { Model } from "swiftify"
 import knexfile from "../../knexfile.mjs"
-import { Comment } from "./comment.mjs"
-import { Connection } from "./connection.mjs"
-import { Content } from "./content.mjs"
-import { Node } from "./node.mjs"
-import { Publication } from "./publication.mjs"
-import { Setting } from "./setting.mjs"
 
 // ---- Centralized database connection setup ----
 if (!Model.knex()) {
   Model.connect(knexfile)
 }
 
-export { Setting, Node, Connection, Content, Publication, Comment, Model }
+export { Model }
+export * from "./comment.mjs"
+export * from "./connection.mjs"
+export * from "./content.mjs"
+export * from "./hashtag.mjs"
+export * from "./node.mjs"
+export * from "./publication.mjs"
+export * from "./setting.mjs"

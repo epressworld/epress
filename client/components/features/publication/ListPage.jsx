@@ -9,7 +9,7 @@ import { PullToRefresh } from "@/components/ui"
 import { usePublicationList } from "@/hooks/data"
 import { useIntl, usePageTitle, usePullToRefresh } from "@/hooks/utils"
 
-export function PublicationListPage({ variables, keyword }) {
+export function PublicationListPage({ variables }) {
   const { t } = useIntl()
 
   const listTriggerRef = useRef(null)
@@ -25,7 +25,7 @@ export function PublicationListPage({ variables, keyword }) {
     handleFileRemove,
     handleSubmit,
     handleRefresh,
-  } = usePublicationList({ variables, keyword })
+  } = usePublicationList({ variables })
 
   // 4. 调用新的 Hook
   const { isRefreshing, pullPosition, isPulling } = usePullToRefresh({
@@ -69,7 +69,6 @@ export function PublicationListPage({ variables, keyword }) {
           nodeAddress={profile?.address}
           onEdit={handleEdit}
           onPublish={handleSubmit}
-          keyword={keyword}
         />
       </Box>
     </>

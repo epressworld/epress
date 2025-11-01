@@ -52,6 +52,44 @@ export const up = async (knex) => {
     table.timestamp("updated_at").defaultTo(knex.fn.now())
   })
 
+  // 创建hashtags表
+  await knex.schema.createTable("hashtags", (table) => {
+    table.increments("id").primary()
+    table.string("hashtag").notNullable().unique()
+    table.timestamp("created_at").defaultTo(knex.fn.now())
+  })
+
+  // 创建publication2hashtag连接表
+  await knex.schema.createTable("publication2hashtag", (table) => {
+    table.increments("id").primary()
+    table
+      .integer("publication_id")
+      .notNullable()
+      .references("id")
+      .inTable("publications")
+      .onDelete("CASCADE")
+    table
+      .integer("hashtag_id")
+      .notNullable()
+      .references("id")
+      .inTable("hashtags")
+      .onDelete("CASCADE")
+    table.timestamp("created_at").defaultTo(knex.fn.now())
+
+    // 确保同一个publication不会重复关联同一个hashtag
+    table.unique(["publication_id", "hashtag_id"])
+  })
+
+  // 为查询性能添加索引
+  await knex.schema.table("publication2hashtag", (table) => {
+    table.index("publication_id")
+    table.index("hashtag_id")
+  })
+
+  await knex.schema.table("hashtags", (table) => {
+    table.index("hashtag")
+  })
+
   // 创建连接表
   await knex.schema.createTable("connections", (table) => {
     table.increments("id").primary()
@@ -95,6 +133,8 @@ export const down = async (knex) => {
   // 按照依赖关系的相反顺序删除表
   await knex.schema.dropTableIfExists("comments")
   await knex.schema.dropTableIfExists("connections")
+  await knex.schema.dropTableIfExists("publication2hashtag")
+  await knex.schema.dropTableIfExists("hashtags")
   await knex.schema.dropTableIfExists("publications")
   await knex.schema.dropTableIfExists("contents")
   await knex.schema.dropTableIfExists("settings")

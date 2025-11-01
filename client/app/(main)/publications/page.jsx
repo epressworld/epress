@@ -31,16 +31,18 @@ export async function generateMetadata({ searchParams }) {
 export default async function PublicationsServerPage({ searchParams }) {
   const params = await searchParams
   const keyword = params?.q || ""
+  const filterBy = params?.hashtag ? { hashtag: params.hashtag } : undefined
 
   const variables = {
     keyword: keyword || null,
     orderBy: "-created_at",
+    filterBy,
     first: 10,
   }
 
   return (
     <PreloadQuery query={SEARCH_PUBLICATIONS} variables={variables}>
-      <PublicationListPage variables={variables} keyword={keyword} />
+      <PublicationListPage variables={variables} />
     </PreloadQuery>
   )
 }

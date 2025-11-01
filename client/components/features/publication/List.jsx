@@ -27,9 +27,9 @@ export const PublicationList = ({
   onPublicationCreated,
   onPublish,
   variables,
-  keyword,
 }) => {
   const router = useRouter()
+  const { keyword, filterBy } = variables
   const { authStatus, isNodeOwner } = useAuth()
   const { signEIP712Data } = useWallet()
   const { t } = useIntl()
@@ -240,14 +240,14 @@ export const PublicationList = ({
     <>
       <VStack spacing={6} align="stretch">
         {/* 搜索结果提示 */}
-        {keyword && (
+        {(keyword || filterBy?.hashtag) && (
           <Alert.Root status="info" variant="subtle">
             <Alert.Indicator />
             <Alert.Content color="fg">
               <Alert.Title>{t("common.searchResults")}</Alert.Title>
               <Alert.Description>
                 {t("common.searchResultsCount", {
-                  keyword,
+                  keyword: keyword || filterBy?.hashtag,
                   count: data?.search?.total || 0,
                 })}
               </Alert.Description>
