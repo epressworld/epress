@@ -41,6 +41,7 @@ export function BodyRenderer({
   ...props
 }) {
   const containerRef = useRef(null)
+  content = replaceHashtagsWithLinks(content)
 
   // 初始化 Mermaid 和 Markmap（客户端渲染）
   useEffect(() => {
@@ -212,4 +213,14 @@ export function BodyRenderer({
       )}
     </Box>
   )
+}
+
+function replaceHashtagsWithLinks(content) {
+  // 支持Unicode字符的hashtag（中文、日文、韩文等）
+  const hashtagRegex = /#([\p{L}\p{N}_-]+)/gu
+
+  return content.replace(hashtagRegex, (_match, hashtag) => {
+    const encodedHashtag = encodeURIComponent(hashtag)
+    return `[#${hashtag}](/publications?hashtag=${encodedHashtag})`
+  })
 }

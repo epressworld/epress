@@ -1215,3 +1215,113 @@ test("Success: search COMMENT without token should return only confirmed comment
     })
   }
 })
+
+test("search: Should filter publications by hashtag", async (t) => {
+  const { graphqlClient } = t.context
+  const selfNode = await Node.query().findOne({ is_self: true })
+
+  // Create publications with different hashtags
+  const content1 = await Content.create({
+    type: "post",
+    body: "Post about #searchtest1",
+  })
+  await Publication.query().insert({
+    content_hash: content1.content_hash,
+    author_address: selfNode.address,
+  })
+
+  const content2 = await Content.create({
+    type: "post",
+    body: "Post about #searchtest2",
+  })
+  await Publication.query().insert({
+    content_hash: content2.content_hash,
+    author_address: selfNode.address,
+  })
+
+  const content3 = await Content.create({
+    type: "post",
+    body: "Post about #searchtest1 again",
+  })
+  await Publication.query().insert({
+    content_hash: content3.content_hash,
+    author_address: selfNode.address,
+  })
+  const query = `
+  query SearchPublications($filterBy: JSON) {
+    search(type: PUBLICATION, filterBy: $filterBy) {
+      total
+      edges {
+        cursor
+        node {
+          ... on Publication {
+            id
+            content_hash
+            signature
+            comment_count
+          }
+        }
+      }
+    }
+  }
+`
+
+  const { data, errors } = await graphqlClient.query(query, {
+    variables: { filterBy: { hashtag: "searchtest1" } },
+  })
+  console.log(JSON.stringify(data, true, 2))
+
+  t.falsy(errors, "Should not have any GraphQL errors")
+  t.is(
+    data.search.edges[0].node.content_hash,
+    content3.content_hash,
+    "should order by publication.id",
+  )
+  t.is(
+    data.search.total,
+    2,
+    "Should find at least 2 publications with #searchtest1",
+  )
+})
+
+test.serial("search: Hashtag filter should be case-insensitive", async (t) => {
+  const { graphqlClient } = t.context
+  const selfNode = await Node.query().findOne({ is_self: true })
+
+  const content = await Content.create({
+    type: "post",
+    body: "Post about #CaseSensitive",
+  })
+  await Publication.query().insert({
+    content_hash: content.content_hash,
+    author_address: selfNode.address,
+  })
+
+  const query = `
+  query SearchPublications($filterBy: JSON) {
+    search(type: PUBLICATION, filterBy: $filterBy) {
+      total
+      edges {
+        cursor
+        node {
+          ... on Publication {
+            content_hash
+            signature
+            comment_count
+          }
+        }
+      }
+    }
+  }
+`
+
+  const { data, errors } = await graphqlClient.query(query, {
+    variables: { filterBy: { hashtag: "casesensitive" } },
+  })
+
+  t.falsy(errors, "Should not have any GraphQL errors")
+  t.true(
+    data.search.total >= 1,
+    "Should find publication with case-insensitive search",
+  )
+})

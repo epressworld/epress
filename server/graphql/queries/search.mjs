@@ -42,6 +42,10 @@ export const searchQuery = {
         searchable: ["title", "description"],
       },
     },
+
+    // ===============================
+    //        🔍 PUBLICATION 搜索
+    // ===============================
     PUBLICATION: {
       model: Publication,
       compose: (search) => async (root, args, ctx, info) => {
@@ -55,8 +59,7 @@ export const searchQuery = {
           "Searching publications",
         )
 
-        // 公开接口：未登录用户只能搜索自己的内容，已登录用户根据权限决定搜索范围
-
+        // 只联接必要的表（不包含 hashtags）
         const query = Publication.query().joinRelated({
           content: true,
           author: true,
@@ -64,23 +67,24 @@ export const searchQuery = {
 
         // 权限检查：如果没有 search:publications 权限，则只能搜索自己的内容
         if (!ctx.request.cani("search:publications")) {
-          // 从请求缓存获取节点地址
           const selfNode = await ctx.request.config.getSelfNode()
           if (selfNode) {
             query.where("author.address", selfNode.address)
           }
         }
+
         return search(root, { ...args, query }, ctx, info)
       },
       resolverOptions: {
         cursor: {
           type: "keyset",
-          column: "id",
+          column: "publications.id",
         },
         searchable: ["body", "publications.description"],
         filterable: [
           "type",
           ({ filterBy, query }) => {
+            // 按签名筛选
             if (filterBy.isSigned === "true" || filterBy.isSigned === true) {
               query.whereNotNull("signature")
             } else if (
@@ -89,13 +93,26 @@ export const searchQuery = {
             ) {
               query.whereNull("signature")
             }
+
+            // 按内容哈希筛选
             if (filterBy.content_hash) {
               query.where("content.content_hash", filterBy.content_hash)
+            }
+
+            // ✅ 按 hashtag 筛选（关键修改点）
+            if (filterBy.hashtag) {
+              const hashtagValue = filterBy.hashtag.toLowerCase()
+              query.whereExists(
+                Publication.relatedQuery("hashtags")
+                  .select(1)
+                  .where("hashtags.hashtag", hashtagValue),
+              )
             }
           },
         ],
       },
     },
+
     COMMENT: {
       model: Comment,
       compose: (search) => async (root, args, ctx, info) => {
@@ -109,19 +126,19 @@ export const searchQuery = {
           "Searching comments",
         )
 
-        // 公开接口：未登录用户只能看到已确认的评论，已登录用户根据权限决定可见范围
-
         if (!args?.filterBy?.publication_id) {
           throw new ErrorWithProps("publication_id is required", {
             code: "INVALID_QUERY",
           })
         }
+
         const query = Comment.query().leftJoinRelated("commenter")
 
         // 权限检查：如果没有 search:comments 权限，则只能看到已确认的评论
         if (!ctx.request.cani("search:comments")) {
           query.where("status", "CONFIRMED")
         }
+
         return search(root, { ...args, query }, ctx, info)
       },
       resolverOptions: {

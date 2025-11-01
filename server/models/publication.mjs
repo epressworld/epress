@@ -1,11 +1,16 @@
 import { Model } from "swiftify"
 import { Comment } from "./comment.mjs"
 import { Content } from "./content.mjs"
+import { Hashtag } from "./hashtag.mjs"
 import { Node } from "./node.mjs"
 
 export class Publication extends Model {
   // 定义模型对应的数据库表名
   static tableName = "publications"
+
+  static get foreignKeyName() {
+    return "publication_id"
+  }
 
   // 定义模型的字段、类型和约束
   static fields = {
@@ -32,7 +37,7 @@ export class Publication extends Model {
     signature: {
       type: "string",
       constraints: {
-        nullable: true, // 核心字段，区分本地与网络发布
+        nullable: true,
       },
     },
     comment_count: {
@@ -63,8 +68,10 @@ export class Publication extends Model {
     return {
       author: Publication.belongsTo(Node, { foreignKey: "author_address" }),
       content: Publication.belongsTo(Content, { foreignKey: "content_hash" }),
-      // 一个 Publication 可以有多个 Comment
-      comments: Publication.hasMany(Comment, { localKey: "publication_id" }),
+      comments: Publication.hasMany(Comment, { localKey: "id" }),
+      hashtags: Publication.manyToMany(Hashtag, {
+        throughTable: "publication2hashtag",
+      }),
     }
   }
 
@@ -116,5 +123,69 @@ export class Publication extends Model {
         timestamp,
       },
     }
+  }
+
+  /**
+   * 处理hashtags - 从内容和描述中提取并关联（优化版）
+   * 使用 delete all + insert all 策略，比逐个对比更高效
+   * @param {Object} trx - 事务对象（可选）
+   * @returns {Promise<void>}
+   */
+  async processHashtags(trx = null) {
+    // 确保已加载content
+    if (!this.content) {
+      await this.$fetchGraph("content", { transaction: trx })
+    }
+
+    const textSource =
+      this.content?.type === "POST" ? this.content.body : this.description
+
+    const tags = Hashtag.extractHashtags(textSource)
+
+    await this.$relatedQuery("hashtags", trx).unrelate()
+
+    // 查找或创建所有hashtags
+    const hashtagInstances = await Promise.all(
+      tags.map((tag) => Hashtag.findOrCreate(tag, trx)),
+    )
+    await Promise.all(
+      hashtagInstances.map((h) =>
+        this.$relatedQuery("hashtags", trx).relate(h.id),
+      ),
+    )
+  }
+
+  /**
+   * 在插入后自动处理hashtags
+   */
+  async $afterInsert(queryContext) {
+    await super.$afterInsert(queryContext)
+    await this.processHashtags(queryContext.transaction)
+  }
+
+  /**
+   * 在更新后自动处理hashtags
+   */
+  async $afterUpdate(opt, queryContext) {
+    const result = await super.$afterUpdate(opt, queryContext)
+
+    // 只有在内容或描述发生变化时才重新处理hashtags
+    if (
+      opt.old &&
+      (opt.old.content_hash !== this.content_hash ||
+        opt.old.description !== this.description)
+    ) {
+      await this.processHashtags(queryContext.transaction)
+    }
+    return result
+  }
+
+  /**
+   * 在删除后清理hashtags
+   */
+  async $afterDelete(queryContext) {
+    const result = await super.$afterDelete(queryContext)
+    await this.$relatedQuery("hashtags").unrelate()
+    return result
   }
 }

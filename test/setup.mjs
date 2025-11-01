@@ -3,7 +3,6 @@ import test from "ava"
 import FormData from "form-data"
 import { createMercuriusTestClient } from "mercurius-integration-testing"
 import nock from "nock"
-import nodemailer from "nodemailer"
 import setupServer from "../server/index.mjs"
 import { Comment, Model, Node } from "../server/models/index.mjs"
 import { cleanupInterval } from "../server/routes/api/visitors.mjs"
@@ -17,7 +16,11 @@ test.before(async (t) => {
   // Run migrations
   await knex.migrate.latest()
 
-  const testAccount = await nodemailer.createTestAccount()
+  const testAccount = {
+    name: "Angela Adams",
+    user: "angela.adams91@ethereal.email",
+    pass: "nqwaTtpAnfNJanxnPe",
+  }
   process.env.INITIAL_DATA_NODE_AVATAR =
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
   process.env.INITIAL_DATA_NODE_ADDRESS = TEST_ETHEREUM_ADDRESS_NODE_A

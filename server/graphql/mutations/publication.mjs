@@ -277,7 +277,7 @@ const publicationMutations = {
           // 更新 publication，使其指向新内容的哈希
           await publication
             .$query()
-            .patch({ content_hash: newContent.content_hash })
+            .patchAndFetch({ content_hash: newContent.content_hash })
         } else {
           // Fallback for unknown content type or no original content
           throw new ErrorWithProps("Cannot update unknown content type.", {
@@ -422,7 +422,7 @@ const publicationMutations = {
       // 安全性由签名验证和地址验证保证
 
       // 5. 更新数据库，保存签名
-      await publication.$query().patch({ signature })
+      await publication.$query().patchAndFetch({ signature })
 
       // 6. 异步分发给所有关注者
       distributeToFollowers({
