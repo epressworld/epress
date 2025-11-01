@@ -1,10 +1,12 @@
 "use client"
 
-import { Box, Highlight, Text } from "@chakra-ui/react"
+import { Box } from "@chakra-ui/react"
 import { useEffect, useRef } from "react"
 import ReactMarkdown from "react-markdown"
 import rehypeHighlight from "rehype-highlight"
 import rehypeKatex from "rehype-katex"
+import rehypeRaw from "rehype-raw"
+import rehypeSanitize, { defaultSchema } from "rehype-sanitize"
 import remarkGfm from "remark-gfm"
 import remarkMath from "remark-math"
 import "katex/dist/katex.min.css"
@@ -21,7 +23,6 @@ import "katex/dist/katex.min.css"
  *
  * @param {Object} props
  * @param {string} props.content - 内容文本
- * @param {string} [props.type="markdown"] - 内容类型: "markdown" | "text"
  * @param {string} [props.keyword] - 搜索关键词(用于高亮)
  * @param {boolean} [props.truncate=false] - 是否截断显示
  * @param {number} [props.maxLines=10] - 最大显示行数
@@ -33,7 +34,6 @@ import "katex/dist/katex.min.css"
  */
 export function BodyRenderer({
   content,
-  type = "markdown",
   keyword,
   truncate = false,
   maxLines = 10,
@@ -43,7 +43,7 @@ export function BodyRenderer({
   const containerRef = useRef(null)
   content = replaceHashtagsWithLinks(content)
 
-  // 初始化 Mermaid 和 Markmap（客户端渲染）
+  // 初始化 Mermaid 和 Markmap(客户端渲染)
   useEffect(() => {
     if (!containerRef.current) return
 
@@ -139,31 +139,25 @@ export function BodyRenderer({
 
   if (!content) return null
 
-  // 文本类型
-  if (type === "text") {
-    return (
-      <Text
-        whiteSpace="pre-wrap"
-        noOfLines={truncate ? maxLines : undefined}
-        color="gray.800"
-        _dark={{ color: "gray.200" }}
-        fontSize="sm"
-        {...props}
-      >
-        {keyword ? (
-          <Highlight query={keyword} styles={{ bg: "yellow.200" }}>
-            {content}
-          </Highlight>
-        ) : (
-          content
-        )}
-      </Text>
-    )
+  // 如果有关键词,先用 <mark> 标签标记
+  if (keyword) {
+    content = highlightKeyword(content, keyword)
   }
-
-  // 准备插件列表（不包含 mermaid 和 markmap，它们在客户端渲染）
+  // 准备插件列表
+  // 添加 rehypeRaw 以允许渲染 HTML 标签(包括 <mark>)
   const remarkPlugins = [remarkGfm, remarkMath]
-  const rehypePlugins = [rehypeHighlight, rehypeKatex]
+  const rehypePlugins = [
+    rehypeRaw,
+    [
+      rehypeSanitize,
+      {
+        tagNames: [...defaultSchema.tagNames, "mark"],
+        attributes: { ...defaultSchema.attributes, mark: [] },
+      },
+    ],
+    rehypeHighlight,
+    rehypeKatex,
+  ]
 
   // Markdown 渲染
   return (
@@ -196,27 +190,46 @@ export function BodyRenderer({
           justifyContent: "center",
           margin: "1em 0",
         },
+        // Mark 标签样式
+        "& mark": {
+          backgroundColor: "yellow.200",
+          padding: "0 2px",
+          borderRadius: "2px",
+        },
       }}
       {...props}
     >
-      {keyword ? (
-        <Highlight query={keyword} styles={{ bg: "yellow.200" }}>
-          {content}
-        </Highlight>
-      ) : (
-        <ReactMarkdown
-          remarkPlugins={remarkPlugins}
-          rehypePlugins={rehypePlugins}
-        >
-          {content}
-        </ReactMarkdown>
-      )}
+      <ReactMarkdown
+        remarkPlugins={remarkPlugins}
+        rehypePlugins={rehypePlugins}
+      >
+        {content}
+      </ReactMarkdown>
     </Box>
   )
 }
 
+/**
+ * 用 <mark> 标签高亮关键词
+ * @param {string} content - 原始内容
+ * @param {string} keyword - 要高亮的关键词
+ * @returns {string} 处理后的内容
+ */
+function highlightKeyword(content, keyword) {
+  if (!keyword || !content) return content
+
+  // 转义特殊正则字符
+  const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+
+  // 使用全局不区分大小写的正则匹配
+  const regex = new RegExp(`(${escapedKeyword})`, "gi")
+
+  // 替换匹配的关键词为 <mark> 标签
+  return content.replace(regex, "<mark>$1</mark>")
+}
+
 function replaceHashtagsWithLinks(content) {
-  // 支持Unicode字符的hashtag（中文、日文、韩文等）
+  // 支持Unicode字符的hashtag(中文、日文、韩文等)
   const hashtagRegex = /#([\p{L}\p{N}_-]+)/gu
 
   return content.replace(hashtagRegex, (_match, hashtag) => {
