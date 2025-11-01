@@ -4,6 +4,7 @@ import { nodeStatusQuery } from "./nodeStatus.mjs"
 import { profileQuery } from "./profile.mjs"
 import { searchQuery } from "./search.mjs"
 import { settingsQuery } from "./settings.mjs" // Import settingsQuery
+import { suggestionsQuery } from "./suggestion.mjs"
 import { visitorQuery } from "./visitor.mjs"
 
 export default {
@@ -14,4 +15,5 @@ export default {
   ...getSiweMessageQuery,
   ...visitorQuery,
   ...nodeStatusQuery,
+  ...suggestionsQuery,
 }
