@@ -237,29 +237,6 @@ export function PublicationItem({
     setLocalPendingComment(comment ? { ...comment, retryFn } : null)
   }
 
-  // 渲染内容
-  const renderContent = () => {
-    const { content } = publication
-
-    if (content.type === "POST") {
-      return (
-        <BodyRenderer
-          content={content.body}
-          keyword={keyword}
-          type="markdown"
-        />
-      )
-    } else if (content.type === "FILE") {
-      return publication.description ? (
-        <BodyRenderer
-          content={publication.description}
-          keyword={keyword}
-          type="text"
-        />
-      ) : null
-    }
-  }
-
   return (
     <>
       <UnifiedCard.Root
@@ -303,8 +280,14 @@ export function PublicationItem({
               />
             )}
 
-            {/* 内容 */}
-            {renderContent()}
+            <BodyRenderer
+              content={
+                publication.content.type === "POST"
+                  ? publication.content.body
+                  : publication.description
+              }
+              keyword={keyword}
+            />
 
             {/* 底部信息栏 */}
             <HStack
