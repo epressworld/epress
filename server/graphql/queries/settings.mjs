@@ -23,6 +23,7 @@ const SettingsType = graphql.type("ObjectType", {
     defaultTheme: { type: graphql.type("NonNull", graphql.type("String")) },
     walletConnectProjectId: { type: graphql.type("String") },
     mail: { type: graphql.type("NonNull", MailType) },
+    vapidPublicKey: { type: graphql.type("String") },
   },
 })
 
@@ -47,6 +48,7 @@ const settingsQuery = {
         walletConnectProjectId: null,
         mailTransport: "",
         mailFrom: "",
+        vapidPublicKey: null,
       }
 
       // 检查邮件是否已配置
@@ -73,6 +75,8 @@ const settingsQuery = {
           mailTransport: context.user ? mailTransport : null,
           mailFrom: context.user ? mailFrom : null,
         },
+        // VAPID 公钥 - 所有人都可以访问
+        vapidPublicKey: allSettings.notification_vapid_keys?.publicKey,
       }
 
       request.log.debug(

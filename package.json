@@ -96,6 +96,7 @@
     "validator": "^13.15.20",
     "viem": "^2.38.4",
     "wagmi": "^2.18.2",
+    "web-push": "^3.6.7",
     "yet-another-react-lightbox": "^3.25.0"
   },
   "devDependencies": {
@@ -107,7 +108,8 @@
     "knex": "^3.1.0",
     "lint-staged": "^16.2.6",
     "nock": "^14.0.10",
-    "nodemon": "^3.1.4"
+    "nodemon": "^3.1.4",
+    "sinon": "^21.0.0"
   },
   "ava": {
     "timeout": "120s",

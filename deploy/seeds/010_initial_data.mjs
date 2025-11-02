@@ -1,4 +1,5 @@
 import crypto from "node:crypto"
+import webpush from "web-push"
 
 /**
  * @param { import("knex").Knex } knex
@@ -17,7 +18,7 @@ export const seed = async (knex) => {
     created_at: new Date(),
     updated_at: new Date(),
   })
-
+  const vapidKeys = webpush.generateVAPIDKeys()
   // 插入设置记录
   const settingsToInsert = [
     { key: "enable_rss", value: "true" },
@@ -43,6 +44,8 @@ export const seed = async (knex) => {
     { key: "avatar", value: process.env.INITIAL_DATA_NODE_AVATAR || "" },
     { key: "jwt_secret", value: crypto.randomBytes(32).toString("hex") },
     { key: "jwt_expires_in", value: "24h" },
+    { key: "notification_vapid_keys", value: JSON.stringify(vapidKeys) },
+    { key: "notification_subscriptions", value: "[]" },
   ]
 
   // 批量插入设置

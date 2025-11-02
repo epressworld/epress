@@ -6,6 +6,7 @@ import { Suspense, useCallback, useEffect, useMemo, useState } from "react"
 import { AuthProvider } from "@/contexts/AuthContext"
 import { OnlineVisitorsProvider } from "@/contexts/OnlineVisitorsContext"
 import { PageContext } from "@/contexts/PageContext"
+import { PushNotificationProvider } from "@/contexts/PushNotificationContext"
 import { PAGE_DATA } from "@/lib/apollo/queries"
 import { ChakraProvider, WagmiProvider } from "../providers"
 import { Footer } from "./Footer"
@@ -65,17 +66,26 @@ export function Page({ children, intl, initialAuthState }) {
         >
           <ChakraProvider defaultTheme={value.settings.defaultTheme}>
             <AuthProvider initialAuthState={initialAuthState}>
-              <OnlineVisitorsProvider>
-                <div className="layout-container page-container">
-                  <Header />
-                  <main className="content-area">
-                    <Container maxW="6xl" py={6}>
-                      <Suspense fallback={null}>{children}</Suspense>
-                    </Container>
-                  </main>
-                  <Footer />
-                </div>
-              </OnlineVisitorsProvider>
+              <PushNotificationProvider>
+                <OnlineVisitorsProvider>
+                  <div className="layout-container page-container">
+                    <main
+                      className="content-area"
+                      style={{
+                        minHeight: "100vh",
+                        display: "flex",
+                        flexDirection: "column",
+                      }}
+                    >
+                      <Header />
+                      <Container maxW="6xl" py={6} flex={1}>
+                        <Suspense fallback={null}>{children}</Suspense>
+                      </Container>
+                      <Footer />
+                    </main>
+                  </div>
+                </OnlineVisitorsProvider>
+              </PushNotificationProvider>
             </AuthProvider>
           </ChakraProvider>
         </WagmiProvider>

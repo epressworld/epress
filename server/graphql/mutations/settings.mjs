@@ -20,6 +20,35 @@ const UpdateSettingsInput = graphql.type("InputObjectType", {
   },
 })
 
+// 定义 PushSubscription 输入类型
+const PushSubscriptionInput = graphql.type("InputObjectType", {
+  name: "PushSubscriptionInput",
+  fields: {
+    endpoint: { type: graphql.type("NonNull", graphql.type("String")) },
+    keys: {
+      type: graphql.type(
+        "NonNull",
+        graphql.type("InputObjectType", {
+          name: "PushSubscriptionKeys",
+          fields: {
+            p256dh: { type: graphql.type("NonNull", graphql.type("String")) },
+            auth: { type: graphql.type("NonNull", graphql.type("String")) },
+          },
+        }),
+      ),
+    },
+  },
+})
+
+// 定义 SaveSubscriptionResult 返回类型
+const SaveSubscriptionResult = graphql.type("ObjectType", {
+  name: "SaveSubscriptionResult",
+  fields: {
+    success: { type: graphql.type("NonNull", graphql.type("Boolean")) },
+    message: { type: graphql.type("String") },
+  },
+})
+
 // 定义 updateSettings 变更
 const updateSettingsMutation = {
   updateSettings: {
@@ -40,7 +69,7 @@ const updateSettingsMutation = {
         "Updating settings",
       )
 
-      // 认证检查: 只有认证过的用户（节点所有者）才能更新设置
+      // 认证检查: 只有认证过的用户(节点所有者)才能更新设置
       if (!context.user) {
         throw new ErrorWithProps("Unauthorized: Authentication required.", {
           code: "UNAUTHENTICATED",
@@ -52,7 +81,7 @@ const updateSettingsMutation = {
         async (trx) => {
           const settingsToReturn = {} // 用于构建最终返回的设置对象
 
-          // 键名映射：GraphQL字段名 -> 数据库键名
+          // 键名映射:GraphQL字段名 -> 数据库键名
           const keyMapping = {
             enableRSS: "enable_rss",
             allowFollow: "allow_follow",
@@ -80,12 +109,12 @@ const updateSettingsMutation = {
                 .first()
 
               if (existingSetting) {
-                // 如果存在，则更新
+                // 如果存在,则更新
                 await Setting.query(trx)
                   .where({ key: dbKey })
                   .update({ value: valueToStore })
               } else {
-                // 如果不存在，则插入
+                // 如果不存在,则插入
                 await Setting.query(trx).insert({
                   key: dbKey,
                   value: valueToStore,
@@ -94,8 +123,8 @@ const updateSettingsMutation = {
             }
           }
 
-          // 所有更新完成后，从数据库中获取最新的设置并返回
-          // 确保在同一个事务中查询，以获取最新数据
+          // 所有更新完成后,从数据库中获取最新的设置并返回
+          // 确保在同一个事务中查询,以获取最新数据
           const settingsList = await Setting.query(trx)
 
           // 设置默认值
@@ -130,7 +159,7 @@ const updateSettingsMutation = {
             }
           })
 
-          // 合并默认值，确保所有必需字段都有值
+          // 合并默认值,确保所有必需字段都有值
           const mergedSettings = { ...defaults, ...settingsToReturn }
 
           // 检查邮件是否已配置
@@ -166,4 +195,143 @@ const updateSettingsMutation = {
   },
 }
 
-export { updateSettingsMutation }
+// 定义 saveSubscription 变更
+const notificationMutation = {
+  subscribeNotification: {
+    type: graphql.type("NonNull", SaveSubscriptionResult),
+    args: {
+      subscription: { type: graphql.type("NonNull", PushSubscriptionInput) },
+    },
+    resolve: async (_parent, { subscription }, context) => {
+      const { request } = context
+
+      request.log.debug(
+        {
+          user: context.user?.sub,
+          endpoint: subscription.endpoint,
+        },
+        "Saving push subscription",
+      )
+
+      // 认证检查: 只有认证过的用户(节点所有者)才能保存订阅
+      if (!context.user) {
+        throw new ErrorWithProps("Unauthorized: Authentication required.", {
+          code: "UNAUTHENTICATED",
+        })
+      }
+
+      try {
+        // 获取现有的订阅列表
+        const subscriptions = await Setting.get("notification_subscriptions")
+        // 检查是否已存在相同的 endpoint
+        const existingIndex = subscriptions.findIndex(
+          (sub) => sub.endpoint === subscription.endpoint,
+        )
+
+        if (existingIndex !== -1) {
+          // 更新现有订阅
+          subscriptions[existingIndex] = subscription
+          request.log.info(
+            { endpoint: subscription.endpoint },
+            "Updated existing subscription",
+          )
+        } else {
+          // 添加新订阅
+          subscriptions.push(subscription)
+          request.log.info(
+            { endpoint: subscription.endpoint },
+            "Added new subscription",
+          )
+        }
+
+        // 保存回数据库
+        await Setting.set("notification_subscriptions", subscriptions)
+
+        request.log.info(
+          {
+            user: context.user.sub,
+            total_subscriptions: subscriptions.length,
+          },
+          "Subscription saved successfully",
+        )
+
+        return {
+          success: true,
+          message: "Subscription saved successfully",
+        }
+      } catch (error) {
+        request.log.error(
+          {
+            error: error.message,
+            stack: error.stack,
+          },
+          "Failed to save subscription",
+        )
+
+        throw new ErrorWithProps("Failed to save subscription", {
+          code: "INTERNAL_SERVER_ERROR",
+        })
+      }
+    },
+  },
+  unsubscribeNotification: {
+    type: graphql.type("NonNull", SaveSubscriptionResult),
+    args: {
+      endpoint: { type: graphql.type("NonNull", graphql.type("String")) },
+    },
+    resolve: async (_parent, { endpoint }, context) => {
+      const { request } = context
+
+      request.log.debug(
+        {
+          user: context.user?.sub,
+          endpoint: endpoint,
+        },
+        "Saving push subscription",
+      )
+
+      // 认证检查: 只有认证过的用户(节点所有者)才能保存订阅
+      if (!context.user) {
+        throw new ErrorWithProps("Unauthorized: Authentication required.", {
+          code: "UNAUTHENTICATED",
+        })
+      }
+
+      try {
+        // 获取现有的订阅列表
+        const subscriptions = await Setting.get("notification_subscriptions")
+        await Setting.set(
+          "notification_subscriptions",
+          subscriptions.filter((sub) => sub.endpoint !== endpoint),
+        )
+
+        request.log.info(
+          {
+            user: context.user.sub,
+            total_subscriptions: subscriptions.length,
+          },
+          "Subscription saved successfully",
+        )
+
+        return {
+          success: true,
+          message: "Subscription saved successfully",
+        }
+      } catch (error) {
+        request.log.error(
+          {
+            error: error.message,
+            stack: error.stack,
+          },
+          "Failed to save subscription",
+        )
+
+        throw new ErrorWithProps("Failed to save subscription", {
+          code: "INTERNAL_SERVER_ERROR",
+        })
+      }
+    },
+  },
+}
+
+export { updateSettingsMutation, notificationMutation }

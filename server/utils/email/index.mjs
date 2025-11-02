@@ -7,6 +7,9 @@ import nodemailer from "nodemailer"
 import { Setting } from "../../models/index.mjs"
 
 let transporter = null
+export function setTransporter(t) {
+  transporter = t
+}
 
 /**
  * Get email transporter
@@ -25,7 +28,7 @@ export async function getTransporter(config) {
       )
     }
 
-    transporter = nodemailer.createTransport(mailTransport)
+    setTransporter(nodemailer.createTransport(mailTransport))
   }
   return transporter
 }

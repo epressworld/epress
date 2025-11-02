@@ -7,6 +7,8 @@ export class Setting extends Model {
   // 指定主键列名
   static idColumn = "key"
 
+  static jsonRows = ["notification_vapid_keys", "notification_subscriptions"]
+
   // 定义模型的字段、类型和约束
   static fields = {
     key: {
@@ -49,7 +51,8 @@ export class Setting extends Model {
 
       if (existing) {
         // Update existing
-        await Setting.query().patchAndFetchById(key, { value })
+        existing.value = value
+        await existing.$query().patch()
       } else {
         // Insert new
         await Setting.query().insert({ key, value })
@@ -70,7 +73,7 @@ export class Setting extends Model {
   static async setMany(settings) {
     try {
       for (const [key, value] of Object.entries(settings)) {
-        await Setting.set(key, String(value))
+        await Setting.set(key, value)
       }
       return true
     } catch (error) {
@@ -112,5 +115,23 @@ export class Setting extends Model {
     } catch (_error) {
       return {}
     }
+  }
+  $formatDatabaseJson(json) {
+    // Remember to call the super class's implementation.
+    json = super.$formatDatabaseJson(json)
+    if (Setting.jsonRows.includes(json.key)) {
+      json.value = JSON.stringify(json.value)
+    }
+    // Do your conversion here.
+    return json
+  }
+  $parseDatabaseJson(json) {
+    // Remember to call the super class's implementation.
+    json = super.$parseDatabaseJson(json)
+    if (Setting.jsonRows.includes(json.key)) {
+      json.value = JSON.parse(json.value)
+    }
+    // Do your conversion here.
+    return json
   }
 }
