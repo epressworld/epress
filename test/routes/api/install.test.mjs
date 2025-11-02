@@ -10,12 +10,6 @@ const INSTALL_LOCK_FILE = path.resolve(process.cwd(), "./data/.INSTALL_LOCK")
 // Helper function to drop all tables for clean installation test
 const dropAllTables = async () => {
   await Model.knex().migrate.rollback(null, true)
-  // await knexMigration(
-  //   [Setting, Comment, Publication, Connection, Content, Node],
-  //   {
-  //     drop: true,
-  //   },
-  // )
 }
 
 // Helper function to remove install lock file
@@ -1179,3 +1173,160 @@ test.serial("POST /install should report error steps correctly", async (t) => {
   t.truthy(dataStep)
   t.false(dataStep.success)
 })
+
+// --- Test Suite: VAPID Keys Generation ---
+
+test.serial(
+  "POST /install should generate VAPID keys during installation",
+  async (t) => {
+    const { app } = t.context
+    await dropAllTables()
+    await removeInstallLock()
+
+    const testAccount = generateTestAccount()
+    const node = {
+      avatar: "",
+      address: testAccount.address,
+      url: "https://test.com",
+      title: "Test Node",
+      description: "",
+    }
+    const settings = {
+      defaultLanguage: "",
+      defaultTheme: "",
+      walletConnectProjectId: "",
+      mailTransport: "",
+      mailFrom: "",
+    }
+    const typedData = createInstallTypedData(
+      node,
+      settings,
+      getValidTimestamp(),
+    )
+    const signature = await generateSignature(
+      testAccount,
+      typedData,
+      "typedData",
+    )
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/install",
+      payload: { typedData, signature },
+    })
+
+    t.is(response.statusCode, 200)
+
+    // Verify VAPID keys were generated and saved
+    const vapidKeys = await Setting.get("notification_vapid_keys")
+
+    t.true(
+      vapidKeys.publicKey?.length > 0,
+      "VAPID public key should be generated",
+    )
+    t.true(
+      vapidKeys.privateKey?.length > 0,
+      "VAPID private key should be generated",
+    )
+    t.not(
+      vapidKeys.publicKey,
+      vapidKeys.privateKey,
+      "Public and private keys should be different",
+    )
+  },
+)
+
+test.serial(
+  "POST /install should generate unique VAPID keys for each installation",
+  async (t) => {
+    const { app } = t.context
+    await dropAllTables()
+    await removeInstallLock()
+
+    // First installation
+    const testAccount1 = generateTestAccount()
+    const node1 = {
+      avatar: "",
+      address: testAccount1.address,
+      url: "https://test1.com",
+      title: "Test 1",
+      description: "",
+    }
+    const settings1 = {
+      defaultLanguage: "",
+      defaultTheme: "",
+      walletConnectProjectId: "",
+      mailTransport: "",
+      mailFrom: "",
+    }
+    const typedData1 = createInstallTypedData(
+      node1,
+      settings1,
+      getValidTimestamp(),
+    )
+    const signature1 = await generateSignature(
+      testAccount1,
+      typedData1,
+      "typedData",
+    )
+
+    await app.inject({
+      method: "POST",
+      url: "/api/install",
+      payload: { typedData: typedData1, signature: signature1 },
+    })
+
+    const vapidKeys1 = await Setting.get("notification_vapid_keys")
+
+    // Clean up and install again
+    await dropAllTables()
+    await removeInstallLock()
+
+    // Second installation
+    const testAccount2 = generateTestAccount()
+    const node2 = {
+      avatar: "",
+      address: testAccount2.address,
+      url: "https://test2.com",
+      title: "Test 2",
+      description: "",
+    }
+    const settings2 = {
+      defaultLanguage: "",
+      defaultTheme: "",
+      walletConnectProjectId: "",
+      mailTransport: "",
+      mailFrom: "",
+    }
+    const typedData2 = createInstallTypedData(
+      node2,
+      settings2,
+      getValidTimestamp(),
+    )
+    const signature2 = await generateSignature(
+      testAccount2,
+      typedData2,
+      "typedData",
+    )
+
+    await app.inject({
+      method: "POST",
+      url: "/api/install",
+      payload: { typedData: typedData2, signature: signature2 },
+    })
+
+    const vapidKeys2 = await Setting.get("notification_vapid_keys")
+
+    // Verify keys are different between installations
+    t.not(
+      vapidKeys1.publicKey,
+      vapidKeys2.publicKey,
+      "VAPID public keys should be unique",
+    )
+    t.not(
+      vapidKeys1.privateKey,
+      vapidKeys2.privateKey,
+      "VAPID private keys should be unique",
+    )
+  },
+)

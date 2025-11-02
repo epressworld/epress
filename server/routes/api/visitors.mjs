@@ -1,5 +1,6 @@
 import { Router } from "swiftify"
 import validator from "validator"
+import { sendPushNotification } from "../../utils/webpush.mjs"
 
 const router = new Router()
 
@@ -7,7 +8,7 @@ const router = new Router()
  * Online Visitors Tracking API
  *
  * 在线访客追踪 API
- * 使用内存存储访客信息，包括以太坊地址和最后活跃时间
+ * 使用内存存储访客信息,包括以太坊地址和最后活跃时间
  *
  * 数据结构:
  * visitors = Map {
@@ -18,10 +19,10 @@ const router = new Router()
 // 内存存储访客信息
 const visitors = new Map()
 
-// 访客过期时间（15分钟，单位：毫秒）
+// 访客过期时间(15分钟,单位:毫秒)
 const VISITOR_TIMEOUT = 15 * 60 * 1000
 
-// 最大访客数量限制（防止内存耗尽攻击）
+// 最大访客数量限制(防止内存耗尽攻击)
 const MAX_VISITORS = 1000
 
 /**
@@ -51,7 +52,7 @@ function cleanupExpiredVisitors() {
 
 /**
  * 执行 FIFO 驱逐策略
- * 当访客数量超过限制时，移除最早添加的访客
+ * 当访客数量超过限制时,移除最早添加的访客
  */
 function evictOldestVisitor() {
   if (visitors.size === 0) return
@@ -75,7 +76,7 @@ function evictOldestVisitor() {
   }
 }
 
-// 定期清理过期访客（每分钟执行一次）
+// 定期清理过期访客(每分钟执行一次)
 const cleanupInterval = setInterval(cleanupExpiredVisitors, 60 * 1000)
 
 // 导出清理函数和常量供测试使用
@@ -128,11 +129,17 @@ router.post("/visitors", async (request, reply) => {
     const now = Date.now()
     const existingVisitor = visitors.get(address)
     let evicted = false
+    let isNewVisitor = false
 
-    // 如果是新访客且已达到限制，执行 FIFO 驱逐
+    // 如果是新访客且已达到限制,执行 FIFO 驱逐
     if (!existingVisitor && visitors.size >= MAX_VISITORS) {
       evictOldestVisitor()
       evicted = true
+    }
+
+    // 检查是否为新访客
+    if (!existingVisitor) {
+      isNewVisitor = true
     }
 
     // 更新或添加访客
@@ -141,6 +148,31 @@ router.post("/visitors", async (request, reply) => {
       lastActive: now,
       addedAt: existingVisitor ? existingVisitor.addedAt : now,
     })
+
+    // 如果是新访客,发送推送通知
+    if (isNewVisitor) {
+      const selfNode = await request.config.getSelfNode()
+      if (address !== selfNode.address) {
+        // 异步发送通知,不阻塞响应
+        sendPushNotification(
+          {
+            title: "New Visitor",
+            body: `Visitor ${address.slice(0, 6)}...${address.slice(-4)} has connected to your node`,
+            tag: "new-visitor",
+            data: {
+              url: "/",
+              timestamp: Date.now(),
+            },
+          },
+          request.log,
+        ).catch((error) => {
+          request.log.error(
+            { error: error.message },
+            "Failed to send push notification",
+          )
+        })
+      }
+    }
 
     const response = {
       success: true,
@@ -232,7 +264,7 @@ router.get("/visitors", async (request, reply) => {
     // 清理过期访客
     cleanupExpiredVisitors()
 
-    // 返回所有访客列表（不包含内部的 addedAt 字段）
+    // 返回所有访客列表(不包含内部的 addedAt 字段)
     const visitorsList = Array.from(visitors.values()).map((v) => ({
       address: v.address,
       lastActive: v.lastActive,

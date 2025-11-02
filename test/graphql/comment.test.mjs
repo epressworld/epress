@@ -1,4 +1,6 @@
 import test from "ava"
+import nodemailer from "nodemailer"
+import sinon from "sinon"
 import {
   Comment,
   Content,
@@ -7,6 +9,7 @@ import {
   Setting,
 } from "../../server/models/index.mjs"
 import { hash } from "../../server/utils/crypto.mjs" // Import hash utility
+import { setTransporter } from "../../server/utils/email/index.mjs"
 import {
   generateSignature,
   TEST_ACCOUNT_NODE_A,
@@ -36,6 +39,15 @@ test.beforeEach(async (t) => {
   t.context.publicationId = testPublication.id
   t.context.selfNode = selfNode // Store selfNode for use in tests
   t.context.testPublication = testPublication // Store testPublication for use in tests
+  setTransporter(null)
+  sinon.restore()
+  const sendMailSpy = sinon.spy()
+  // stub createTransport 返回这个带 spy 的对象
+  sinon.stub(nodemailer, "createTransport").returns({
+    sendMail: sendMailSpy,
+    verify: async () => true,
+  })
+  t.context.sendMailSpy = sendMailSpy
 })
 
 const COMMENT_SIGNATURE_DOMAIN = {
@@ -60,10 +72,12 @@ const COMMENT_SIGNATURE_TYPES = {
 }
 
 // Test case 1: Email authentication - Success
-test("createComment: Should be able to create comment through EMAIL authentication with PENDING status", async (t) => {
-  const { graphqlClient, publicationId } = t.context
+test.serial(
+  "createComment: Should be able to create comment through EMAIL authentication with PENDING status",
+  async (t) => {
+    const { graphqlClient, publicationId, sendMailSpy } = t.context
 
-  const mutation = `
+    const mutation = `
     mutation CreateComment($input: CreateCommentInput!) {
       createComment(input: $input) {
         id
@@ -76,49 +90,52 @@ test("createComment: Should be able to create comment through EMAIL authenticati
     }
   `
 
-  const input = {
-    publication_id: publicationId,
-    body: "This is a test comment through email.",
-    author_name: "Email User",
-    auth_type: "EMAIL",
-    author_id: "email@example.com",
-  }
+    const input = {
+      publication_id: publicationId,
+      body: "This is a test comment through email.",
+      author_name: "Email User",
+      auth_type: "EMAIL",
+      author_id: "email@example.com",
+    }
 
-  const { data, errors } = await graphqlClient.query(mutation, {
-    variables: { input },
-  })
+    const { data, errors } = await graphqlClient.query(mutation, {
+      variables: { input },
+    })
 
-  t.falsy(errors, "Should not have any GraphQL errors")
-  t.truthy(data.createComment, "Should return created comment")
-  t.is(data.createComment.body, input.body, "Comment body should match")
-  t.is(
-    data.createComment.status,
-    "PENDING",
-    "Email authentication comment status should be PENDING",
-  )
-  t.is(
-    data.createComment.auth_type,
-    input.auth_type,
-    "Authentication type should match",
-  )
-  t.is(
-    data.createComment.author_name,
-    input.author_name,
-    "Author name should match",
-  )
-  // email field is hidden to protect user privacy
-  t.truthy(data.createComment.id, "Comment should have ID")
-  t.truthy(
-    data.createComment.created_at,
-    "Comment should have created_at timestamp",
-  )
-  // TODO: Verify if email was sent
+    t.falsy(errors, "Should not have any GraphQL errors")
+    t.truthy(data.createComment, "Should return created comment")
+    t.is(data.createComment.body, input.body, "Comment body should match")
+    t.is(
+      data.createComment.status,
+      "PENDING",
+      "Email authentication comment status should be PENDING",
+    )
+    t.is(
+      data.createComment.auth_type,
+      input.auth_type,
+      "Authentication type should match",
+    )
+    t.is(
+      data.createComment.author_name,
+      input.author_name,
+      "Author name should match",
+    )
+    // email field is hidden to protect user privacy
+    t.truthy(data.createComment.id, "Comment should have ID")
+    t.truthy(
+      data.createComment.created_at,
+      "Comment should have created_at timestamp",
+    )
+    // TODO: Verify if email was sent
+    t.true(sendMailSpy.called, "sendMail should be called")
+    console.log(sendMailSpy.callCount, "-------------------")
 
-  // Verify comment was saved to database
-  const commentInDb = await Comment.query().findById(data.createComment.id)
-  t.truthy(commentInDb, "Comment should be saved to database")
-  t.is(commentInDb.status, "PENDING", "Status in database should be PENDING")
-})
+    // Verify comment was saved to database
+    const commentInDb = await Comment.query().findById(data.createComment.id)
+    t.truthy(commentInDb, "Comment should be saved to database")
+    t.is(commentInDb.status, "PENDING", "Status in database should be PENDING")
+  },
+)
 
 // Test case 2: Ethereum authentication - Success
 test.serial(
@@ -879,7 +896,7 @@ const DELETE_COMMENT_TYPES = {
 test.serial(
   "destroyComment: EMAIL auth should trigger email and not delete immediately",
   async (t) => {
-    const { graphqlClient } = t.context
+    const { graphqlClient, sendMailSpy } = t.context
     const testEmail = "delete_email@example.com"
     const createdComment = await createTestComment(
       t,
@@ -901,7 +918,6 @@ test.serial(
       variables: input,
     })
 
-    console.log(errors)
     t.falsy(errors, "destroyComment should not have GraphQL errors")
     t.truthy(data.destroyComment, "should return the comment object")
     t.is(
@@ -917,6 +933,8 @@ test.serial(
       data.destroyComment.status,
       "Comment status should remain the same",
     )
+    console.log(sendMailSpy.callCount, "===============")
+    t.true(sendMailSpy.called, "sendMail should be called")
   },
 )
 

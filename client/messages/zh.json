@@ -364,7 +364,10 @@
     "fetchComments": "获取评论",
     "deleteComments": "删除评论",
     "titleRequired": "标题不能为空",
-    "pleaseLoginFirst": "请先登录"
+    "pleaseLoginFirst": "请先登录",
+    "enablePushNotification": "启用推送通知",
+    "pushNotificationDenied": "权限已禁用",
+    "enablePushNotificationHelper": "本设置只对当前设备有效"
   },
   "error": {
     "pageNotFound": "页面未找到",

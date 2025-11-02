@@ -140,6 +140,24 @@ export const UPDATE_SETTINGS = gql`
   }
 `
 
+// Push Notification mutations
+export const SUBSCRIBE_NOTIFICATION = gql`
+  mutation SubscribeNotification($subscription: PushSubscriptionInput!) {
+    subscribeNotification(subscription: $subscription) {
+      success
+      message
+    }
+  }
+`
+export const UNSUBSCRIBE_NOTIFICATION = gql`
+  mutation UnsubscribeNotification($endpoint: String!) {
+    unsubscribeNotification(endpoint: $endpoint) {
+      success
+      message
+    }
+  }
+`
+
 // Comment mutations
 export const CREATE_COMMENT = gql`
   mutation CreateComment($input: CreateCommentInput!) {

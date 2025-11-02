@@ -61,160 +61,152 @@ export const Footer = () => {
     : t("common.unknown")
 
   return (
-    <>
-      <Center
-        bgColor={"gray.100"}
-        color={"gray.600"}
-        _dark={{
-          bgColor: "rgba(26, 32, 44, 0.8)",
-          color: "gray.300",
-          borderColor: "gray.600",
-        }}
-        p={2}
-        borderTop="1px solid"
-        borderColor="gray.200"
-      >
-        <Container maxW="6xl">
-          <HStack justify="space-between" w="full">
-            {/* 左侧：Logo */}
-            <Link
-              href="https://github.com/epressworld/epress"
-              target="_blank"
-              rel="noopener noreferrer"
-              _hover={{ opacity: 0.8 }}
-            >
-              <Image
-                src="/assets/logo-light.svg"
-                alt="epress logo"
-                width={16}
-              />
-            </Link>
+    <Center
+      bgColor={"gray.100"}
+      color={"gray.600"}
+      _dark={{
+        bgColor: "rgba(26, 32, 44, 0.8)",
+        color: "gray.300",
+        borderColor: "gray.600",
+      }}
+      p={2}
+      borderTop="1px solid"
+      borderColor="gray.200"
+    >
+      <Container maxW="6xl">
+        <HStack justify="space-between" w="full">
+          {/* 左侧：Logo */}
+          <Link
+            href="https://github.com/epressworld/epress"
+            target="_blank"
+            rel="noopener noreferrer"
+            _hover={{ opacity: 0.8 }}
+          >
+            <Image src="/assets/logo-light.svg" alt="epress logo" width={16} />
+          </Link>
 
-            {/* 右侧：在线访客 + 运行状态 */}
-            <HStack gap={3}>
-              {/* 在线访客按钮 */}
-              <OnlineVisitorsButton />
+          {/* 右侧：在线访客 + 运行状态 */}
+          <HStack gap={3}>
+            {/* 在线访客按钮 */}
+            <OnlineVisitorsButton />
 
-              {/* 运行状态按钮 */}
-              <Popover.Root placement="top">
-                <Popover.Trigger asChild>
-                  <Button variant="plain" color="fg.muted" size="sm" px={0}>
-                    <HStack gap={1}>
-                      <Text fontSize="sm">
-                        {t("common.onlineDays", { days: runningDays })}
-                      </Text>
-                      <Box
-                        w={3}
-                        h={3}
-                        borderRadius="full"
-                        bgColor="green.500"
-                        flexShrink={0}
-                      />
-                    </HStack>
-                  </Button>
-                </Popover.Trigger>
-                <Popover.Positioner>
-                  <Popover.Content maxW="md">
-                    <Popover.Arrow />
-                    <Popover.Body>
-                      <VStack gap={4} align="stretch">
-                        {/* 版本信息 */}
-                        <VStack gap={2} align="start">
-                          <HStack gap={2}>
-                            <FaCodeBranch size={16} />
-                            <Text fontWeight="semibold">
-                              {t("common.version")}
-                            </Text>
-                          </HStack>
-                          <Text
-                            fontSize="sm"
-                            color="gray.600"
-                            _dark={{ color: "gray.300" }}
-                          >
-                            v{nodeStatus.version || "..."}
-                            <Badge ml={1} colorPalette={"orange"}>
-                              Beta
-                            </Badge>
+            {/* 运行状态按钮 */}
+            <Popover.Root placement="top">
+              <Popover.Trigger asChild>
+                <Button variant="plain" color="fg.muted" size="sm" px={0}>
+                  <HStack gap={1}>
+                    <Text fontSize="sm">
+                      {t("common.onlineDays", { days: runningDays })}
+                    </Text>
+                    <Box
+                      w={3}
+                      h={3}
+                      borderRadius="full"
+                      bgColor="green.500"
+                      flexShrink={0}
+                    />
+                  </HStack>
+                </Button>
+              </Popover.Trigger>
+              <Popover.Positioner>
+                <Popover.Content maxW="md">
+                  <Popover.Arrow />
+                  <Popover.Body>
+                    <VStack gap={4} align="stretch">
+                      {/* 版本信息 */}
+                      <VStack gap={2} align="start">
+                        <HStack gap={2}>
+                          <FaCodeBranch size={16} />
+                          <Text fontWeight="semibold">
+                            {t("common.version")}
                           </Text>
-                        </VStack>
-
-                        <Separator />
-
-                        {/* 以太坊地址 */}
-                        <VStack gap={2} align="start">
-                          <HStack gap={2}>
-                            <SiEthereum size={16} />
-                            <Text fontWeight="semibold">
-                              {t("common.ethereumAddress")}
-                            </Text>
-                          </HStack>
-                          <Text
-                            fontFamily="mono"
-                            fontSize="sm"
-                            color="gray.600"
-                            _dark={{ color: "gray.300" }}
-                            wordBreak="break-all"
-                          >
-                            {profile.address || "..."}
-                          </Text>
-                        </VStack>
-
-                        <Separator />
-
-                        {/* 安装时间 */}
-                        <VStack gap={2} align="start">
-                          <HStack gap={2}>
-                            <LuCalendar size={16} />
-                            <Text fontWeight="semibold">
-                              {t("common.installTime")}
-                            </Text>
-                          </HStack>
-                          <Text
-                            fontSize="sm"
-                            color="gray.600"
-                            _dark={{ color: "gray.300" }}
-                          >
-                            {formattedInstallDate}
-                          </Text>
-                        </VStack>
-
-                        <Separator />
-
-                        {/* 运行天数 */}
-                        <VStack gap={2} align="start">
-                          <HStack gap={2}>
-                            <LuClock size={16} />
-                            <Text fontWeight="semibold">
-                              {t("common.runningDays")}
-                            </Text>
-                          </HStack>
-                          <HStack gap={2}>
-                            <Badge colorPalette="green" variant="solid">
-                              {t("common.daysWithCount", {
-                                count: runningDays,
-                              })}
-                            </Badge>
-                            <Text
-                              fontSize="sm"
-                              color="gray.600"
-                              _dark={{ color: "gray.300" }}
-                            >
-                              ({t("common.sinceWithTime", { time: uptimeText })}
-                              )
-                            </Text>
-                          </HStack>
-                        </VStack>
+                        </HStack>
+                        <Text
+                          fontSize="sm"
+                          color="gray.600"
+                          _dark={{ color: "gray.300" }}
+                        >
+                          v{nodeStatus.version || "..."}
+                          <Badge ml={1} colorPalette={"orange"}>
+                            Beta
+                          </Badge>
+                        </Text>
                       </VStack>
-                    </Popover.Body>
-                  </Popover.Content>
-                </Popover.Positioner>
-              </Popover.Root>
-            </HStack>
-          </HStack>
-        </Container>
-      </Center>
 
+                      <Separator />
+
+                      {/* 以太坊地址 */}
+                      <VStack gap={2} align="start">
+                        <HStack gap={2}>
+                          <SiEthereum size={16} />
+                          <Text fontWeight="semibold">
+                            {t("common.ethereumAddress")}
+                          </Text>
+                        </HStack>
+                        <Text
+                          fontFamily="mono"
+                          fontSize="sm"
+                          color="gray.600"
+                          _dark={{ color: "gray.300" }}
+                          wordBreak="break-all"
+                        >
+                          {profile.address || "..."}
+                        </Text>
+                      </VStack>
+
+                      <Separator />
+
+                      {/* 安装时间 */}
+                      <VStack gap={2} align="start">
+                        <HStack gap={2}>
+                          <LuCalendar size={16} />
+                          <Text fontWeight="semibold">
+                            {t("common.installTime")}
+                          </Text>
+                        </HStack>
+                        <Text
+                          fontSize="sm"
+                          color="gray.600"
+                          _dark={{ color: "gray.300" }}
+                        >
+                          {formattedInstallDate}
+                        </Text>
+                      </VStack>
+
+                      <Separator />
+
+                      {/* 运行天数 */}
+                      <VStack gap={2} align="start">
+                        <HStack gap={2}>
+                          <LuClock size={16} />
+                          <Text fontWeight="semibold">
+                            {t("common.runningDays")}
+                          </Text>
+                        </HStack>
+                        <HStack gap={2}>
+                          <Badge colorPalette="green" variant="solid">
+                            {t("common.daysWithCount", {
+                              count: runningDays,
+                            })}
+                          </Badge>
+                          <Text
+                            fontSize="sm"
+                            color="gray.600"
+                            _dark={{ color: "gray.300" }}
+                          >
+                            ({t("common.sinceWithTime", { time: uptimeText })})
+                          </Text>
+                        </HStack>
+                      </VStack>
+                    </VStack>
+                  </Popover.Body>
+                </Popover.Content>
+              </Popover.Positioner>
+            </Popover.Root>
+          </HStack>
+        </HStack>
+      </Container>
       <Toaster />
-    </>
+    </Center>
   )
 }

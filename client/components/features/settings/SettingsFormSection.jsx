@@ -15,6 +15,7 @@ import {
 import { FaCheckCircle } from "react-icons/fa"
 import { LuCircleAlert, LuSettings } from "react-icons/lu"
 import { FormField, LanguageSelect, Link, ThemeSelector } from "@/components/ui"
+import { usePushNotification } from "@/contexts/PushNotificationContext"
 import { useSettingsForm } from "@/hooks/form"
 import { useIntl } from "@/hooks/utils"
 import { TokenGenerator } from "./TokenGenerator"
@@ -29,6 +30,16 @@ export function SettingsFormSection({ onSuccess }) {
     mailTransportValidating,
     mailTransportValid,
   } = useSettingsForm()
+
+  const {
+    isSupported,
+    permission,
+    isSubscribed,
+    isLoading: isEnabling,
+    subscribe,
+    unsubscribe,
+    canSubscribe,
+  } = usePushNotification()
 
   const handleSubmit = async (data) => {
     const result = await onSubmit(data)
@@ -206,9 +217,38 @@ export function SettingsFormSection({ onSuccess }) {
         >
           <LuSettings /> {t("settings.saveSettings")}
         </Button>
-
         <Separator />
 
+        {/* 通知设置 */}
+        <VStack align="stretch" gap={2}>
+          <HStack justify="space-between">
+            <VStack align="start" gap={1}>
+              <Text fontSize="sm" fontWeight="medium">
+                {t("settings.enablePushNotification")}
+              </Text>
+              <Text fontSize="xs" color="gray.500">
+                {permission === "denied"
+                  ? t("settings.pushNotificationDenied")
+                  : t("settings.enablePushNotificationHelper")}
+              </Text>
+            </VStack>
+            <Switch.Root
+              checked={isSubscribed}
+              disabled={!isSupported || !canSubscribe || isEnabling}
+              onCheckedChange={async (details) => {
+                if (!details.checked) {
+                  await unsubscribe()
+                } else {
+                  await subscribe()
+                }
+              }}
+            >
+              <Switch.HiddenInput />
+              <Switch.Control />
+            </Switch.Root>
+          </HStack>
+        </VStack>
+        <Separator />
         {/* Token 生成功能 */}
         <VStack align="stretch" gap={4}>
           <VStack align="start" gap={1}>

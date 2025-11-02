@@ -364,7 +364,10 @@
     "fetchComments": "Get Comments",
     "deleteComments": "Delete Comments",
     "titleRequired": "Title is required",
-    "pleaseLoginFirst": "Please login first"
+    "pleaseLoginFirst": "Please login first",
+    "enablePushNotification": "Enable Push Notifications",
+    "pushNotificationDenied": "Permission Denied",
+    "enablePushNotificationHelper": "This setting only applies to the current device"
   },
   "error": {
     "pageNotFound": "Page Not Found",

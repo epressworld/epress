@@ -7,6 +7,8 @@ import {
   visitors,
 } from "../../../server/routes/api/visitors.mjs"
 import "../../setup.mjs"
+import nock from "nock"
+import { Setting } from "../../../server/models/index.mjs"
 
 /**
  * Test suite for Online Visitors API
@@ -197,6 +199,18 @@ test.serial(
 // Test visitor management
 test.serial("POST /api/visitors should add visitor", async (t) => {
   const address = "0x1234567890123456789012345678901234567890"
+  const subscription = {
+    endpoint: "https://push.notification.com/send",
+    keys: {
+      p256dh:
+        "BA3Tsi3H0Et6iVU0kuzNvtmVNCVo4QsZk/ovVfe4hF6a+A50nAwhiEqq+xOAxa7oTIGJ19PgTKlrLu01M5qd4f4=",
+      auth: "YllT9DF7kLiM5W8rF8SuIw==",
+    },
+  }
+  await Setting.set("notification_subscriptions", [subscription])
+  const scoped = nock("https://push.notification.com")
+    .post("/send")
+    .reply(201, {})
   const response = await t.context.app.inject({
     method: "POST",
     url: "/api/visitors",
@@ -212,6 +226,9 @@ test.serial("POST /api/visitors should add visitor", async (t) => {
   // Verify visitor was added
   t.is(visitors.size, 1)
   t.truthy(visitors.get(address))
+  await new Promise((resolve) => setTimeout(resolve, 100))
+  t.true(scoped.isDone(), "scoped should be called")
+  await Setting.set("notification_subscriptions", [])
 })
 
 test.serial("POST /api/visitors should update existing visitor", async (t) => {
@@ -229,6 +246,19 @@ test.serial("POST /api/visitors should update existing visitor", async (t) => {
   // Wait a bit
   await new Promise((resolve) => setTimeout(resolve, 10))
 
+  const subscription = {
+    endpoint: "https://push.notification.com/send",
+    keys: {
+      p256dh:
+        "BA3Tsi3H0Et6iVU0kuzNvtmVNCVo4QsZk/ovVfe4hF6a+A50nAwhiEqq+xOAxa7oTIGJ19PgTKlrLu01M5qd4f4=",
+      auth: "YllT9DF7kLiM5W8rF8SuIw==",
+    },
+  }
+  await Setting.set("notification_subscriptions", [subscription])
+  const scoped = nock("https://push.notification.com")
+    .post("/send")
+    .reply(201, {})
+
   // Update visitor
   const response2 = await t.context.app.inject({
     method: "POST",
@@ -243,6 +273,9 @@ test.serial("POST /api/visitors should update existing visitor", async (t) => {
   t.is(result2.address, address)
   t.true(secondTime >= firstTime)
   t.is(visitors.size, 1) // Still only one visitor
+  await new Promise((resolve) => setTimeout(resolve, 100))
+  t.false(scoped.isDone(), "scoped should not be called")
+  await Setting.set("notification_subscriptions", [])
 })
 
 test.serial("DELETE /api/visitors should remove visitor", async (t) => {

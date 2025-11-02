@@ -264,6 +264,7 @@ export const SETTINGS = gql`
       enableRSS
       allowFollow
       allowComment
+      vapidPublicKey
     }
   }
 `
@@ -302,6 +303,7 @@ export const PAGE_DATA = gql`
       defaultLanguage
       defaultTheme
       walletConnectProjectId
+      vapidPublicKey
       mail {
         enabled
         mailTransport
