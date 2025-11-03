@@ -1,4 +1,6 @@
 import test from "ava"
+import nock from "nock"
+import { Setting } from "../../../server/models/index.mjs"
 import {
   cleanupInterval,
   evictOldestVisitor,
@@ -6,9 +8,8 @@ import {
   VISITOR_TIMEOUT,
   visitors,
 } from "../../../server/routes/api/visitors.mjs"
+import { clearServiceInstances } from "../../../server/utils/webpush.mjs"
 import "../../setup.mjs"
-import nock from "nock"
-import { Setting } from "../../../server/models/index.mjs"
 
 /**
  * Test suite for Online Visitors API
@@ -20,6 +21,7 @@ import { Setting } from "../../../server/models/index.mjs"
  * - Getting visitor list
  * - Automatic cleanup of expired visitors
  * - FIFO eviction when visitor limit is reached
+ * - Web push notifications for new visitors
  */
 
 // --- Test Setup ---
@@ -29,14 +31,27 @@ test.before((_t) => {
   clearInterval(cleanupInterval)
 })
 
-test.beforeEach((_t) => {
+test.beforeEach(async (_t) => {
   // Clear visitors before each test
   visitors.clear()
+
+  // Clear notification service instances
+  clearServiceInstances()
+
+  // Clear VAPID keys and subscriptions
+  await Setting.set("notification_vapid_keys", null)
+  await Setting.set("notification_subscriptions", null)
 })
 
-test.afterEach((_t) => {
+test.afterEach(async (_t) => {
   // Clean up after each test
   visitors.clear()
+  clearServiceInstances()
+  nock.cleanAll()
+
+  // Clear settings
+  await Setting.set("notification_vapid_keys", null)
+  await Setting.set("notification_subscriptions", null)
 })
 
 // --- Helper Functions ---
@@ -49,6 +64,31 @@ test.afterEach((_t) => {
 function generateAddress(seed) {
   const hex = seed.toString(16).padStart(40, "0")
   return `0x${hex}`
+}
+
+/**
+ * Setup valid VAPID keys and subscription for push notification tests
+ */
+async function setupPushNotification() {
+  const vapidKeys = {
+    publicKey:
+      "BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U",
+    privateKey: "UUxI4O8-FbRouAevSmBQ6o18hgE4nSG3qwvJTfKc-ls",
+  }
+
+  const subscription = {
+    endpoint: "https://push.notification.com/send/test123",
+    keys: {
+      p256dh:
+        "BA3Tsi3H0Et6iVU0kuzNvtmVNCVo4QsZk/ovVfe4hF6a+A50nAwhiEqq+xOAxa7oTIGJ19PgTKlrLu01M5qd4f4=",
+      auth: "YllT9DF7kLiM5W8rF8SuIw==",
+    },
+  }
+
+  await Setting.set("notification_vapid_keys", vapidKeys)
+  await Setting.set("notification_subscriptions", [subscription])
+
+  return { vapidKeys, subscription }
 }
 
 // --- Test Cases ---
@@ -199,18 +239,7 @@ test.serial(
 // Test visitor management
 test.serial("POST /api/visitors should add visitor", async (t) => {
   const address = "0x1234567890123456789012345678901234567890"
-  const subscription = {
-    endpoint: "https://push.notification.com/send",
-    keys: {
-      p256dh:
-        "BA3Tsi3H0Et6iVU0kuzNvtmVNCVo4QsZk/ovVfe4hF6a+A50nAwhiEqq+xOAxa7oTIGJ19PgTKlrLu01M5qd4f4=",
-      auth: "YllT9DF7kLiM5W8rF8SuIw==",
-    },
-  }
-  await Setting.set("notification_subscriptions", [subscription])
-  const scoped = nock("https://push.notification.com")
-    .post("/send")
-    .reply(201, {})
+
   const response = await t.context.app.inject({
     method: "POST",
     url: "/api/visitors",
@@ -226,10 +255,171 @@ test.serial("POST /api/visitors should add visitor", async (t) => {
   // Verify visitor was added
   t.is(visitors.size, 1)
   t.truthy(visitors.get(address))
-  await new Promise((resolve) => setTimeout(resolve, 100))
-  t.true(scoped.isDone(), "scoped should be called")
-  await Setting.set("notification_subscriptions", [])
 })
+
+test.serial(
+  "POST /api/visitors should send push notification for new visitor",
+  async (t) => {
+    const address = "0x1234567890123456789012345678901234567890"
+
+    // Setup push notification
+    await setupPushNotification()
+
+    // Mock the push notification endpoint
+    const scope = nock("https://push.notification.com")
+      .post("/send/test123")
+      .reply(201, {})
+
+    const response = await t.context.app.inject({
+      method: "POST",
+      url: "/api/visitors",
+      payload: { address },
+    })
+
+    t.is(response.statusCode, 200)
+    const result = response.json()
+    t.true(result.success)
+
+    // Wait for async notification to be sent
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    t.true(scope.isDone(), "Push notification should be sent")
+  },
+)
+
+test.serial(
+  "POST /api/visitors should NOT send push notification for self node",
+  async (t) => {
+    // Get self node address from the app
+    const { selfNode } = t.context
+    const address = selfNode.address
+
+    // Setup push notification
+    await setupPushNotification()
+
+    // Mock the push notification endpoint (should NOT be called)
+    const scope = nock("https://push.notification.com")
+      .post("/send/test123")
+      .reply(201, {})
+
+    const response = await t.context.app.inject({
+      method: "POST",
+      url: "/api/visitors",
+      payload: { address },
+    })
+
+    t.is(response.statusCode, 200)
+
+    // Wait to ensure notification would have been sent if it was going to
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    t.false(
+      scope.isDone(),
+      "Push notification should NOT be sent for self node",
+    )
+
+    nock.cleanAll()
+  },
+)
+
+test.serial(
+  "POST /api/visitors should handle push notification failure gracefully",
+  async (t) => {
+    const address = "0x1234567890123456789012345678901234567890"
+
+    // Setup push notification
+    await setupPushNotification()
+
+    // Mock the push notification endpoint to fail
+    const scope = nock("https://push.notification.com")
+      .post("/send/test123")
+      .replyWithError("Network error")
+
+    const response = await t.context.app.inject({
+      method: "POST",
+      url: "/api/visitors",
+      payload: { address },
+    })
+
+    // Should still succeed even if push fails
+    t.is(response.statusCode, 200)
+    const result = response.json()
+    t.true(result.success)
+
+    // Wait for async notification attempt
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    t.true(scope.isDone())
+  },
+)
+
+test.serial(
+  "POST /api/visitors should NOT send notification when VAPID not configured",
+  async (t) => {
+    const address = "0x1234567890123456789012345678901234567890"
+
+    // Don't setup VAPID keys
+
+    // Mock the push notification endpoint (should NOT be called)
+    const scope = nock("https://push.notification.com")
+      .post("/send/test123")
+      .reply(201, {})
+
+    const response = await t.context.app.inject({
+      method: "POST",
+      url: "/api/visitors",
+      payload: { address },
+    })
+
+    t.is(response.statusCode, 200)
+
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    t.false(
+      scope.isDone(),
+      "Push notification should NOT be sent when VAPID not configured",
+    )
+
+    nock.cleanAll()
+  },
+)
+
+test.serial(
+  "POST /api/visitors should NOT send notification when no subscriptions",
+  async (t) => {
+    const address = "0x1234567890123456789012345678901234567890"
+
+    // Setup VAPID keys but no subscriptions
+    const vapidKeys = {
+      publicKey:
+        "BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U",
+      privateKey: "UUxI4O8-FbRouAevSmBQ6o18hgE4nSG3qwvJTfKc-ls",
+    }
+    await Setting.set("notification_vapid_keys", vapidKeys)
+    await Setting.set("notification_subscriptions", [])
+
+    const scope = nock("https://push.notification.com")
+      .post("/send/test123")
+      .reply(201, {})
+
+    const response = await t.context.app.inject({
+      method: "POST",
+      url: "/api/visitors",
+      payload: { address },
+    })
+
+    t.is(response.statusCode, 200)
+
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    t.false(
+      scope.isDone(),
+      "Push notification should NOT be sent when no subscriptions",
+    )
+
+    nock.cleanAll()
+  },
+)
 
 test.serial("POST /api/visitors should update existing visitor", async (t) => {
   const address = "0x1234567890123456789012345678901234567890"
@@ -246,19 +436,6 @@ test.serial("POST /api/visitors should update existing visitor", async (t) => {
   // Wait a bit
   await new Promise((resolve) => setTimeout(resolve, 10))
 
-  const subscription = {
-    endpoint: "https://push.notification.com/send",
-    keys: {
-      p256dh:
-        "BA3Tsi3H0Et6iVU0kuzNvtmVNCVo4QsZk/ovVfe4hF6a+A50nAwhiEqq+xOAxa7oTIGJ19PgTKlrLu01M5qd4f4=",
-      auth: "YllT9DF7kLiM5W8rF8SuIw==",
-    },
-  }
-  await Setting.set("notification_subscriptions", [subscription])
-  const scoped = nock("https://push.notification.com")
-    .post("/send")
-    .reply(201, {})
-
   // Update visitor
   const response2 = await t.context.app.inject({
     method: "POST",
@@ -273,10 +450,82 @@ test.serial("POST /api/visitors should update existing visitor", async (t) => {
   t.is(result2.address, address)
   t.true(secondTime >= firstTime)
   t.is(visitors.size, 1) // Still only one visitor
-  await new Promise((resolve) => setTimeout(resolve, 100))
-  t.false(scoped.isDone(), "scoped should not be called")
-  await Setting.set("notification_subscriptions", [])
 })
+
+test.serial(
+  "POST /api/visitors should NOT send notification when updating existing visitor",
+  async (t) => {
+    const address = "0x1234567890123456789012345678901234567890"
+
+    // Add visitor first time
+    await t.context.app.inject({
+      method: "POST",
+      url: "/api/visitors",
+      payload: { address },
+    })
+
+    // Clear service instances to ensure fresh notification service
+    clearServiceInstances()
+
+    // Setup push notification for second request
+    await setupPushNotification()
+
+    const scope = nock("https://push.notification.com")
+      .post("/send/test123")
+      .reply(201, {})
+
+    // Update visitor (should NOT send notification)
+    const response2 = await t.context.app.inject({
+      method: "POST",
+      url: "/api/visitors",
+      payload: { address },
+    })
+
+    t.is(response2.statusCode, 200)
+    t.is(visitors.size, 1)
+
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    t.false(scope.isDone(), "Should NOT send notification for existing visitor")
+
+    nock.cleanAll()
+  },
+)
+
+test.serial(
+  "POST /api/visitors should handle expired subscriptions gracefully",
+  async (t) => {
+    const address = "0x1234567890123456789012345678901234567890"
+
+    // Setup push notification
+    await setupPushNotification()
+
+    // Mock the push notification endpoint to return 410 (Gone)
+    const scope = nock("https://push.notification.com")
+      .post("/send/test123")
+      .reply(410, {})
+
+    const response = await t.context.app.inject({
+      method: "POST",
+      url: "/api/visitors",
+      payload: { address },
+    })
+
+    // Should still succeed even if subscription expired
+    t.is(response.statusCode, 200)
+    const result = response.json()
+    t.true(result.success)
+
+    // Wait for async notification attempt
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    t.true(scope.isDone())
+
+    // Verify expired subscription was removed
+    const subscriptions = await Setting.get("notification_subscriptions")
+    t.is(subscriptions.length, 0, "Expired subscription should be removed")
+  },
+)
 
 test.serial("DELETE /api/visitors should remove visitor", async (t) => {
   const address = "0x1234567890123456789012345678901234567890"

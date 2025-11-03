@@ -1,6 +1,10 @@
 import { Router } from "swiftify"
 import validator from "validator"
-import { sendPushNotification } from "../../utils/webpush.mjs"
+import {
+  getNotificationService,
+  NoSubscriptionsError,
+  VapidNotConfiguredError,
+} from "../../utils/webpush.mjs"
 
 const router = new Router()
 
@@ -90,6 +94,57 @@ export {
 }
 
 /**
+ * 发送新访客通知
+ * @param {string} address - 访客地址
+ * @param {string} selfNodeAddress - 自己的节点地址
+ * @param {string} vapidSubject - VAPID subject (通常是节点URL)
+ * @param {object} logger - 日志记录器
+ */
+async function sendNewVisitorNotification(
+  address,
+  selfNodeAddress,
+  vapidSubject,
+  logger,
+) {
+  // 不给自己发送通知
+  if (address.toLowerCase() === selfNodeAddress.toLowerCase()) {
+    return
+  }
+
+  try {
+    const service = await getNotificationService({ vapidSubject })
+
+    await service.notify({
+      title: "New Visitor",
+      body: `Visitor ${address.slice(0, 6)}...${address.slice(-4)} has connected to your node`,
+      tag: "new-visitor",
+      data: {
+        url: "/",
+        timestamp: Date.now(),
+      },
+    })
+
+    logger.debug({ address }, "Push notification sent for new visitor")
+  } catch (error) {
+    // 优雅地处理通知错误
+    if (error instanceof VapidNotConfiguredError) {
+      logger.debug("Push notifications not configured, skipping")
+    } else if (error instanceof NoSubscriptionsError) {
+      logger.debug("No push notification subscriptions, skipping")
+    } else {
+      logger.error(
+        {
+          error: error.message,
+          stack: error.stack,
+          address,
+        },
+        "Failed to send push notification for new visitor",
+      )
+    }
+  }
+}
+
+/**
  * POST /api/visitors
  * 添加或更新访客的最后活跃时间
  *
@@ -149,29 +204,16 @@ router.post("/visitors", async (request, reply) => {
       addedAt: existingVisitor ? existingVisitor.addedAt : now,
     })
 
-    // 如果是新访客,发送推送通知
+    // 如果是新访客,发送推送通知 (异步,不阻塞响应)
     if (isNewVisitor) {
-      const selfNode = await request.config.getSelfNode()
-      if (address !== selfNode.address) {
-        // 异步发送通知,不阻塞响应
-        sendPushNotification(
-          {
-            title: "New Visitor",
-            body: `Visitor ${address.slice(0, 6)}...${address.slice(-4)} has connected to your node`,
-            tag: "new-visitor",
-            data: {
-              url: "/",
-              timestamp: Date.now(),
-            },
-          },
+      request.config.getSelfNode().then(async (selfNode) => {
+        await sendNewVisitorNotification(
+          address,
+          selfNode.address,
+          selfNode.url,
           request.log,
-        ).catch((error) => {
-          request.log.error(
-            { error: error.message },
-            "Failed to send push notification",
-          )
-        })
-      }
+        )
+      })
     }
 
     const response = {
