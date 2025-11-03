@@ -29,12 +29,13 @@ export function LoadMoreButton({
   onLoadMore,
   showNoMore = true,
   hasAttemptedLoadMore = false,
+  ...props
 }) {
   const { t } = useIntl()
 
   if (hasMore) {
     return (
-      <Box textAlign="center" pt={2}>
+      <Box textAlign="center">
         <Button
           onClick={onLoadMore}
           loading={loading}
@@ -43,6 +44,7 @@ export function LoadMoreButton({
           w="full"
           block
           disabled={loading}
+          {...props}
         >
           {t("common.loadMore")} <LuEllipsis />
         </Button>
@@ -52,8 +54,13 @@ export function LoadMoreButton({
 
   if (showNoMore && hasAttemptedLoadMore) {
     return (
-      <Box textAlign="center" pt={2}>
-        <Text color="gray.400" _dark={{ color: "gray.500" }} fontSize="sm">
+      <Box textAlign="center">
+        <Text
+          color="gray.400"
+          _dark={{ color: "gray.500" }}
+          fontSize="sm"
+          {...props}
+        >
           {t("common.noMore")}
         </Text>
       </Box>
