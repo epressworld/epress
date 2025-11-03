@@ -531,8 +531,6 @@ test("GET /contents/:content_hash should honor Range header if If-Range matches"
   const filePath = `/tmp/${fileName}`
 
   await fs.writeFile(filePath, testContent)
-  const stats = await fs.stat(filePath)
-  const lastModified = stats.mtime.toUTCString()
 
   const content = await Content.create({
     type: "FILE",
@@ -542,6 +540,12 @@ test("GET /contents/:content_hash should honor Range header if If-Range matches"
       createReadStream: () => createReadStream(filePath),
     },
   })
+
+  const uploadDir = path.join(process.cwd(), "data", "uploads")
+  const actualFilePath = path.join(uploadDir, content.local_path)
+
+  const stats = await fs.stat(actualFilePath)
+  const lastModified = stats.mtime.toUTCString()
 
   await Publication.query().insert({
     content_hash: content.content_hash,
@@ -562,7 +566,7 @@ test("GET /contents/:content_hash should honor Range header if If-Range matches"
   t.is(response.headers["content-range"], "bytes 0-7/16")
   t.deepEqual(response.rawPayload, Buffer.from("QWE01234"))
 
-  await fs.unlink(filePath)
+  await fs.unlink(filePath) // 清理临时文件
 })
 
 test("GET /contents/:content_hash should handle FILE without filename (use 'download' as default)", async (t) => {
