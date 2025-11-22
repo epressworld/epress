@@ -1,6 +1,6 @@
 import "../config/index.mjs"
 import { fileURLToPath } from "node:url"
-import { Command } from "swiftify"
+import { Command } from "solidify.js"
 import { Model } from "../server/models/index.mjs"
 
 function isMainModule(meta) {

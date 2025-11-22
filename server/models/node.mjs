@@ -1,6 +1,6 @@
 import { Readable } from "node:stream"
 import { buffer } from "node:stream/consumers"
-import { Model } from "swiftify"
+import { Model } from "solidify.js"
 import { verifyTypedData } from "viem"
 import { hash } from "../utils/crypto.mjs"
 import { extractFileNameFromContentDisposition } from "../utils/helper.mjs"

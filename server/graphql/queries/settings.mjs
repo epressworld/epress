@@ -1,5 +1,5 @@
 // server/graphql/queries/settings.mjs
-import { graphql } from "swiftify"
+import { graphql } from "solidify.js"
 import { Setting } from "../../models/setting.mjs"
 
 // 定义 Mail 配置对象类型

@@ -1,5 +1,5 @@
 import "../config/index.mjs"
-import { Command, Model } from "swiftify"
+import { Command, Model } from "solidify.js"
 import { Content } from "../server/models/index.mjs"
 
 export class CleanContentCommand extends Command {

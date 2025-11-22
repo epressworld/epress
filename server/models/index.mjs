@@ -1,5 +1,5 @@
 import "../../config/index.mjs"
-import { Model } from "swiftify"
+import { Model } from "solidify.js"
 import knexfile from "../../knexfile.mjs"
 
 // ---- Centralized database connection setup ----

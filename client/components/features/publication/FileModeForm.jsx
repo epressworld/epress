@@ -35,7 +35,6 @@ export function FileModeForm({
         alignItems="center"
         justifyContent="center"
         bg={"gray.100"}
-        borderRadius={"none"}
         roundedTop={"md"}
         _dark={{
           bg: "gray.700",

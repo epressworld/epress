@@ -1,4 +1,4 @@
-import { graphql } from "swiftify"
+import { graphql } from "solidify.js"
 import { types as commentTypes } from "./mutations/comment.mjs"
 import mutations from "./mutations/index.mjs"
 import { UpdateProfileInput } from "./mutations/profile.mjs"

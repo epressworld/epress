@@ -1,5 +1,5 @@
 import mercurius from "mercurius"
-import { graphql } from "swiftify"
+import { graphql } from "solidify.js"
 import { Hashtag, Node } from "../../models/index.mjs"
 
 const { ErrorWithProps } = mercurius

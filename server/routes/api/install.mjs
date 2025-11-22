@@ -1,7 +1,7 @@
 import { constants } from "node:fs"
 import { access, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
-import { Router } from "swiftify"
+import { Router } from "solidify.js"
 import { getAddress, verifyTypedData } from "viem"
 import { Model, Node } from "../../models/index.mjs"
 

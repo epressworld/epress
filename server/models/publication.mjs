@@ -1,4 +1,4 @@
-import { Model } from "swiftify"
+import { Model } from "solidify.js"
 import { Comment } from "./comment.mjs"
 import { Content } from "./content.mjs"
 import { Hashtag } from "./hashtag.mjs"

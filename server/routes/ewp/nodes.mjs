@@ -1,4 +1,4 @@
-import { Router } from "swiftify"
+import { Router } from "solidify.js"
 import { getAddress, recoverTypedDataAddress } from "viem"
 import { Node } from "../../models/index.mjs"
 

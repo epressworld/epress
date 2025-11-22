@@ -1,7 +1,7 @@
 import { GraphQLError } from "graphql"
 import mercurius from "mercurius"
 import { SiweMessage } from "siwe"
-import { graphql } from "swiftify"
+import { graphql } from "solidify.js"
 
 const { ErrorWithProps } = mercurius
 

@@ -2,7 +2,7 @@ import { createReadStream } from "node:fs"
 import fs from "node:fs/promises"
 import path from "node:path"
 import sharp from "sharp"
-import { Router } from "swiftify"
+import { Router } from "solidify.js"
 import { Content, Publication } from "../../models/index.mjs"
 
 const router = new Router()

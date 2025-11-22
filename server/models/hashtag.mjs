@@ -1,4 +1,4 @@
-import { Model } from "swiftify"
+import { Model } from "solidify.js"
 import { Publication } from "./index.mjs"
 
 export class Hashtag extends Model {

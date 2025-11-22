@@ -1,4 +1,4 @@
-import { graphql } from "swiftify"
+import { graphql } from "solidify.js"
 
 // Define the GraphQL Profile type manually, as it's a subset of the Node model
 const ProfileType = graphql.type("ObjectType", {

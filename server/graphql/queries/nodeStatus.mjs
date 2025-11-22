@@ -1,4 +1,4 @@
-import { graphql } from "swiftify"
+import { graphql } from "solidify.js"
 import pkg from "../../../package.json" with { type: "json" }
 
 // Helper to read package.json

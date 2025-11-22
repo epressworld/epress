@@ -1,4 +1,4 @@
-import { graphql } from "swiftify"
+import { graphql } from "solidify.js"
 import { Comment, Node, Publication } from "../../models/index.mjs"
 
 export const fetchQuery = {

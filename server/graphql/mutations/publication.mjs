@@ -1,6 +1,6 @@
 import { GraphQLUpload } from "graphql-upload-minimal"
 import mercurius from "mercurius"
-import { graphql } from "swiftify"
+import { graphql } from "solidify.js"
 import { verifyTypedData } from "viem"
 import { Content, Node, Publication } from "../../models/index.mjs"
 

@@ -1,5 +1,5 @@
 import mercurius from "mercurius"
-import { graphql } from "swiftify"
+import { graphql } from "solidify.js"
 import validator from "validator"
 import { getAddress, isAddress, recoverTypedDataAddress } from "viem" // 导入 verifyTypedData
 import { Comment, Publication, Setting } from "../../models/index.mjs" // 导入 Node 用于 selfNode.address
