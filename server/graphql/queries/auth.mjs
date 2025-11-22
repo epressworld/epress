@@ -1,7 +1,7 @@
 import crypto from "node:crypto"
 import mercurius from "mercurius"
 import { SiweMessage } from "siwe"
-import { graphql } from "swiftify"
+import { graphql } from "solidify.js"
 import { getAddress, isAddress } from "viem"
 
 const { ErrorWithProps } = mercurius

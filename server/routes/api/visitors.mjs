@@ -1,4 +1,4 @@
-import { Router } from "swiftify"
+import { Router } from "solidify.js"
 import validator from "validator"
 import {
   getNotificationService,

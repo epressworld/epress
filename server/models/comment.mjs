@@ -1,4 +1,4 @@
-import { Model } from "swiftify"
+import { Model } from "solidify.js"
 import { Node } from "./node.mjs"
 import { Publication } from "./publication.mjs"
 

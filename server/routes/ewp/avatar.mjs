@@ -1,4 +1,4 @@
-import { Router } from "swiftify"
+import { Router } from "solidify.js"
 import { Setting } from "../../models/index.mjs"
 
 export const DEFAULT_AVATAR =

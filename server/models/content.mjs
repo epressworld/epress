@@ -1,6 +1,6 @@
 import path from "node:path"
 import fs from "fs-extra"
-import { Model } from "swiftify"
+import { Model } from "solidify.js"
 import { hash } from "../utils/crypto.mjs"
 import { Publication } from "./publication.mjs"
 // 移除日志导入 - Model 层不记录日志

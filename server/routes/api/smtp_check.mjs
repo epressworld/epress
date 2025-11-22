@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer"
-import { Router } from "swiftify"
+import { Router } from "solidify.js"
 
 const router = new Router()
 

@@ -1,5 +1,5 @@
 import mercurius from "mercurius"
-import { graphql } from "swiftify"
+import { graphql } from "solidify.js"
 import { Comment, Node, Publication } from "../../models/index.mjs"
 
 const { ErrorWithProps } = mercurius
@@ -76,10 +76,6 @@ export const searchQuery = {
         return search(root, { ...args, query }, ctx, info)
       },
       resolverOptions: {
-        cursor: {
-          type: "keyset",
-          column: "id",
-        },
         searchable: ["body", "publications.description"],
         filterable: [
           "type",

@@ -1,4 +1,4 @@
-import { graphql } from "swiftify"
+import { graphql } from "solidify.js"
 import { getAddress } from "viem"
 import { Connection, Node } from "../../models/index.mjs"
 

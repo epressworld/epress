@@ -1,7 +1,7 @@
 import { fastifyCors } from "@fastify/cors"
 import jwt from "@fastify/jwt"
 import mercuriusUpload from "mercurius-upload"
-import { WebServer } from "swiftify"
+import { WebServer } from "solidify.js"
 import "../config/index.mjs"
 import graphqlPlugin from "./graphql/index.mjs"
 import { Node } from "./models/node.mjs"

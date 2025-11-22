@@ -2,7 +2,7 @@ import "../config/index.mjs"
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
-import { Command, Model } from "swiftify"
+import { Command, Model } from "solidify.js"
 import { Node } from "../server/models/index.mjs"
 
 function isMainModule(meta) {

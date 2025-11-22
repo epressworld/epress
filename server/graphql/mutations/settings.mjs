@@ -1,5 +1,5 @@
 import mercurius from "mercurius"
-import { graphql, Model } from "swiftify"
+import { graphql, Model } from "solidify.js"
 import { Setting } from "../../models/index.mjs" // 导入 Setting 模型
 import { SettingsType } from "../queries/settings.mjs" // 导入 SettingsType
 

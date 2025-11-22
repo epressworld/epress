@@ -1,4 +1,4 @@
-import { Router } from "swiftify"
+import { Router } from "solidify.js"
 import validator from "validator"
 import { getAddress, recoverTypedDataAddress, verifyTypedData } from "viem"
 import { Connection, Node } from "../../models/index.mjs"

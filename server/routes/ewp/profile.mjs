@@ -1,4 +1,4 @@
-import { Router } from "swiftify"
+import { Router } from "solidify.js"
 import { Node } from "../../models/index.mjs"
 
 const router = new Router()

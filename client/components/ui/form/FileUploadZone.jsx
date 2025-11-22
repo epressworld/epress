@@ -127,6 +127,7 @@ export function FileUploadZone({
         minHeight={"110px"}
         border={0}
         bg="gray.100"
+        roundedBottom={"none"}
         _dark={{ bg: "gray.800" }}
         p={0}
       >

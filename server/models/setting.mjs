@@ -1,4 +1,4 @@
-import { Model } from "swiftify"
+import { Model } from "solidify.js"
 
 export class Setting extends Model {
   // 定义模型对应的数据库表名

@@ -1,5 +1,5 @@
 import mercurius from "mercurius" // 修正导入路径（假设此包）
-import { graphql } from "swiftify"
+import { graphql } from "solidify.js"
 import validator from "validator"
 import { getAddress, recoverTypedDataAddress } from "viem"
 import { Connection, Node, Setting } from "../../models/index.mjs"
