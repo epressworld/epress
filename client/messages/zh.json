@@ -103,7 +103,7 @@
     "selected": "已选择:",
     "size": "大小:",
     "removeFile": "移除文件",
-    "clickToSelectFile": "点击空白处选择文件或直接拖拽文件至此",
+    "clickToSelectFile": "点击选择文件或直接拖拽文件至此",
     "supportAllFormats": "支持所有格式,最大",
     "supportImageFormats": "支持图片格式",
     "supportAllFormatsShort": "支持所有格式",
@@ -204,7 +204,7 @@
     "publishSuccess": "发布成功",
     "publishFailed": "发布失败,请重试",
     "addFileDescription": "为文件添加描述...",
-    "editFileDescription": "编辑文件描述(文件本身无法修改)",
+    "editFileDescription": "编辑文件描述",
     "saveChanges": "保存",
     "saving": "保存中...",
     "signedCannotEdit": "已签名,无法编辑",
@@ -218,7 +218,13 @@
     "noContent": "暂无内容",
     "loadFailed": "加载失败",
     "enterFullscreen": "进入全屏",
-    "exitFullscreen": "退出全屏"
+    "signedNotEditable": "已签名的内容无法编辑",
+    "cancelEdit": "取消编辑",
+    "exitFullscreen": "退出全屏",
+    "setSlug": "设置SLUG",
+    "slug": "SLUG",
+    "slugPlaceholder": "唯一URL标识",
+    "slugHelper": "只允许小写字母、数字和连字符（-）"
   },
   "comment": {
     "addComment": "发表评论",

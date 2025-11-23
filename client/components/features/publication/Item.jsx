@@ -7,6 +7,7 @@ import {
   Drawer,
   HStack,
   IconButton,
+  Input,
   Portal,
   Separator,
   Text,
@@ -52,6 +53,7 @@ export function PublicationItem({
   const commentsRef = useRef(null)
   const [isPublishing, setIsPublishing] = useState(false)
   const [_copied, copyToClipboard] = useCopyToClipboard()
+  const [quoteSlug, setQuoteSlug] = useState(null)
   const { t, formatDateTime, formatRelativeTime } = useIntl()
 
   // 评论 Drawer 状态
@@ -111,7 +113,7 @@ export function PublicationItem({
       `> `,
       contentSection,
       `> `,
-      `> [${createdAt}](${authorUrl}/publications/${contentHash})`,
+      `> [${createdAt}](${authorUrl}/publications/${publication.content.content_hash})`,
     ].join("\n")
 
     return quoteText
@@ -189,6 +191,7 @@ export function PublicationItem({
 
       const formData = {
         mode: "post",
+        slug: quoteSlug,
         content: editorContent,
         file: null,
       }
@@ -206,10 +209,11 @@ export function PublicationItem({
 
   // 生成正确的详情链接
   const getDetailUrl = () => {
+    const identifier = publication.slug || publication.id
     if (isNodeOwner && isAuthenticated && !isOwnContent) {
       return `${publication.author.url}/publications/${publication.content.content_hash}`
     }
-    return `/publications/${publication.id}`
+    return `/publications/${identifier}`
   }
 
   // 判断是否应该显示评论按钮（只有本节点内容才显示）
@@ -365,7 +369,7 @@ export function PublicationItem({
                   </IconButton>
                 </Tooltip>
                 <ShareButton
-                  url={`${publication.author.url}/publications/${publication.id}`}
+                  url={`${publication.author.url}/publications/${publication.slug || publication.id}`}
                   onCopied={() =>
                     toaster.create({
                       description: t("publication.shareUrlCopied"),
@@ -405,25 +409,38 @@ export function PublicationItem({
               </Dialog.Body>
 
               <Dialog.Footer>
-                <HStack gap={2}>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setIsQuoteDialogOpen(false)}
-                  >
-                    {t("publication.cancel")}
-                  </Button>
-                  <Button
-                    size="sm"
-                    colorPalette="orange"
-                    onClick={handleQuotePublish}
-                    loading={isPublishing}
-                    loadingText={t("publication.publishing")}
-                    disabled={isPublishing || !quoteContent.trim()}
-                  >
-                    <LuSend size={14} style={{ marginRight: "4px" }} />
-                    {t("publication.publish")}
-                  </Button>
+                <HStack justify="space-between" width="100%">
+                  {/* 左侧内容（左对齐） */}
+                  <HStack>
+                    <Input
+                      placeholder="SLUG"
+                      variant="flushed"
+                      name="slug"
+                      onChange={(e) => setQuoteSlug(e.target.value)}
+                    />
+                  </HStack>
+
+                  {/* 右侧内容（右对齐） */}
+                  <HStack gap={2}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setIsQuoteDialogOpen(false)}
+                    >
+                      {t("publication.cancel")}
+                    </Button>
+                    <Button
+                      size="sm"
+                      colorPalette="orange"
+                      onClick={handleQuotePublish}
+                      loading={isPublishing}
+                      loadingText={t("publication.publishing")}
+                      disabled={isPublishing || !quoteContent.trim()}
+                    >
+                      <LuSend size={14} style={{ marginRight: "4px" }} />
+                      {t("publication.publish")}
+                    </Button>
+                  </HStack>
                 </HStack>
               </Dialog.Footer>
             </Dialog.Content>

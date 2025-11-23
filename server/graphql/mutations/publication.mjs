@@ -56,6 +56,7 @@ const CreatePublicationInput = graphql.type("InputObjectType", {
     body: { type: graphql.type("String") },
     file: { type: GraphQLUpload },
     description: { type: graphql.type("String") },
+    slug: { type: graphql.type("String") },
   },
 })
 
@@ -65,6 +66,7 @@ const UpdatePublicationInput = graphql.type("InputObjectType", {
     id: { type: graphql.type("NonNull", graphql.type("ID")) },
     body: { type: graphql.type("String") },
     description: { type: graphql.type("String") },
+    slug: { type: graphql.type("String") },
   },
 })
 
@@ -101,13 +103,28 @@ const publicationMutations = {
         }
       }
 
-      const { body, file, description } = input
+      const { body, file, description, slug } = input
       const type = input?.type?.toUpperCase()
       const authorAddress = context.user.sub
 
       request.log.debug("Authentication passed")
 
-      // 2. 输入验证：根据类型检查 body 和 file 的互斥性及存在性
+      // 2. Slug 验证和处理
+      let processedSlug = slug?.trim() || null
+      if (processedSlug === "") {
+        processedSlug = null
+      }
+      if (processedSlug) {
+        // 验证 slug 格式：只允许小写字母、数字和连字符
+        if (!/^[a-z0-9-]+$/.test(processedSlug)) {
+          throw new ErrorWithProps(
+            "Slug can only contain lowercase letters, numbers, and hyphens.",
+            { code: "VALIDATION_FAILED" },
+          )
+        }
+      }
+
+      // 3. 输入验证：根据类型检查 body 和 file 的互斥性及存在性
       if (type === "POST") {
         if (!body) {
           throw new ErrorWithProps("body is required for POST type.", {
@@ -138,7 +155,20 @@ const publicationMutations = {
         )
       }
 
-      // 3. 获取作者节点 ID
+      // 4. 检查 slug 唯一性（如果提供了 slug）
+      if (processedSlug) {
+        const existingPublication = await Publication.query()
+          .where({ author_address: authorAddress, slug: processedSlug })
+          .first()
+        if (existingPublication) {
+          throw new ErrorWithProps(
+            "Slug already in use by another of your publications.",
+            { code: "VALIDATION_FAILED" },
+          )
+        }
+      }
+
+      // 5. 获取作者节点 ID
       const authorNode = await Node.query().findOne({ address: authorAddress })
       if (!authorNode) {
         throw new ErrorWithProps("Author node not found.", {
@@ -179,12 +209,13 @@ const publicationMutations = {
       // 使用 createdContent 中的 content_hash
       const contentHash = createdContent.content_hash
 
-      // 5. 创建 Publication 记录
+      // 6. 创建 Publication 记录
       const publication = await Publication.query().insert({
         content_hash: contentHash,
         author_address: authorNode.address,
         signature: null, // 初始为未签名状态
         description: description, // Add description for FILE type
+        slug: processedSlug,
       })
 
       // 6. 返回新创建的 Publication 并加载关联数据
@@ -209,7 +240,7 @@ const publicationMutations = {
       input: { type: graphql.type("NonNull", UpdatePublicationInput) },
     },
     resolve: async (_parent, { input }, context) => {
-      const { id, body, description } = input
+      const { id, body, description, slug } = input
       const { user, request } = context
 
       request.log.debug(
@@ -218,6 +249,7 @@ const publicationMutations = {
           user: user?.sub,
           hasBody: !!body,
           hasDescription: !!description,
+          hasSlug: slug !== undefined,
         },
         "Updating publication",
       )
@@ -258,7 +290,36 @@ const publicationMutations = {
         })
       }
 
-      // 4. 更新逻辑 (仅当 body 或 description 有新内容时)
+      // 4. Slug 验证和处理
+      let processedSlug = slug !== undefined ? slug?.trim() || null : undefined
+      if (processedSlug === "") {
+        processedSlug = null
+      }
+      if (processedSlug !== undefined && processedSlug !== null) {
+        // 验证 slug 格式：只允许小写字母、数字和连字符
+        if (!/^[a-z0-9-]+$/.test(processedSlug)) {
+          throw new ErrorWithProps(
+            "Slug can only contain lowercase letters, numbers, and hyphens.",
+            { code: "VALIDATION_FAILED" },
+          )
+        }
+        // 检查 slug 唯一性（排除当前 publication）
+        const existingPublication = await Publication.query()
+          .where({
+            author_address: publication.author.address,
+            slug: processedSlug,
+          })
+          .whereNot("id", id)
+          .first()
+        if (existingPublication) {
+          throw new ErrorWithProps(
+            "Slug already in use by another of your publications.",
+            { code: "VALIDATION_FAILED" },
+          )
+        }
+      }
+
+      // 5. 更新逻辑 (仅当 body 或 description 有新内容时)
       if (body || description) {
         // 获取原始内容
         const originalContent = await Content.query().findById(
@@ -267,7 +328,11 @@ const publicationMutations = {
 
         if (originalContent && originalContent.type === "FILE") {
           // 对于 FILE 类型，更新 Publication 的 description 字段
-          await publication.$query().patch({ description: description })
+          const updateData = { description: description }
+          if (processedSlug !== undefined) {
+            updateData.slug = processedSlug
+          }
+          await publication.$query().patch(updateData)
         } else if (originalContent && originalContent.type === "POST") {
           // 对于 POST 类型，创建新的 Content 记录（保持不可变性）
           const newContent = await Content.create({
@@ -275,18 +340,23 @@ const publicationMutations = {
             body: body,
           })
           // 更新 publication，使其指向新内容的哈希
-          await publication
-            .$query()
-            .patchAndFetch({ content_hash: newContent.content_hash })
+          const updateData = { content_hash: newContent.content_hash }
+          if (processedSlug !== undefined) {
+            updateData.slug = processedSlug
+          }
+          await publication.$query().patchAndFetch(updateData)
         } else {
           // Fallback for unknown content type or no original content
           throw new ErrorWithProps("Cannot update unknown content type.", {
             code: "INTERNAL_SERVER_ERROR",
           })
         }
+      } else if (processedSlug !== undefined) {
+        // 如果只更新 slug，不更新内容
+        await publication.$query().patch({ slug: processedSlug })
       }
 
-      // 5. 重新获取并返回更新后的帖子，确保关联数据正确
+      // 6. 重新获取并返回更新后的帖子，确保关联数据正确
       request.log.info(
         {
           publication_id: id,

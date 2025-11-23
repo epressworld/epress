@@ -4,6 +4,7 @@ import {
   Box,
   Checkbox,
   Container,
+  Flex,
   HStack,
   IconButton,
   Portal,
@@ -34,7 +35,9 @@ export const PostModeForm = forwardRef(function PostModeForm(
     content,
     onContentChange,
     showFullscreenButton = false,
-    fullscreenActions = null,
+    fullscreenLeftActions = null,
+    fullscreenRightActions = null,
+    onFullscreen = () => {},
     disabled = false,
   },
   ref,
@@ -73,7 +76,10 @@ export const PostModeForm = forwardRef(function PostModeForm(
   }
 
   // 暴露 exitFullscreen 方法给父组件
-  useImperativeHandle(ref, () => ({ exitFullscreen }))
+  useImperativeHandle(ref, () => ({
+    exitFullscreen,
+    isFullscreen,
+  }))
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen)
@@ -81,6 +87,7 @@ export const PostModeForm = forwardRef(function PostModeForm(
     if (isFullscreen && isSourceMode) {
       exitFullscreen()
     }
+    onFullscreen(!isFullscreen)
   }
 
   const handleSourceModeToggle = (details) => {
@@ -118,15 +125,18 @@ export const PostModeForm = forwardRef(function PostModeForm(
         _dark={{ borderColor: "gray.700", bg: "gray.900" }}
       >
         <HStack justify="space-between" align="center">
-          <Checkbox.Root
-            checked={isSourceMode}
-            onCheckedChange={handleSourceModeToggle}
-          >
-            <Checkbox.HiddenInput />
-            <Checkbox.Control />
-            <Checkbox.Label>{t("publication.sourceCodeMode")}</Checkbox.Label>
-          </Checkbox.Root>
-          {fullscreenActions || <Box />}
+          <Flex alignItems={"center"} gap={2}>
+            <Checkbox.Root
+              checked={isSourceMode}
+              onCheckedChange={handleSourceModeToggle}
+            >
+              <Checkbox.HiddenInput />
+              <Checkbox.Control />
+              <Checkbox.Label>{t("publication.sourceCodeMode")}</Checkbox.Label>
+            </Checkbox.Root>
+            {fullscreenLeftActions}
+          </Flex>
+          {fullscreenRightActions || <Box />}
         </HStack>
       </Container>
     </Box>

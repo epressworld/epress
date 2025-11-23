@@ -54,6 +54,7 @@ export const up = async (knex) => {
     table.string("signature").nullable()
     table.integer("comment_count").nullable().defaultTo(0)
     table.text("description").nullable()
+    table.string("slug").nullable()
     table.timestamp("created_at").defaultTo(knex.fn.now())
     table.timestamp("updated_at").defaultTo(knex.fn.now())
 
@@ -63,6 +64,8 @@ export const up = async (knex) => {
     table.index("content_hash")
     // 索引：优化按时间排序 (ORDER BY created_at DESC)
     table.index("created_at")
+    // 唯一复合索引：确保每个作者的 slug 唯一
+    table.unique(["author_address", "slug"])
   })
 
   // 创建hashtags表

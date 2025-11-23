@@ -24,6 +24,7 @@ test("createPublication: Successfully create POST type publication", async (t) =
     mutation CreatePostPublication($input: CreatePublicationInput!) {
       createPublication(input: $input) {
         id
+        slug
         content_hash
         signature
         created_at
@@ -77,21 +78,27 @@ test("createPublication: Successfully create POST type publication", async (t) =
   t.truthy(dbContent, "Content record should exist in database")
   t.is(dbContent.body, input.body, "Database content body should match")
   t.is(dbContent.type, "POST", "Database content type should be post")
+
+  // Verify slug is null by default
+  t.is(dbPublication.slug, null, "Slug should be null by default")
+  t.is(publication.slug, null, "Returned slug should be null by default")
 })
 
 // Test case: Successfully create FILE type publication
-test("createPublication: Successfully create FILE type publication", async (t) => {
-  const { app, createClientJwt } = t.context
-  const authToken = await createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
+test.serial(
+  "createPublication: Successfully create FILE type publication",
+  async (t) => {
+    const { app, createClientJwt } = t.context
+    const authToken = await createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
 
-  const fileName = "temp_content.png"
-  const tempFilePath = `/tmp/${fileName}`
-  const mimeType = "image/png"
-  const largeBuffer = Buffer.alloc(2 * 1024 * 1024 + 1) // 2MB + 1 byte
-  fs.writeFileSync(tempFilePath, largeBuffer)
+    const fileName = "temp_content.png"
+    const tempFilePath = `/tmp/${fileName}`
+    const mimeType = "image/png"
+    const largeBuffer = Buffer.alloc(2 * 1024 * 1024 + 1) // 2MB + 1 byte
+    fs.writeFileSync(tempFilePath, largeBuffer)
 
-  const { body, headers } = createGraphQLUploadRequest({
-    query: `
+    const { body, headers } = createGraphQLUploadRequest({
+      query: `
       mutation CreateFilePublication($input: CreatePublicationInput!) {
           createPublication(input: $input) {
             id
@@ -111,76 +118,84 @@ test("createPublication: Successfully create FILE type publication", async (t) =
           }
       }
     `,
-    filePath: tempFilePath,
-    variables: {
-      input: { type: "file", description: "description", file: null },
-    },
-    uploadFieldName: "input.file",
-    fileName: "temp_content.png",
-  })
+      filePath: tempFilePath,
+      variables: {
+        input: { type: "file", description: "description", file: null },
+      },
+      uploadFieldName: "input.file",
+      fileName: "temp_content.png",
+    })
 
-  const response = await app.inject({
-    method: "POST",
-    url: "/api/graphql",
-    payload: body,
-    headers: {
-      ...headers,
-      Authorization: `Bearer ${authToken}`,
-    },
-  })
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/graphql",
+      payload: body,
+      headers: {
+        ...headers,
+        Authorization: `Bearer ${authToken}`,
+      },
+    })
 
-  const { errors, data } = JSON.parse(response.body)
+    const { errors, data } = JSON.parse(response.body)
 
-  t.falsy(errors, "Should not have any GraphQL errors")
-  t.truthy(data.createPublication, "Should return created publication")
+    t.falsy(errors, "Should not have any GraphQL errors")
+    t.truthy(data.createPublication, "Should return created publication")
 
-  const publication = data.createPublication
-  t.falsy(publication.signature, "Publication should initially be unsigned")
-  t.truthy(publication.content_hash, "Publication should have content hash")
-  t.truthy(publication.created_at, "Publication should have created timestamp")
-  t.is(
-    publication.author.address,
-    TEST_ACCOUNT_NODE_A.address,
-    "Author should be authenticated node owner",
-  )
+    const publication = data.createPublication
+    t.falsy(publication.signature, "Publication should initially be unsigned")
+    t.truthy(publication.content_hash, "Publication should have content hash")
+    t.truthy(
+      publication.created_at,
+      "Publication should have created timestamp",
+    )
+    t.is(
+      publication.author.address,
+      TEST_ACCOUNT_NODE_A.address,
+      "Author should be authenticated node owner",
+    )
 
-  // Verify database records
-  const dbPublication = await Publication.query().findById(publication.id)
-  t.truthy(dbPublication, "Publication record should exist in database")
-  t.is(
-    dbPublication.content_hash,
-    publication.content_hash,
-    "Database content hash should match",
-  )
-  t.is(
-    dbPublication.description,
-    "description",
-    "Database publication description should match",
-  )
+    // Verify database records
+    const dbPublication = await Publication.query().findById(publication.id)
+    t.truthy(dbPublication, "Publication record should exist in database")
+    t.is(
+      dbPublication.content_hash,
+      publication.content_hash,
+      "Database content hash should match",
+    )
+    t.is(
+      dbPublication.description,
+      "description",
+      "Database publication description should match",
+    )
 
-  const dbContent = await Content.query().findOne({
-    content_hash: publication.content_hash,
-  })
-  t.truthy(dbContent, "Content record should exist in database")
-  t.is(dbContent.filename, fileName, "Database content filename should match")
-  t.is(dbContent.mimetype, mimeType, "Database content MIME type should match")
-  t.is(
-    Number(dbContent.size),
-    largeBuffer.length,
-    "Database content size should match",
-  )
-  t.is(dbContent.type, "FILE", "Database content type should be file")
-  t.truthy(dbContent.local_path, "Database content should have local path")
+    const dbContent = await Content.query().findOne({
+      content_hash: publication.content_hash,
+    })
+    t.truthy(dbContent, "Content record should exist in database")
+    t.is(dbContent.filename, fileName, "Database content filename should match")
+    t.is(
+      dbContent.mimetype,
+      mimeType,
+      "Database content MIME type should match",
+    )
+    t.is(
+      Number(dbContent.size),
+      largeBuffer.length,
+      "Database content size should match",
+    )
+    t.is(dbContent.type, "FILE", "Database content type should be file")
+    t.truthy(dbContent.local_path, "Database content should have local path")
 
-  // Clean up temporary file
-  try {
-    if (fs.existsSync(tempFilePath)) {
-      fs.unlinkSync(tempFilePath)
+    // Clean up temporary file
+    try {
+      if (fs.existsSync(tempFilePath)) {
+        fs.unlinkSync(tempFilePath)
+      }
+    } catch {
+      // File may have been deleted, ignore error
     }
-  } catch {
-    // File may have been deleted, ignore error
-  }
-})
+  },
+)
 
 // Test case: Authentication failure
 test("createPublication: Should return UNAUTHENTICATED when JWT not provided", async (t) => {
@@ -1288,3 +1303,271 @@ test("Success: destroyPublication with integration token should work", async (t)
     "Publication should be deleted from database",
   )
 })
+
+// --- Slug-related Test Cases ---
+
+test.serial(
+  "createPublication: Should successfully create publication with slug",
+  async (t) => {
+    const { graphqlClient, createClientJwt } = t.context
+    const authToken = await createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
+
+    const query = `
+      mutation CreatePublicationWithSlug($input: CreatePublicationInput!) {
+        createPublication(input: $input) {
+          id
+          slug
+          content {
+            body
+          }
+        }
+      }
+    `
+
+    const input = {
+      type: "post",
+      body: "This is a test post with slug.",
+      slug: "my-test-post",
+    }
+
+    const { data, errors } = await graphqlClient.query(query, {
+      variables: { input },
+      headers: { Authorization: `Bearer ${authToken}` },
+    })
+
+    t.falsy(errors, "Should not have any GraphQL errors")
+    t.truthy(data.createPublication, "Should return created publication")
+    t.is(
+      data.createPublication.slug,
+      "my-test-post",
+      "Should return correct slug",
+    )
+
+    // Verify database
+    const dbPublication = await Publication.query().findById(
+      data.createPublication.id,
+    )
+    t.is(
+      dbPublication.slug,
+      "my-test-post",
+      "Database should have correct slug",
+    )
+  },
+)
+
+test.serial(
+  "createPublication: Should reject invalid slug format",
+  async (t) => {
+    const { graphqlClient, createClientJwt } = t.context
+    const authToken = await createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
+
+    const query = `
+      mutation CreatePublicationWithInvalidSlug($input: CreatePublicationInput!) {
+        createPublication(input: $input) {
+          id
+          slug
+        }
+      }
+    `
+
+    const input = {
+      type: "post",
+      body: "This is a test post.",
+      slug: "Invalid Slug With Spaces!",
+    }
+
+    const { _data, errors } = await graphqlClient.query(query, {
+      variables: { input },
+      headers: { Authorization: `Bearer ${authToken}` },
+    })
+
+    t.truthy(errors, "Should return GraphQL errors")
+    t.is(
+      errors[0].extensions.code,
+      "VALIDATION_FAILED",
+      "Should return VALIDATION_FAILED error",
+    )
+  },
+)
+
+test.serial(
+  "createPublication: Should reject duplicate slug for same author",
+  async (t) => {
+    const { graphqlClient, createClientJwt } = t.context
+    const authToken = await createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
+    const selfNode = await Node.query().findOne({ is_self: true })
+
+    // Create first publication with slug
+    const content1 = await Content.create({
+      type: "post",
+      body: "First post",
+    })
+    await Publication.query().insert({
+      content_hash: content1.content_hash,
+      author_address: selfNode.address,
+      slug: "duplicate-slug",
+    })
+
+    // Try to create second publication with same slug
+    const query = `
+      mutation CreatePublicationWithDuplicateSlug($input: CreatePublicationInput!) {
+        createPublication(input: $input) {
+          id
+          slug
+        }
+      }
+    `
+
+    const input = {
+      type: "post",
+      body: "Second post",
+      slug: "duplicate-slug",
+    }
+
+    const { errors } = await graphqlClient.query(query, {
+      variables: { input },
+      headers: { Authorization: `Bearer ${authToken}` },
+    })
+
+    t.truthy(errors, "Should return GraphQL errors")
+    t.is(
+      errors[0].extensions.code,
+      "VALIDATION_FAILED",
+      "Should return VALIDATION_FAILED error",
+    )
+    t.true(
+      errors[0].message.includes("Slug already in use"),
+      "Error message should mention slug conflict",
+    )
+  },
+)
+
+test.serial(
+  "createPublication: Should treat empty string slug as null",
+  async (t) => {
+    const { graphqlClient, createClientJwt } = t.context
+    const authToken = await createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
+
+    const query = `
+      mutation CreatePublicationWithEmptySlug($input: CreatePublicationInput!) {
+        createPublication(input: $input) {
+          id
+          slug
+        }
+      }
+    `
+
+    const input = {
+      type: "post",
+      body: "This is a test post.",
+      slug: "",
+    }
+
+    const { data, errors } = await graphqlClient.query(query, {
+      variables: { input },
+      headers: { Authorization: `Bearer ${authToken}` },
+    })
+
+    t.falsy(errors, "Should not have any GraphQL errors")
+    t.is(
+      data.createPublication.slug,
+      null,
+      "Empty slug should be treated as null",
+    )
+
+    // Verify database
+    const dbPublication = await Publication.query().findById(
+      data.createPublication.id,
+    )
+    t.is(dbPublication.slug, null, "Database should have null slug")
+  },
+)
+
+test.serial("updatePublication: Should successfully update slug", async (t) => {
+  const { graphqlClient, createClientJwt } = t.context
+  const selfNode = await Node.query().findOne({ is_self: true })
+
+  const { publication } = await createTestPublication(
+    selfNode,
+    TEST_ACCOUNT_NODE_A,
+    "Original content",
+  )
+  const token = await createClientJwt(selfNode.address)
+
+  const mutation = `
+      mutation UpdatePublicationSlug($input: UpdatePublicationInput!) {
+        updatePublication(input: $input) {
+          id
+          slug
+        }
+      }
+    `
+  const variables = {
+    input: { id: publication.id, slug: "updated-slug" },
+  }
+
+  const { data, errors } = await graphqlClient.query(mutation, {
+    variables,
+    headers: { Authorization: `Bearer ${token}` },
+  })
+
+  t.falsy(errors, "Should not return any GraphQL errors")
+  t.is(data.updatePublication.slug, "updated-slug", "Slug should be updated")
+
+  // Verify database
+  const dbPublication = await Publication.query().findById(publication.id)
+  t.is(dbPublication.slug, "updated-slug", "Database should have updated slug")
+})
+
+test.serial(
+  "updatePublication: Should reject duplicate slug when updating",
+  async (t) => {
+    const { graphqlClient, createClientJwt } = t.context
+    const selfNode = await Node.query().findOne({ is_self: true })
+    const token = await createClientJwt(selfNode.address)
+
+    // Create first publication with slug
+    const content1 = await Content.create({
+      type: "post",
+      body: "First post",
+    })
+    const _pub1 = await Publication.query().insert({
+      content_hash: content1.content_hash,
+      author_address: selfNode.address,
+      slug: "existing-slug",
+    })
+
+    // Create second publication without slug
+    const { publication: pub2 } = await createTestPublication(
+      selfNode,
+      TEST_ACCOUNT_NODE_A,
+      "Second post",
+    )
+
+    // Try to update second publication with first publication's slug
+    const mutation = `
+      mutation UpdatePublicationWithDuplicateSlug($input: UpdatePublicationInput!) {
+        updatePublication(input: $input) {
+          id
+          slug
+        }
+      }
+    `
+    const variables = {
+      input: { id: pub2.id, slug: "existing-slug" },
+    }
+
+    const { errors } = await graphqlClient.query(mutation, {
+      variables,
+      headers: { Authorization: `Bearer ${token}` },
+    })
+
+    t.truthy(errors, "Should return GraphQL errors")
+    t.truthy(errors[0].extensions, "Error should have extensions")
+    t.is(
+      errors[0].extensions.code,
+      "VALIDATION_FAILED",
+      "Should return VALIDATION_FAILED error",
+    )
+  },
+)

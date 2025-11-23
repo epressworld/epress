@@ -35,7 +35,6 @@ export function PublicationItemPage({ variables }) {
   const contentTriggerRef = useRef(null)
 
   const {
-    publicationId,
     isEditMode,
     publication,
     publicationLoading,
@@ -184,7 +183,7 @@ export function PublicationItemPage({ variables }) {
             <UnifiedCard.Body>
               {/* Comment form */}
               <CommentForm
-                publicationId={publicationId}
+                publicationId={publication?.id}
                 onCommentCreated={async () => {
                   await client.refetchQueries({
                     include: [SEARCH_COMMENTS],
@@ -199,7 +198,7 @@ export function PublicationItemPage({ variables }) {
               <Separator my={6} />
               {/* Comment list - above the form */}
               <CommentList
-                publicationId={publicationId}
+                publicationId={publication?.id}
                 onCommentDeleted={async () => {
                   await client.refetchQueries({
                     include: [SEARCH_COMMENTS],

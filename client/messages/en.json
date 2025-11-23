@@ -103,7 +103,7 @@
     "selected": "Selected:",
     "size": "Size:",
     "removeFile": "Remove file",
-    "clickToSelectFile": "Click the blank area to select a file or drag and drop a file here",
+    "clickToSelectFile": "Click to select a file or drag and drop a file here",
     "supportAllFormats": "Support all formats, max",
     "supportImageFormats": "Support image formats",
     "supportAllFormatsShort": "Support all formats",
@@ -205,7 +205,7 @@
     "publishFailed": "Publish failed, please try again",
     "sourceCodeMode": "Source Code",
     "addFileDescription": "Add description for file...",
-    "editFileDescription": "Edit file description (file itself cannot be modified)",
+    "editFileDescription": "Edit file description",
     "saveChanges": "Save",
     "saving": "Saving...",
     "signedCannotEdit": "Signed, cannot edit",
@@ -218,7 +218,13 @@
     "noContent": "No content",
     "loadFailed": "Load failed",
     "enterFullscreen": "Enter Fullscreen",
-    "exitFullscreen": "Exit Fullscreen"
+    "signedNotEditable": "Signed content cannot be edited",
+    "cancelEdit": "Cancel editing",
+    "exitFullscreen": "Exit Fullscreen",
+    "setSlug": "Set SLUG",
+    "slug": "SLUG",
+    "slugPlaceholder": "Unique URL identifier",
+    "slugHelper": "Only lowercase letters, numbers, and hyphens (-) are allowed"
   },
   "comment": {
     "addComment": "Add Comment",
