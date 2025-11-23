@@ -58,6 +58,7 @@ router.get("/publications", async (request, reply) => {
       signature: pub.signature,
       comment_count: pub.comment_count,
       created_at: pub.created_at,
+      slug: pub.slug,
     }))
 
     // 10. 返回结果

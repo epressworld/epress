@@ -61,6 +61,12 @@ export class Publication extends Model {
         nullable: true,
       },
     },
+    slug: {
+      type: "string",
+      constraints: {
+        nullable: true,
+      },
+    },
   }
 
   // 定义关联关系

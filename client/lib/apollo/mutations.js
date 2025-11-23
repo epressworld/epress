@@ -28,6 +28,7 @@ export const CREATE_PUBLICATION = gql`
   mutation CreatePublication($input: CreatePublicationInput!) {
     createPublication(input: $input) {
       id
+      slug
       signature
       created_at
       description
@@ -58,6 +59,7 @@ export const UPDATE_PUBLICATION = gql`
   mutation UpdatePublication($input: UpdatePublicationInput!) {
     updatePublication(input: $input) {
       id
+      slug
       signature
       created_at
       updated_at
@@ -171,6 +173,7 @@ export const CREATE_COMMENT = gql`
       created_at
       publication {
         id
+        slug
       }
     }
   }
@@ -199,6 +202,7 @@ export const CONFIRM_COMMENT = gql`
       created_at
       publication {
         id
+        slug
       }
     }
   }
@@ -215,6 +219,7 @@ export const CONFIRM_COMMENT_DELETION = gql`
       created_at
       publication {
         id
+        slug
       }
     }
   }

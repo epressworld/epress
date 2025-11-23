@@ -57,7 +57,7 @@ function generateRSS(publications, nodeInfo, fullContent = false) {
 
   const rssItems = publications
     .map((pub) => {
-      const pubUrl = `${nodeUrl}/publications/${pub.id}`
+      const pubUrl = `${nodeUrl}/publications/${pub.slug || pub.id}`
       const pubDate = new Date(pub.created_at).toUTCString()
       const authorName = pub.author?.title || "Unknown Author"
 

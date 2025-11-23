@@ -26,6 +26,7 @@ export function usePublicationForm({
   const [content, setContent] = useState(initialContent)
   const [fileDescription, setFileDescription] = useState("")
   const [selectedFile, setSelectedFile] = useState(null)
+  const [slug, setSlug] = useState("")
 
   // TipTap编辑器配置
   const editor = useEditor({
@@ -138,6 +139,7 @@ export function usePublicationForm({
       setContent("")
       setFileDescription("")
       setSelectedFile(null)
+      setSlug("")
 
       if (editor) {
         editor.commands.clearContent()
@@ -197,6 +199,7 @@ export function usePublicationForm({
       mode,
       content: mode === "post" ? content : fileDescription,
       file: mode === "file" ? selectedFile : null,
+      slug: slug.trim() || null,
     }
   }
 
@@ -208,6 +211,8 @@ export function usePublicationForm({
     fileDescription,
     setFileDescription,
     selectedFile,
+    slug,
+    setSlug,
     editor,
     handleFileSelect,
     handleRemoveFile,

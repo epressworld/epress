@@ -111,7 +111,7 @@ export function PublicationItem({
       `> `,
       contentSection,
       `> `,
-      `> [${createdAt}](${authorUrl}/publications/${contentHash})`,
+      `> [${createdAt}](${authorUrl}/publications/${publication.content.content_hash})`,
     ].join("\n")
 
     return quoteText
@@ -206,10 +206,11 @@ export function PublicationItem({
 
   // 生成正确的详情链接
   const getDetailUrl = () => {
+    const identifier = publication.slug || publication.id
     if (isNodeOwner && isAuthenticated && !isOwnContent) {
       return `${publication.author.url}/publications/${publication.content.content_hash}`
     }
-    return `/publications/${publication.id}`
+    return `/publications/${identifier}`
   }
 
   // 判断是否应该显示评论按钮（只有本节点内容才显示）
@@ -365,7 +366,7 @@ export function PublicationItem({
                   </IconButton>
                 </Tooltip>
                 <ShareButton
-                  url={`${publication.author.url}/publications/${publication.id}`}
+                  url={`${publication.author.url}/publications/${publication.slug || publication.id}`}
                   onCopied={() =>
                     toaster.create({
                       description: t("publication.shareUrlCopied"),

@@ -116,10 +116,14 @@ router.get("/contents/:content_hash", async (request, reply) => {
       return reply.code(404).send({ error: "CONTENT_NOT_FOUND" })
     }
 
+    // 生成 canonical link
+    const linkHeader = `<${publication.slug ? `/slug/${publication.slug}` : `/id/${publication.id}`}>; rel="canonical"`
+
     if (content.type === "POST") {
       // Markdown 内容
       reply
         .header("Content-Type", content.mimetype || "text/markdown")
+        .header("Link", linkHeader)
         .send(content.body)
     } else if (content.type === "FILE") {
       if (!content.local_path) {
@@ -229,6 +233,7 @@ router.get("/contents/:content_hash", async (request, reply) => {
             makeContentDisposition(safeFileName, "inline"),
           )
           .header("Content-Description", encodeURIComponent(description || ""))
+          .header("Link", linkHeader)
 
         const range = request.headers.range
         const ifRange = request.headers["if-range"]

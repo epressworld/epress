@@ -9,11 +9,17 @@ export const fetchQuery = {
       resolve: async (_root, args, context) => {
         const { request } = context
 
+        const identifier = args.id
+        const isContentHash = identifier.startsWith("0x")
+        const isNumericId = /^\d+$/.test(identifier)
+
         request.log.debug(
           {
-            id: args.id,
+            id: identifier,
             user: context.user?.sub,
-            isContentHash: args.id.startsWith("0x"),
+            isContentHash,
+            isNumericId,
+            isSlug: !isContentHash && !isNumericId,
           },
           "Fetching publication",
         )
@@ -24,22 +30,24 @@ export const fetchQuery = {
           .select("publications.*")
 
         // 权限检查：如果没有 fetch:publications 权限，则只能获取自己的内容
-        if (!context.request.cani("fetch:publications")) {
+        if (
+          !context.request.cani("fetch:publications") ||
+          isContentHash ||
+          (!isContentHash && !isNumericId)
+        ) {
           // 从请求缓存获取节点地址
           const selfNode = await context.request.config.getSelfNode()
-          if (selfNode) {
-            query.where("author.address", selfNode.address)
-          }
+          query.where("author.address", selfNode.address)
         }
-
-        if (args.id.startsWith("0x")) {
-          return await query
-            .where({ content_hash: args.id })
-            .orderBy("created_at", "desc")
-            .first()
-        } else {
-          return await query.findById(args.id)
-        }
+        return await query
+          .where((builder) => {
+            builder
+              .where({ content_hash: identifier })
+              .orWhere({ id: identifier })
+              .orWhere({ slug: identifier })
+          })
+          .orderBy("created_at", "desc")
+          .first()
       },
     },
     COMMENT: {

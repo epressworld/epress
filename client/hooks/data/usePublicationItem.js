@@ -19,7 +19,7 @@ export function usePublicationItem(options = {}) {
   const params = useParams()
   const searchParams = useSearchParams()
   const router = useRouter()
-  const publicationId = params.id
+  const slugOrId = params.id
   const isEditMode = searchParams.get("edit") === "true"
 
   const { authStatus, isNodeOwner } = useAuth()
@@ -57,12 +57,14 @@ export function usePublicationItem(options = {}) {
 
   // 处理编辑
   const handleEdit = (publication) => {
-    router.push(`/publications/${publication.id}?edit=true`)
+    const identifier = publication.slug || publication.id
+    router.push(`/publications/${identifier}?edit=true`)
   }
 
   // 取消编辑
   const handleCancelEdit = () => {
-    router.push(`/publications/${publicationId}`)
+    const identifier = publication?.slug || slugOrId
+    router.push(`/publications/${identifier}`)
   }
 
   // 保存编辑
@@ -75,6 +77,7 @@ export function usePublicationItem(options = {}) {
       const input = {
         id: id,
         body: content, // 直接传递 body 内容
+        slug: editData.slug || null,
       }
       if (publication.content.type === "FILE") {
         delete input.body
@@ -97,15 +100,25 @@ export function usePublicationItem(options = {}) {
         variables: { input },
         onCompleted: () => {
           toaster.create({
-            title: "保存成功",
+            title: t("common.submitSuccess"),
             description: t("common.contentUpdateSuccess"),
             type: "success",
           })
-          // 刷新数据
+          // 刷新数据并获取更新后的 publication
           setLoading(true)
-          refetchPublication().finally(() => setLoading(false))
-          // 退出编辑模式
-          router.push(`/publications/${publicationId}`)
+          refetchPublication({
+            id: publication?.id,
+          })
+            .then((result) => {
+              const identifier = result?.data?.fetch?.slug || slugOrId
+              router.push(`/publications/${identifier}`)
+              setLoading(false)
+            })
+            .catch(() => {
+              setLoading(false)
+              // 如果刷新失败，仍然使用当前 publicationId
+              router.push(`/publications/${slugOrId}`)
+            })
         },
         onError: (error) => {
           console.error("更新失败:", error)
@@ -266,14 +279,15 @@ export function usePublicationItem(options = {}) {
         variables: { input },
       })
 
-      const newId = data?.createPublication?.id
+      const newPublication = data?.createPublication
+      const identifier = newPublication?.slug || newPublication?.id
       toaster.create({
         description: t("common.publishSuccess"),
         type: "success",
       })
 
-      if (newId) {
-        router.push(`/publications/${newId}`)
+      if (identifier) {
+        router.push(`/publications/${identifier}`)
       }
     } catch (error) {
       console.error("发布失败:", error)
@@ -286,7 +300,7 @@ export function usePublicationItem(options = {}) {
 
   return {
     // 状态
-    publicationId,
+    slugOrId,
     isEditMode,
     publication,
     publicationLoading,
