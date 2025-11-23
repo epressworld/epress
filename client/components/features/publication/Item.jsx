@@ -7,6 +7,7 @@ import {
   Drawer,
   HStack,
   IconButton,
+  Input,
   Portal,
   Separator,
   Text,
@@ -52,6 +53,7 @@ export function PublicationItem({
   const commentsRef = useRef(null)
   const [isPublishing, setIsPublishing] = useState(false)
   const [_copied, copyToClipboard] = useCopyToClipboard()
+  const [quoteSlug, setQuoteSlug] = useState(null)
   const { t, formatDateTime, formatRelativeTime } = useIntl()
 
   // 评论 Drawer 状态
@@ -189,6 +191,7 @@ export function PublicationItem({
 
       const formData = {
         mode: "post",
+        slug: quoteSlug,
         content: editorContent,
         file: null,
       }
@@ -406,25 +409,38 @@ export function PublicationItem({
               </Dialog.Body>
 
               <Dialog.Footer>
-                <HStack gap={2}>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setIsQuoteDialogOpen(false)}
-                  >
-                    {t("publication.cancel")}
-                  </Button>
-                  <Button
-                    size="sm"
-                    colorPalette="orange"
-                    onClick={handleQuotePublish}
-                    loading={isPublishing}
-                    loadingText={t("publication.publishing")}
-                    disabled={isPublishing || !quoteContent.trim()}
-                  >
-                    <LuSend size={14} style={{ marginRight: "4px" }} />
-                    {t("publication.publish")}
-                  </Button>
+                <HStack justify="space-between" width="100%">
+                  {/* 左侧内容（左对齐） */}
+                  <HStack>
+                    <Input
+                      placeholder="SLUG"
+                      variant="flushed"
+                      name="slug"
+                      onChange={(e) => setQuoteSlug(e.target.value)}
+                    />
+                  </HStack>
+
+                  {/* 右侧内容（右对齐） */}
+                  <HStack gap={2}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setIsQuoteDialogOpen(false)}
+                    >
+                      {t("publication.cancel")}
+                    </Button>
+                    <Button
+                      size="sm"
+                      colorPalette="orange"
+                      onClick={handleQuotePublish}
+                      loading={isPublishing}
+                      loadingText={t("publication.publishing")}
+                      disabled={isPublishing || !quoteContent.trim()}
+                    >
+                      <LuSend size={14} style={{ marginRight: "4px" }} />
+                      {t("publication.publish")}
+                    </Button>
+                  </HStack>
                 </HStack>
               </Dialog.Footer>
             </Dialog.Content>

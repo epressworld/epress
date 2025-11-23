@@ -273,6 +273,7 @@ export function usePublicationItem(options = {}) {
       const input = {
         type: mode.toUpperCase(),
         body: formData.content,
+        slug: formData.slug || null,
       }
 
       const { data } = await createPublication({
