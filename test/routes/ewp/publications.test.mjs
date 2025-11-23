@@ -68,10 +68,48 @@ test.serial(
     t.is(pub.signature, "0x1234567890abcdef", "should return correct signature")
     t.is(pub.comment_count, 5, "should return correct comment_count")
     t.truthy(pub.created_at, "should return created_at")
+    t.is(pub.slug, null, "should return slug (null by default)")
 
     // 验证不包含 author 和 content 详情
     t.falsy(pub.author, "should not include author details")
     t.falsy(pub.content, "should not include content details")
+  },
+)
+
+test.serial(
+  "GET /publications should return slug field when present",
+  async (t) => {
+    // Arrange: 创建自节点数据
+    const selfNode = await Node.query().findOne({ is_self: true })
+    t.truthy(selfNode, "self node should exist")
+
+    const content = await Content.create({
+      type: "POST",
+      body: "# Slug Test Post\n\nThis is a slug test post.",
+    })
+
+    await Publication.query().insert({
+      content_hash: content.content_hash,
+      author_address: selfNode.address,
+      signature: "0x1234567890abcdef",
+      comment_count: 5,
+      slug: "my-custom-slug",
+    })
+
+    // Act: 发送 GET 请求
+    const response = await t.context.app.inject({
+      method: "GET",
+      url: "/ewp/publications",
+    })
+
+    // Assert
+    t.is(response.statusCode, 200, "should return 200 OK")
+
+    const result = JSON.parse(response.payload)
+    t.is(result.data.length, 1, "should return 1 publication")
+
+    const pub = result.data[0]
+    t.is(pub.slug, "my-custom-slug", "should return correct slug")
   },
 )
 

@@ -28,7 +28,9 @@ export default async function VerifyPage({ searchParams }) {
         fetchPolicy: "network-only",
       })
       if (data) {
-        redirect(`/publications/${data.confirmComment.publication.id}`)
+        const publication = data.confirmComment.publication
+        const identifier = publication.slug || publication.id
+        redirect(`/publications/${identifier}`)
       } else {
         return (
           <VerifyError message="Failed" description={JSON.stringify(error)} />
@@ -41,7 +43,9 @@ export default async function VerifyPage({ searchParams }) {
         fetchPolicy: "network-only",
       })
       if (data) {
-        redirect(`/publications/${data.confirmCommentDeletion.publication.id}`)
+        const publication = data.confirmCommentDeletion.publication
+        const identifier = publication.slug || publication.id
+        redirect(`/publications/${identifier}`)
       } else {
         return (
           <VerifyError message="Failed" description={JSON.stringify(error)} />

@@ -1,8 +1,20 @@
 "use client"
 
-import { Box, Button, HStack, Input, Text, VStack } from "@chakra-ui/react"
-import { useEffect, useRef } from "react"
+import {
+  Box,
+  Button,
+  Field,
+  HStack,
+  IconButton,
+  Input,
+  Popover,
+  Portal,
+  Text,
+  VStack,
+} from "@chakra-ui/react"
+import { useEffect, useRef, useState } from "react"
 import { FiArrowLeft, FiSave } from "react-icons/fi"
+import { LuLink } from "react-icons/lu"
 import { PostModeForm } from "@/components/features/publication"
 import { FileRenderer, UnifiedCard } from "@/components/ui"
 import { usePublicationForm } from "@/hooks/form"
@@ -18,6 +30,31 @@ export const PublicationEditForm = ({
 }) => {
   const { t } = useIntl()
   const postModeFormRef = useRef(null)
+  const [isSlugPopoverOpen, setIsSlugPopoverOpen] = useState(false)
+  const [slugError, setSlugError] = useState("")
+
+  // Slug 验证
+  const validateSlug = (value) => {
+    if (!value.trim()) {
+      setSlugError("")
+      return true
+    }
+    if (!/^[a-z0-9-]+$/.test(value)) {
+      setSlugError(
+        t("publication.slugInvalid") ||
+          "Slug can only contain lowercase letters, numbers, and hyphens.",
+      )
+      return false
+    }
+    setSlugError("")
+    return true
+  }
+
+  const handleSlugChange = (e) => {
+    const value = e.target.value
+    setSlug(value)
+    validateSlug(value)
+  }
 
   // 根据原始内容类型确定模式，不允许切换
   const originalMode = publication?.content?.type === "FILE" ? "file" : "post"
@@ -33,6 +70,8 @@ export const PublicationEditForm = ({
     fileDescription,
     setFileDescription,
     selectedFile,
+    slug,
+    setSlug,
     editor,
   } = usePublicationForm({
     initialContent:
@@ -54,6 +93,13 @@ export const PublicationEditForm = ({
       setFileDescription(publication.description)
     }
   }, [publication?.description, originalMode, setFileDescription])
+
+  // 设置初始 slug
+  useEffect(() => {
+    if (publication?.slug) {
+      setSlug(publication.slug)
+    }
+  }, [publication?.slug, setSlug])
 
   // 同步文件描述到content（文件模式下）
   useEffect(() => {
@@ -82,6 +128,7 @@ export const PublicationEditForm = ({
         mode,
         content: mode === "post" ? content : fileDescription,
         file: selectedFile, // 编辑模式下可能为null，这是正常的
+        slug: slug.trim() || null,
       }).then((_result) => {
         // 保存后退出全屏模式
         if (postModeFormRef.current) {
@@ -94,6 +141,50 @@ export const PublicationEditForm = ({
   const handleContentChange = (newContent) => {
     setContent(newContent)
   }
+
+  const renderSlugButton = (props = { variant: "plain", zIndex: 1500 }) => (
+    <Popover.Root
+      open={isSlugPopoverOpen}
+      onOpenChange={(e) => setIsSlugPopoverOpen(e.open)}
+    >
+      <Popover.Trigger asChild>
+        <IconButton
+          size="xs"
+          variant={props.variant}
+          aria-label={t("publication.setSlug") || "Set slug"}
+        >
+          <LuLink />
+        </IconButton>
+      </Popover.Trigger>
+      <Portal>
+        <Popover.Positioner>
+          <Popover.Content zIndex={props.zIndex}>
+            <Popover.Arrow />
+            <Popover.Body>
+              <VStack gap={2} align="stretch">
+                <Field.Root invalid={!!slugError}>
+                  <Field.Label>{t("publication.slug") || "Slug"}</Field.Label>
+                  <Input
+                    value={slug}
+                    onChange={handleSlugChange}
+                    placeholder={
+                      t("publication.slugPlaceholder") || "my-custom-slug"
+                    }
+                    disabled={disabled}
+                  />
+                  {slugError && <Field.ErrorText>{slugError}</Field.ErrorText>}
+                  <Field.HelperText>
+                    {t("publication.slugHelper") ||
+                      "Only lowercase letters, numbers, and hyphens allowed"}
+                  </Field.HelperText>
+                </Field.Root>
+              </VStack>
+            </Popover.Body>
+          </Popover.Content>
+        </Popover.Positioner>
+      </Portal>
+    </Popover.Root>
+  )
 
   return (
     <UnifiedCard.Root overflow="hidden">
@@ -118,7 +209,11 @@ export const PublicationEditForm = ({
                 content={content}
                 onContentChange={handleContentChange}
                 showFullscreenButton={true}
-                fullscreenActions={
+                fullscreenLeftActions={renderSlugButton({
+                  zIndex: 10000,
+                  variant: "plain",
+                })}
+                fullscreenRightActions={
                   <Button
                     colorPalette="orange"
                     size="sm"
@@ -147,10 +242,10 @@ export const PublicationEditForm = ({
                 {/* 文件描述编辑 */}
                 <VStack gap={2} align="stretch">
                   <Text fontSize="sm" color="gray.600">
-                    编辑文件描述
+                    {t("publication.editFileDescription")}
                   </Text>
                   <Input
-                    placeholder="输入文件描述"
+                    placeholder={t("publication.addFileDescription")}
                     value={fileDescription}
                     onChange={(e) => setFileDescription(e.target.value)}
                     disabled={disabled || isSigned}
@@ -163,18 +258,30 @@ export const PublicationEditForm = ({
           {/* 签名状态提示 */}
           {isSigned && (
             <Text fontSize="sm" color="red.500" textAlign="center">
-              ⚠️ 已签名的内容无法编辑
+              {t("publication.signedNotEditable")}
             </Text>
           )}
 
           <HStack justify="space-between" align="center">
-            <Button size="sm" variant="ghost" onClick={onCancel} gap={2}>
-              <FiArrowLeft />
-              取消编辑
-            </Button>
+            <HStack gap={2}>
+              <Button
+                size="sm"
+                variant="plain"
+                onClick={onCancel}
+                gap={2}
+                p={0}
+              >
+                <FiArrowLeft />
+                {t("publication.cancelEdit")}
+              </Button>
+              {postModeFormRef?.current?.isFullscreen
+                ? null
+                : renderSlugButton()}
+            </HStack>
             <Button
               colorPalette="orange"
               onClick={handleSave}
+              size="sm"
               loading={isLoading}
               loadingText={t("publication.saving")}
               disabled={

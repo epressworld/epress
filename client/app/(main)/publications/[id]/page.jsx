@@ -1,6 +1,5 @@
-import { notFound, redirect } from "next/navigation"
 import { PublicationItemPage } from "@/components/features/publication"
-import { FETCH, SEARCH_PUBLICATIONS } from "@/lib/apollo"
+import { FETCH } from "@/lib/apollo"
 import { PreloadQuery, query } from "@/lib/apollo/client"
 import {
   generatePageMetadata,
@@ -67,60 +66,8 @@ export async function generateMetadata({ params }) {
   }
 }
 
-export default async function PublicationDetailServerPage({
-  params,
-  searchParams,
-}) {
+export default async function PublicationDetailServerPage({ params }) {
   const { id } = await params
-
-  const isContentHash =
-    typeof id === "string" && id.startsWith("0x") && id.length === 66
-
-  if (isContentHash) {
-    const tsParam = searchParams?.timestamp
-    let targetNodeId = null
-
-    const { data } = await query({
-      query: SEARCH_PUBLICATIONS,
-      variables: {
-        filterBy: { content_hash: id },
-        orderBy: "-created_at",
-        first: 10,
-      },
-      fetchPolicy: "cache-first",
-    })
-
-    const edges = data?.search?.edges || []
-
-    if (edges.length === 0) {
-      notFound()
-    }
-
-    if (tsParam) {
-      const unixTs = parseInt(tsParam, 10)
-      if (!Number.isNaN(unixTs)) {
-        const start = new Date(unixTs * 1000)
-        const end = new Date((unixTs + 1) * 1000)
-        const matched = edges.find((edge) => {
-          const createdAt = new Date(edge?.node?.created_at)
-          return createdAt >= start && createdAt < end
-        })
-        if (matched?.node?.id) {
-          targetNodeId = matched.node.id
-        }
-      }
-    }
-
-    if (!targetNodeId) {
-      targetNodeId = edges[0]?.node?.id
-    }
-
-    if (!targetNodeId) {
-      notFound()
-    }
-
-    return redirect(`/publications/${targetNodeId}`)
-  }
 
   const variables = {
     type: "PUBLICATION",

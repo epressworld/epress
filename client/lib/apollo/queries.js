@@ -28,6 +28,7 @@ const segments = {
   `,
   publication: `
     id
+    slug
     description
     author {
       address

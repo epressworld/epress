@@ -76,6 +76,7 @@ test.serial(
             signature: signature,
             comment_count: 5,
             created_at: createdAt.toISOString(),
+            slug: "synced-slug",
           },
         ],
         pagination: {
@@ -95,6 +96,7 @@ test.serial(
       .reply(200, textContent, {
         "content-type": "text/markdown",
         "content-description": "",
+        link: '</slug/synced-slug>; rel="canonical"',
       })
 
     // Act: 执行同步
@@ -128,6 +130,12 @@ test.serial(
       syncedPublication.comment_count,
       0,
       "should save comment count as 0 during sync",
+    )
+    // Verify slug was extracted from JSON (preferred) or Link header
+    t.is(
+      syncedPublication.slug,
+      "synced-slug",
+      "should save slug from JSON or Link header",
     )
 
     const syncedContent = await Content.query()
@@ -559,6 +567,7 @@ test.serial(
       .reply(200, textContent, {
         "content-type": "text/markdown",
         "content-description": "",
+        link: '</slug/test-slug>; rel="canonical"',
       })
 
     // Act: 执行同步
@@ -587,6 +596,11 @@ test.serial(
       syncedPublication.signature,
       signature,
       "should save correct signature",
+    )
+    t.is(
+      syncedPublication.slug,
+      "test-slug",
+      "should save slug from Link header",
     )
 
     const syncedContent = await Content.query()

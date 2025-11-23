@@ -90,6 +90,7 @@ export function usePublicationList({ variables, keyword: _keyword }) {
       const input = {
         type: mode.toUpperCase(),
         body: formData.content,
+        slug: formData.slug || null,
       }
 
       // 如果有文件,需要特殊处理
@@ -105,6 +106,7 @@ export function usePublicationList({ variables, keyword: _keyword }) {
                 type: mode.toUpperCase(),
                 description: formData.content,
                 file: null,
+                slug: formData.slug || null,
               },
             },
           }),

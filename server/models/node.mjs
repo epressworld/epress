@@ -169,7 +169,7 @@ export class Node extends Model {
        * @returns {Promise<Object>} 同步结果
        */
       publication: async (typedData, signature, options = {}) => {
-        const { timeout = 30000 } = options
+        const { timeout = 30000, slug: jsonSlug } = options
 
         const result = {
           success: false,
@@ -270,6 +270,27 @@ export class Node extends Model {
           const contentDescription = decodeURIComponent(
             contentResponse.headers.get("content-description") || "",
           )
+          // 从 Link header 提取 slug
+          let extractedSlug = null
+          const linkHeader = contentResponse.headers.get("link")
+          if (linkHeader) {
+            // 解析 Link header: <URI>; rel="canonical"
+            const canonicalMatch = linkHeader.match(
+              /<([^>]+)>;\s*rel=["']canonical["']/i,
+            )
+            if (canonicalMatch) {
+              const canonicalUrl = canonicalMatch[1]
+              // 提取 /slug/{slug} 中的 slug
+              const slugMatch = canonicalUrl.match(/\/slug\/([^/]+)$/)
+              if (slugMatch) {
+                extractedSlug = slugMatch[1]
+              }
+            }
+          }
+          // 如果 Link header 中没有 slug，使用从 JSON 传入的 slug
+          if (!extractedSlug && jsonSlug) {
+            extractedSlug = jsonSlug
+          }
           const isTextContent = fetchedContentType === "text/markdown"
 
           if (isTextContent) {
@@ -345,6 +366,7 @@ export class Node extends Model {
               typedData.message.timestamp * 1000,
             ).toISOString(),
             description: contentDescription, // Add description for FILE type
+            slug: extractedSlug, // 从 Link header 提取的 slug
           })
 
           result.synced = true
@@ -445,7 +467,7 @@ export class Node extends Model {
                       Math.floor(new Date(pub.created_at).getTime() / 1000),
                     ),
                     pub.signature,
-                    { timeout },
+                    { timeout, slug: pub.slug },
                   )
 
                   if (syncResult.success) {

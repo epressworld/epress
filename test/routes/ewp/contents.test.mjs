@@ -64,6 +64,52 @@ test("GET /contents/:content_hash should return Markdown content successfully", 
     markdownContent,
     "response body should be the Markdown content",
   )
+
+  // Verify Link header with canonical (should use ID when slug is null)
+  const linkHeader = response.headers.link
+  t.truthy(linkHeader, "Link header should be present")
+  t.true(
+    linkHeader.includes('rel="canonical"'),
+    "Link header should contain canonical relation",
+  )
+})
+
+test("GET /contents/:content_hash should return Link header with slug in canonical", async (t) => {
+  // Arrange: Insert a Markdown content record with slug
+  const markdownContent = "# Hello World\n\nThis is a test post with slug."
+
+  const content = await Content.create({
+    type: "POST",
+    body: markdownContent,
+  })
+
+  const _publication = await Publication.query().insert({
+    content_hash: content.content_hash,
+    author_address: t.context.selfNode.address,
+    signature: "0x123",
+    slug: "my-test-slug",
+  })
+
+  // Act: Send GET request to /contents/:content_hash
+  const response = await t.context.app.inject({
+    method: "GET",
+    url: `/ewp/contents/${content.content_hash}`,
+  })
+
+  // Assert
+  t.is(response.statusCode, 200, "should return 200 OK")
+
+  // Verify Link header with canonical using slug
+  const linkHeader = response.headers.link
+  t.truthy(linkHeader, "Link header should be present")
+  t.true(
+    linkHeader.includes('rel="canonical"'),
+    "Link header should contain canonical relation",
+  )
+  t.true(
+    linkHeader.includes("/slug/my-test-slug"),
+    "Link header should contain slug in canonical URL",
+  )
 })
 
 test("GET /contents/:content_hash should return PNG image content successfully", async (t) => {
