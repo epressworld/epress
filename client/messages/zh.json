@@ -224,6 +224,7 @@
     "setSlug": "设置SLUG",
     "slug": "SLUG",
     "slugPlaceholder": "唯一URL标识",
+    "slugInvalid": "SLUG格式错误",
     "slugHelper": "只允许小写字母、数字和连字符（-）"
   },
   "comment": {

@@ -224,6 +224,7 @@
     "setSlug": "Set SLUG",
     "slug": "SLUG",
     "slugPlaceholder": "Unique URL identifier",
+    "slugInvalid": "Invalid SLUG",
     "slugHelper": "Only lowercase letters, numbers, and hyphens (-) are allowed"
   },
   "comment": {
