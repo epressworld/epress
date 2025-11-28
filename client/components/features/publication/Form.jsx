@@ -20,6 +20,8 @@ import { UnifiedCard } from "@/components/ui"
 import { usePublicationForm } from "@/hooks/form"
 import { useIntl } from "@/hooks/utils"
 
+const SLUG_PATTERN = /^[a-z0-9-]+$/
+
 export const PublicationForm = ({
   initialContent = "",
   initialMode = "post",
@@ -34,32 +36,9 @@ export const PublicationForm = ({
 }) => {
   const { t } = useIntl()
   const postModeFormRef = useRef(null)
-  const [hideSlugButton, setHideSlugButton] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const [isSlugPopoverOpen, setIsSlugPopoverOpen] = useState(false)
   const [slugError, setSlugError] = useState("")
-
-  // Slug 验证
-  const validateSlug = (value) => {
-    if (!value.trim()) {
-      setSlugError("")
-      return true
-    }
-    if (!/^[a-z0-9-]+$/.test(value)) {
-      setSlugError(
-        t("publication.slugInvalid") ||
-          "Slug can only contain lowercase letters, numbers, and hyphens.",
-      )
-      return false
-    }
-    setSlugError("")
-    return true
-  }
-
-  const handleSlugChange = (e) => {
-    const value = e.target.value
-    setSlug(value)
-    validateSlug(value)
-  }
 
   const {
     mode,
@@ -86,25 +65,55 @@ export const PublicationForm = ({
     disabled,
   })
 
-  const handleFormSubmit = () => {
+  // Slug validation
+  const validateSlug = (value) => {
+    if (!value.trim()) {
+      setSlugError("")
+      return true
+    }
+
+    if (!SLUG_PATTERN.test(value)) {
+      setSlugError(
+        t("publication.slugInvalid") ||
+          "Slug can only contain lowercase letters, numbers, and hyphens.",
+      )
+      return false
+    }
+
+    setSlugError("")
+    return true
+  }
+
+  const handleSlugChange = (e) => {
+    const value = e.target.value
+    setSlug(value)
+    validateSlug(value)
+  }
+
+  const handleFullscreenChange = (fullscreen) => {
+    setIsFullscreen(fullscreen)
+  }
+
+  const handleFormSubmit = async () => {
     const formData = handleSubmit()
     if (formData && onSubmit) {
-      onSubmit(formData).then((_result) => {
-        // 提交后退出全屏模式
-        if (postModeFormRef.current) {
-          postModeFormRef.current.exitFullscreen()
-        }
-      })
+      await onSubmit(formData)
+      postModeFormRef.current?.exitFullscreen()
     }
   }
 
   const handleContentChange = (newContent) => {
     setContent(newContent)
-    if (onContentChange) {
-      onContentChange(newContent, mode, fileDescription, selectedFile)
-    }
+    onContentChange?.(newContent, mode, fileDescription, selectedFile)
   }
-  const renderSlugButton = (props = { variant: "subtle", zIndex: null }) => (
+
+  const isPublishDisabled =
+    disabled ||
+    isLoading ||
+    (mode === "post" && !content.trim()) ||
+    (mode === "file" && (!selectedFile || !fileDescription.trim()))
+
+  const renderSlugButton = (variant = "subtle", zIndex = null) => (
     <Popover.Root
       open={isSlugPopoverOpen}
       onOpenChange={(e) => setIsSlugPopoverOpen(e.open)}
@@ -112,7 +121,7 @@ export const PublicationForm = ({
       <Popover.Trigger asChild>
         <IconButton
           size="xs"
-          variant={props.variant}
+          variant={variant}
           aria-label={t("publication.setSlug") || "Set slug"}
         >
           <LuLink />
@@ -120,18 +129,16 @@ export const PublicationForm = ({
       </Popover.Trigger>
       <Portal>
         <Popover.Positioner>
-          <Popover.Content zIndex={props.zIndex}>
+          <Popover.Content zIndex={zIndex}>
             <Popover.Arrow />
             <Popover.Body>
               <VStack gap={2} align="stretch">
                 <Field.Root invalid={!!slugError}>
-                  <Field.Label>{t("publication.slug") || "Slug"}</Field.Label>
+                  <Field.Label>{t("publication.slug")}</Field.Label>
                   <Input
                     value={slug}
                     onChange={handleSlugChange}
-                    placeholder={
-                      t("publication.slugPlaceholder") || "my-custom-slug"
-                    }
+                    placeholder={t("publication.slugPlaceholder")}
                     disabled={disabled}
                   />
                   {slugError && <Field.ErrorText>{slugError}</Field.ErrorText>}
@@ -148,6 +155,20 @@ export const PublicationForm = ({
     </Popover.Root>
   )
 
+  const renderPublishButton = () => (
+    <Button
+      colorPalette="orange"
+      size="sm"
+      onClick={handleFormSubmit}
+      loading={isLoading}
+      loadingText={t("publication.publishing")}
+      disabled={isPublishDisabled}
+    >
+      <LuSend />
+      {t("publication.publish")}
+    </Button>
+  )
+
   return (
     <UnifiedCard.Root mb={2}>
       {mode === "file" && (
@@ -161,9 +182,10 @@ export const PublicationForm = ({
           />
         </UnifiedCard.Header>
       )}
+
       <UnifiedCard.Body>
         <VStack gap={4} align="stretch">
-          {/* 内容区域 */}
+          {/* Content Area */}
           {mode === "post" ? (
             <Box minH="120px">
               <PostModeForm
@@ -172,24 +194,9 @@ export const PublicationForm = ({
                 content={content}
                 onContentChange={handleContentChange}
                 showFullscreenButton={true}
-                onFullscreen={(isFullscreen) => setHideSlugButton(isFullscreen)}
-                fullscreenLeftActions={renderSlugButton({
-                  zIndex: 10000,
-                  variant: "plain",
-                })}
-                fullscreenRightActions={
-                  <Button
-                    colorPalette="orange"
-                    size="sm"
-                    onClick={handleFormSubmit}
-                    loading={isLoading}
-                    loadingText={t("publication.publishing")}
-                    disabled={disabled || isLoading || !content.trim()}
-                  >
-                    <LuSend />
-                    {t("publication.publish")}
-                  </Button>
-                }
+                onFullscreen={handleFullscreenChange}
+                fullscreenLeftActions={renderSlugButton("plain", 10000)}
+                fullscreenRightActions={renderPublishButton()}
                 disabled={disabled}
               />
             </Box>
@@ -201,14 +208,16 @@ export const PublicationForm = ({
               disabled={disabled}
             />
           )}
-          {/* Tabs和发布按钮在同一行，在内容下方 */}
+
+          {/* Mode Tabs and Publish Button */}
           <HStack justify="space-between" align="center">
             <HStack gap={2}>
               <Group attached>
                 <Button
                   size="xs"
                   variant={mode === "post" ? "solid" : "subtle"}
-                  onClick={(_e) => setMode("post")}
+                  onClick={() => setMode("post")}
+                  disabled={disabled}
                 >
                   <FiFileText />
                   {t("publication.postMode")}
@@ -216,31 +225,18 @@ export const PublicationForm = ({
                 <Button
                   size="xs"
                   variant={mode === "file" ? "solid" : "subtle"}
-                  onClick={(_e) => setMode("file")}
+                  onClick={() => setMode("file")}
+                  disabled={disabled}
                 >
                   <FiFile />
                   {t("publication.fileMode")}
                 </Button>
               </Group>
-              {!hideSlugButton && renderSlugButton()}
+
+              {!isFullscreen && renderSlugButton()}
             </HStack>
 
-            <Button
-              colorPalette="orange"
-              size="sm"
-              onClick={handleFormSubmit}
-              loading={isLoading}
-              loadingText={t("publication.publishing")}
-              disabled={
-                disabled ||
-                isLoading ||
-                (mode === "post" && !content.trim()) ||
-                (mode === "file" && (!selectedFile || !fileDescription.trim()))
-              }
-            >
-              <LuSend />
-              {t("publication.publish")}
-            </Button>
+            {renderPublishButton()}
           </HStack>
         </VStack>
       </UnifiedCard.Body>

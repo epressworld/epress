@@ -9,7 +9,6 @@ import {
   IconButton,
   Portal,
   Textarea,
-  VStack,
 } from "@chakra-ui/react"
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react"
 import { LuMaximize2, LuMinimize2 } from "react-icons/lu"
@@ -17,17 +16,17 @@ import { RichTextEditor } from "@/components/ui/editor"
 import { useIntl } from "@/hooks/utils"
 
 /**
- * PostModeForm - 帖子模式表单组件
- * 支持所见即所得编辑和全屏模式下的源码编辑
+ * PostModeForm - Post mode form component with WYSIWYG and fullscreen support
  *
  * @param {Object} props
- * @param {Object} props.editor - TipTap 编辑器实例
- * @param {string} props.content - 当前内容
- * @param {Function} props.onContentChange - 内容变化回调
- * @param {boolean} [props.showFullscreenButton=false] - 是否显示全屏按钮
- * @param {React.ReactNode} [props.fullscreenActions=null] - 全屏模式下的额外操作按钮
- * @param {boolean} [props.disabled=false] - 是否禁用
- * @param {React.Ref} ref - 用于暴露 exitFullscreen 方法
+ * @param {Object} props.editor - TipTap editor instance
+ * @param {string} props.content - Current content
+ * @param {Function} props.onContentChange - Content change callback
+ * @param {boolean} [props.showFullscreenButton=false] - Show fullscreen button
+ * @param {Function} [props.onFullscreen] - Fullscreen state change callback
+ * @param {React.ReactNode} [props.fullscreenLeftActions] - Left actions in fullscreen
+ * @param {React.ReactNode} [props.fullscreenRightActions] - Right actions in fullscreen
+ * @param {boolean} [props.disabled=false] - Disabled state
  */
 export const PostModeForm = forwardRef(function PostModeForm(
   {
@@ -35,9 +34,9 @@ export const PostModeForm = forwardRef(function PostModeForm(
     content,
     onContentChange,
     showFullscreenButton = false,
+    onFullscreen,
     fullscreenLeftActions = null,
     fullscreenRightActions = null,
-    onFullscreen = () => {},
     disabled = false,
   },
   ref,
@@ -46,128 +45,88 @@ export const PostModeForm = forwardRef(function PostModeForm(
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isSourceMode, setIsSourceMode] = useState(false)
 
+  // Handle ESC key to exit fullscreen
   useEffect(() => {
-    const handleEsc = (event) => {
+    if (!isFullscreen) return
+
+    const handleEscape = (event) => {
       if (event.key === "Escape" || event.keyCode === 27) {
-        if (isFullscreen) {
-          exitFullscreen()
-        }
+        setFullscreenState(false)
       }
     }
 
-    window.addEventListener("keydown", handleEsc)
-
-    // 清理事件监听器
-    return () => {
-      window.removeEventListener("keydown", handleEsc)
-    }
+    window.addEventListener("keydown", handleEscape)
+    return () => window.removeEventListener("keydown", handleEscape)
   }, [isFullscreen])
 
-  const exitFullscreen = () => {
-    if (isFullscreen) {
-      setIsFullscreen(false)
-      if (isSourceMode) {
-        setIsSourceMode(false)
-        if (editor && content) {
-          editor.commands.setContent(content)
-        }
+  const setFullscreenState = (fullscreen) => {
+    if (isFullscreen === fullscreen) return
+
+    setIsFullscreen(fullscreen)
+    onFullscreen?.(fullscreen)
+
+    // Auto exit source mode when leaving fullscreen
+    if (!fullscreen && isSourceMode) {
+      setIsSourceMode(false)
+      if (editor && content) {
+        editor.commands.setContent(content)
       }
     }
   }
 
-  // 暴露 exitFullscreen 方法给父组件
-  useImperativeHandle(ref, () => ({
-    exitFullscreen,
-    isFullscreen,
-  }))
-
-  const toggleFullscreen = () => {
-    setIsFullscreen(!isFullscreen)
-    // 退出全屏时自动切换回所见即所得模式
-    if (isFullscreen && isSourceMode) {
-      exitFullscreen()
-    }
-    onFullscreen(!isFullscreen)
-  }
+  const toggleFullscreen = () => setFullscreenState(!isFullscreen)
 
   const handleSourceModeToggle = (details) => {
     const checked = details.checked
     setIsSourceMode(checked)
 
-    if (checked && editor) {
-      // 切换到源代码模式：从编辑器获取 Markdown
+    if (!editor) return
+
+    if (checked) {
+      // Switch to source mode: get Markdown from editor
       const markdown = editor.storage.markdown.getMarkdown()
-      if (onContentChange) {
-        onContentChange(markdown)
-      }
-    } else if (!checked && editor) {
-      // 切换回 WYSIWYG 模式：将 Markdown 设置回编辑器
+      onContentChange?.(markdown)
+    } else {
+      // Switch to WYSIWYG: set Markdown back to editor
       editor.commands.setContent(content)
     }
   }
 
   const handleSourceContentChange = (e) => {
-    const newContent = e.target.value
-    if (onContentChange) {
-      onContentChange(newContent)
-    }
+    onContentChange?.(e.target.value)
   }
 
-  // 全屏模式下的控制栏
-  const fullscreenControls = (
-    <Box>
-      <Container
-        maxW="6xl"
-        borderTop="1px solid"
-        borderColor="gray.200"
-        p={3}
-        bg="white"
-        _dark={{ borderColor: "gray.700", bg: "gray.900" }}
-      >
-        <HStack justify="space-between" align="center">
-          <Flex alignItems={"center"} gap={2}>
-            <Checkbox.Root
-              checked={isSourceMode}
-              onCheckedChange={handleSourceModeToggle}
-            >
-              <Checkbox.HiddenInput />
-              <Checkbox.Control />
-              <Checkbox.Label>{t("publication.sourceCodeMode")}</Checkbox.Label>
-            </Checkbox.Root>
-            {fullscreenLeftActions}
-          </Flex>
-          {fullscreenRightActions || <Box />}
-        </HStack>
-      </Container>
-    </Box>
-  )
+  // Expose methods to parent component
+  useImperativeHandle(ref, () => ({
+    exitFullscreen: () => setFullscreenState(false),
+    isFullscreen,
+  }))
 
-  // 非全屏模式：只显示所见即所得编辑器
+  // Normal mode: WYSIWYG editor only
   if (!isFullscreen) {
     return (
-      <VStack gap={4} align="stretch">
-        <Box position="relative">
-          {showFullscreenButton && (
-            <IconButton
-              aria-label={t("publication.enterFullscreen")}
-              size="xs"
-              variant="ghost"
-              position="absolute"
-              top={0}
-              right={0}
-              zIndex={10}
-              onClick={toggleFullscreen}
-            >
-              <LuMaximize2 />
-            </IconButton>
-          )}
-          <RichTextEditor editor={editor} minHeight="150px" />
-        </Box>
-      </VStack>
+      <Box position="relative">
+        {showFullscreenButton && (
+          <IconButton
+            aria-label={t("publication.enterFullscreen")}
+            size="xs"
+            variant="ghost"
+            position="absolute"
+            top={0}
+            right={0}
+            zIndex={10}
+            onClick={toggleFullscreen}
+            disabled={disabled}
+          >
+            <LuMaximize2 />
+          </IconButton>
+        )}
+        <RichTextEditor editor={editor} minHeight="150px" />
+      </Box>
     )
   }
 
-  // 全屏模式
+  // Fullscreen mode
   return (
     <Portal>
       <Box
@@ -182,7 +141,7 @@ export const PostModeForm = forwardRef(function PostModeForm(
         display="flex"
         flexDirection="column"
       >
-        {/* 编辑区域 */}
+        {/* Editor Area */}
         <Box flex={1} overflow="hidden">
           <Container maxW="6xl" h="full" p={3}>
             <Box
@@ -191,7 +150,7 @@ export const PostModeForm = forwardRef(function PostModeForm(
               display="flex"
               flexDirection="column"
             >
-              {/* 全屏退出按钮 */}
+              {/* Exit Fullscreen Button */}
               <IconButton
                 aria-label={t("publication.exitFullscreen")}
                 size="xs"
@@ -205,7 +164,7 @@ export const PostModeForm = forwardRef(function PostModeForm(
                 <LuMinimize2 />
               </IconButton>
 
-              {/* 内容编辑区域 */}
+              {/* Content Editor */}
               {isSourceMode ? (
                 <Textarea
                   p={0}
@@ -241,8 +200,35 @@ export const PostModeForm = forwardRef(function PostModeForm(
           </Container>
         </Box>
 
-        {/* 底部控制栏 */}
-        {fullscreenControls}
+        {/* Bottom Control Bar */}
+        <Box>
+          <Container
+            maxW="6xl"
+            borderTop="1px solid"
+            borderColor="gray.200"
+            p={3}
+            bg="white"
+            _dark={{ borderColor: "gray.700", bg: "gray.900" }}
+          >
+            <HStack justify="space-between" align="center">
+              <Flex alignItems="center" gap={2}>
+                <Checkbox.Root
+                  checked={isSourceMode}
+                  onCheckedChange={handleSourceModeToggle}
+                  disabled={disabled}
+                >
+                  <Checkbox.HiddenInput />
+                  <Checkbox.Control />
+                  <Checkbox.Label>
+                    {t("publication.sourceCodeMode")}
+                  </Checkbox.Label>
+                </Checkbox.Root>
+                {fullscreenLeftActions}
+              </Flex>
+              {fullscreenRightActions}
+            </HStack>
+          </Container>
+        </Box>
       </Box>
     </Portal>
   )
