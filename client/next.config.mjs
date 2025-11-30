@@ -2,6 +2,7 @@ import "../config/index.mjs"
 export default {
   experimental: {
     optimizePackageImports: ["@chakra-ui/react"],
+    proxyClientMaxBodySize: "100mb",
   },
   async headers() {
     return [
