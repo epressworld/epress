@@ -1,5 +1,14 @@
 import "../config/index.mjs"
+
 export default {
+  // 新增这一项配置
+  serverExternalPackages: [
+    "pino",
+    "pino-pretty",
+    "thread-stream",
+    "@walletconnect/logger",
+  ],
+
   experimental: {
     optimizePackageImports: ["@chakra-ui/react"],
     proxyClientMaxBodySize: "100mb",
