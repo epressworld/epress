@@ -3,6 +3,7 @@
   "scripts": {
     "prepare": "if [ \"$NODE_ENV\" != \"production\" ]; then husky; fi",
     "start": "NODE_ENV=production node commands/start.mjs",
+    "start:pm2": "pm2-runtime start ecosystem.config.cjs",
     "dev": "NODE_ENV=development nodemon -w ./server commands/start.mjs",
     "build": "next build ./client",
     "migrate": "node commands/migrate.mjs",
