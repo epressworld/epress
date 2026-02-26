@@ -13,7 +13,7 @@ const { plugin, Loader, type } = graphql
 export default function () {
   return plugin({
     graphiql: true,
-    path: "/api/graphql",
+    prefix: "/api",
     allowBatchedQueries: true,
     context: async (request, reply) => {
       // request.user is already populated by the preHandler hook
