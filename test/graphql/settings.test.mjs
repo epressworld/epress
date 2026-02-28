@@ -3,6 +3,10 @@ import test from "ava"
 import { Setting } from "../../server/models/index.mjs"
 import { TEST_ETHEREUM_ADDRESS_NODE_A } from "../setup.mjs"
 
+test.beforeEach(async (_t) => {
+  await Setting.knex()("settings").where({ key: "pwa_app_name" }).delete()
+})
+
 test("settings query should return settings data without mailTransport", async (t) => {
   const { graphqlClient } = t.context
   await Setting.set("mail_transport", "test")
@@ -75,6 +79,47 @@ test("settings query should return settings data with mailTransport", async (t) 
   t.is(data.settings.mail.mailTransport, "test", "mailTransport should be test")
 })
 
+test("settings query should return pwaAppName when not set", async (t) => {
+  const { graphqlClient } = t.context
+
+  const query = `
+    query GetSettings {
+      settings {
+        pwaAppName
+      }
+    }
+  `
+
+  const { data, errors } = await graphqlClient.query(query, {})
+
+  t.falsy(errors, "Should not have any GraphQL errors")
+  t.truthy(data.settings, "Settings data should exist")
+  t.is(data.settings.pwaAppName, null, "pwaAppName should be null when not set")
+})
+
+test("settings query should return pwaAppName when set", async (t) => {
+  const { graphqlClient } = t.context
+  await Setting.set("pwa_app_name", "My Custom App")
+
+  const query = `
+    query GetSettings {
+      settings {
+        pwaAppName
+      }
+    }
+  `
+
+  const { data, errors } = await graphqlClient.query(query, {})
+
+  t.falsy(errors, "Should not have any GraphQL errors")
+  t.truthy(data.settings, "Settings data should exist")
+  t.is(
+    data.settings.pwaAppName,
+    "My Custom App",
+    "pwaAppName should be 'My Custom App'",
+  )
+})
+
 // Test case 2: Successfully update settings
 test("updateSettings mutation should update a public setting with valid JWT", async (t) => {
   const { graphqlClient, createClientJwt } = t.context
@@ -122,6 +167,45 @@ test("updateSettings mutation should update a public setting with valid JWT", as
   await Setting.knex()("settings")
     .where({ key: "enable_rss" })
     .update({ value: "true" })
+})
+
+test("updateSettings mutation should update pwaAppName with valid JWT", async (t) => {
+  const { graphqlClient, createClientJwt } = t.context
+
+  const ownerAddress = TEST_ETHEREUM_ADDRESS_NODE_A
+  const token = await createClientJwt(ownerAddress)
+
+  const mutation = `
+    mutation UpdateSettings($input: UpdateSettingsInput!) {
+      updateSettings(input: $input) {
+        pwaAppName
+      }
+    }
+  `
+
+  const input = { pwaAppName: "My PWA App" }
+
+  const { data, errors } = await graphqlClient.query(mutation, {
+    variables: { input },
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  t.falsy(errors, "Should not have any GraphQL errors")
+  t.truthy(data.updateSettings, "Should return updated settings data")
+  t.is(
+    data.updateSettings.pwaAppName,
+    "My PWA App",
+    "pwaAppName should be updated to 'My PWA App'",
+  )
+
+  // Verify in database
+  const savedValue = await Setting.get("pwa_app_name")
+  t.is(savedValue, "My PWA App", "pwa_app_name should be saved in database")
+
+  // Cleanup
+  await Setting.knex()("settings").where({ key: "pwa_app_name" }).delete()
 })
 
 // Test case 3: Successfully update another setting

@@ -22,6 +22,7 @@ const SettingsType = graphql.type("ObjectType", {
     defaultLanguage: { type: graphql.type("NonNull", graphql.type("String")) },
     defaultTheme: { type: graphql.type("NonNull", graphql.type("String")) },
     walletConnectProjectId: { type: graphql.type("String") },
+    pwaAppName: { type: graphql.type("String") },
     mail: { type: graphql.type("NonNull", MailType) },
     vapidPublicKey: { type: graphql.type("String") },
   },
@@ -69,6 +70,7 @@ const settingsQuery = {
         walletConnectProjectId:
           allSettings.walletconnect_projectid ||
           defaults.walletConnectProjectId,
+        pwaAppName: allSettings.pwa_app_name || null,
         // 新的 mail 对象结构
         mail: {
           enabled: mailEnabled,
