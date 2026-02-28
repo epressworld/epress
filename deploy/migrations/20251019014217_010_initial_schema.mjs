@@ -153,6 +153,18 @@ export const up = async (knex) => {
     // 索引：优化按作者ID查询
     table.index("author_id")
   })
+
+  // 创建 tokens 表（用于 token 撤销和审计）
+  await knex.schema.createTable("tokens", (table) => {
+    table.string("id").primary()
+    table.text("token").notNullable()
+    table.timestamp("expires_at").notNullable()
+    table.boolean("revoked").notNullable().defaultTo(false)
+    table.timestamp("created_at").defaultTo(knex.fn.now())
+
+    // 索引：优化按过期时间查询（清理过期 token）
+    table.index("expires_at")
+  })
 }
 
 /**
@@ -162,6 +174,7 @@ export const up = async (knex) => {
 export const down = async (knex) => {
   // 按照依赖关系的相反顺序删除表
   // down 函数不需要更改，dropTableIfExists 会自动删除表及其所有索引
+  await knex.schema.dropTableIfExists("tokens")
   await knex.schema.dropTableIfExists("comments")
   await knex.schema.dropTableIfExists("connections")
   await knex.schema.dropTableIfExists("publication2hashtag")

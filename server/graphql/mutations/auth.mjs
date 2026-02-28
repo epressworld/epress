@@ -2,6 +2,7 @@ import { GraphQLError } from "graphql"
 import mercurius from "mercurius"
 import { SiweMessage } from "siwe"
 import { graphql } from "solidify.js"
+import { Token } from "../../models/index.mjs"
 
 const { ErrorWithProps } = mercurius
 
@@ -131,21 +132,20 @@ const authMutations = {
           )
         }
 
-        // 5. 生成 JWT token (using Fastify's JWT plugin)
+        // 5. 生成 JWT token
         // Get JWT expiration from request config cache
         const jwtExpiresIn = await request.config.getSetting(
           "jwt_expires_in",
           "24h",
         )
 
-        const token = await context.app.jwt.sign(
-          {
-            aud: "client",
-            sub: address,
-            iss: selfNode.address,
-          },
-          { expiresIn: jwtExpiresIn },
-        )
+        const token = await Token.issue({
+          app: context.app,
+          sub: address,
+          aud: "client",
+          iss: selfNode.address,
+          expiresIn: jwtExpiresIn,
+        })
 
         const duration = Date.now() - startTime
         request.log.info(
@@ -183,6 +183,12 @@ const authMutations = {
         if (error.message?.includes("Invalid or expired nonce")) {
           throw new ErrorWithProps("Invalid or expired nonce.", {
             code: "EXPIRED_NONCE",
+          })
+        }
+
+        if (error.message?.includes("Failed to save token")) {
+          throw new ErrorWithProps("Server error: Failed to save token.", {
+            code: "INTERNAL_SERVER_ERROR",
           })
         }
 
@@ -240,15 +246,14 @@ const authMutations = {
         })
       }
 
-      const token = await context.app.jwt.sign(
-        {
-          aud: "integration",
-          sub: selfNode.address,
-          iss: selfNode.address,
-          scope: scope,
-        },
-        { expiresIn },
-      )
+      const token = await Token.issue({
+        app: context.app,
+        sub: selfNode.address,
+        aud: "integration",
+        iss: selfNode.address,
+        scope: scope,
+        expiresIn,
+      })
 
       request.log.info(
         {
