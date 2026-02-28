@@ -4,7 +4,7 @@ import FormData from "form-data"
 import { createMercuriusTestClient } from "mercurius-integration-testing"
 import nock from "nock"
 import setupServer from "../server/index.mjs"
-import { Comment, Model, Node } from "../server/models/index.mjs"
+import { Comment, Model, Node, Token } from "../server/models/index.mjs"
 import { cleanupInterval } from "../server/routes/api/visitors.mjs"
 import { generateTestAccount, TEST_ETHEREUM_ADDRESS_NODE_A } from "./env.mjs"
 
@@ -52,11 +52,13 @@ test.before(async (t) => {
   t.context.otherUserNode = otherUserNode
 
   // JWT generation helper functions
-  t.context.createClientJwt = async (address) => {
-    return await app.jwt.sign({
-      aud: "client",
+  t.context.createClientJwt = async (address, expiresIn = "24h") => {
+    return await Token.issue({
+      app,
       sub: address,
+      aud: "client",
       iss: selfNode.address,
+      expiresIn,
     })
   }
   t.context.createCommentJwt = async (
@@ -80,16 +82,16 @@ test.before(async (t) => {
     payload.iss = selfNode.address
     return await app.jwt.sign(payload, { expiresIn })
   }
-  t.context.createIntegrationJwt = async (scope, expiresIn = "24h") =>
-    await app.jwt.sign(
-      {
-        aud: "integration",
-        sub: TEST_ETHEREUM_ADDRESS_NODE_A,
-        scope,
-        iss: selfNode.address,
-      },
-      { expiresIn },
-    )
+  t.context.createIntegrationJwt = async (scope, expiresIn = "24h") => {
+    return await Token.issue({
+      app,
+      sub: TEST_ETHEREUM_ADDRESS_NODE_A,
+      aud: "integration",
+      iss: selfNode.address,
+      scope,
+      expiresIn,
+    })
+  }
   t.context.createNonceJwt = async (address, expiresIn = "3m") =>
     await app.jwt.sign(
       {

@@ -10,6 +10,7 @@ import {
   useState,
 } from "react"
 import { useAccount, useDisconnect, useWalletClient } from "wagmi"
+import { toaster } from "@/components/ui/toaster"
 import { usePage } from "@/contexts/PageContext"
 import { GET_SIWE_MESSAGE, SIGN_IN_WITH_ETHEREUM, VISITOR } from "@/lib/apollo"
 
@@ -219,16 +220,20 @@ export function AuthProvider({ children, initialAuthState }) {
       }
     } catch (error) {
       console.error("SIWE登录失败:", error)
+      toaster.create({
+        type: "error",
+        title: "登录失败",
+        description: error.message,
+      })
       // 清除 HttpOnly Cookie
       try {
         await fetch("/api/auth/token", { method: "DELETE" })
       } catch (e) {
         console.error("Failed to clear auth cookie:", e)
       }
-      setLoginState({ loading: false, error: error.message })
+      setLoginState({ loading: false, error: null })
       setToken(null)
       setAuthStatus(AUTH_STATUS.UNAUTHENTICATED)
-      throw error
     }
   }, [
     isClient,

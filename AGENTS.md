@@ -160,6 +160,10 @@ When asked to work on an Issue together:
 3. **Do NOT make any code changes** - code changes will be made by the user manually
 4. After the user confirms code changes are complete, proceed with the remaining workflow (commit, PR creation, etc.)
 
+## Language Guidelines
+
+- This is a globalized project, all documentation, comments, and Issues must use English by default unless there are special circumstances
+
 ## Commit Guidelines
 
 - **Do not** use any markdown syntax in commit messages

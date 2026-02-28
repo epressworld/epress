@@ -6,6 +6,7 @@ import "../config/index.mjs"
 import graphqlPlugin from "./graphql/index.mjs"
 import { Node } from "./models/node.mjs"
 import { Setting } from "./models/setting.mjs"
+import { Token } from "./models/token.mjs"
 import restfulRoutes from "./routes/index.mjs"
 
 /**
@@ -199,7 +200,46 @@ export default async function () {
             "JWT audience not allowed, resetting user",
           )
           request.user = undefined
+        } else if (userAud === "client" || userAud === "integration") {
+          // 对于 client 和 integration 类型的 token，验证数据库中的 token 记录
+          const jti = request.user?.jti
+          if (!jti) {
+            request.log.warn(
+              {
+                userId: userSub,
+                audience: userAud,
+              },
+              "JWT missing jti, resetting user",
+            )
+            request.user = undefined
+          } else {
+            try {
+              await Token.verify(jti)
+              request.log.debug(
+                {
+                  userId: userSub,
+                  audience: userAud,
+                  issuer: request.user?.iss,
+                  jti,
+                },
+                "Token database verification successful",
+              )
+            } catch (error) {
+              request.log.warn(
+                {
+                  userId: userSub,
+                  audience: userAud,
+                  jti,
+                  error: error.message,
+                  errorCode: error.code,
+                },
+                "Token verification failed, resetting user",
+              )
+              request.user = undefined
+            }
+          }
         } else {
+          // 对于 nonce 和 comment 类型的 token，跳过数据库验证
           request.log.debug(
             {
               userId: userSub,
