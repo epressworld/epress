@@ -305,6 +305,7 @@ export const PAGE_DATA = gql`
       defaultTheme
       walletConnectProjectId
       vapidPublicKey
+      pwaAppName
       mail {
         enabled
         mailTransport

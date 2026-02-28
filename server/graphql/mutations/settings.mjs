@@ -15,6 +15,7 @@ const UpdateSettingsInput = graphql.type("InputObjectType", {
     defaultLanguage: { type: graphql.type("String") },
     defaultTheme: { type: graphql.type("String") },
     walletConnectProjectId: { type: graphql.type("String") },
+    pwaAppName: { type: graphql.type("String") },
     mailTransport: { type: graphql.type("String") },
     mailFrom: { type: graphql.type("String") },
   },
@@ -89,6 +90,7 @@ const updateSettingsMutation = {
             defaultLanguage: "default_language",
             defaultTheme: "default_theme",
             walletConnectProjectId: "walletconnect_projectid",
+            pwaAppName: "pwa_app_name",
             mailTransport: "mail_transport",
             mailFrom: "mail_from",
           }
@@ -135,6 +137,7 @@ const updateSettingsMutation = {
             defaultLanguage: "en",
             defaultTheme: "light",
             walletConnectProjectId: "",
+            pwaAppName: null,
             mailTransport: "",
             mailFrom: "",
           }
@@ -148,6 +151,8 @@ const updateSettingsMutation = {
               settingsToReturn.allowComment = setting.value === "true"
             } else if (setting.key === "walletconnect_projectid") {
               settingsToReturn.walletConnectProjectId = setting.value
+            } else if (setting.key === "pwa_app_name") {
+              settingsToReturn.pwaAppName = setting.value
             } else if (setting.key === "default_language") {
               settingsToReturn.defaultLanguage = setting.value
             } else if (setting.key === "default_theme") {

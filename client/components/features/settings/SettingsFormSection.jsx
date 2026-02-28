@@ -74,6 +74,13 @@ export function SettingsFormSection({ onSuccess }) {
           }
           {...form.register("walletConnectProjectId")}
         />
+        <FormField
+          label={t("settings.pwaAppName")}
+          placeholder={t("settings.pwaAppNamePlaceholder")}
+          error={form.formState.errors.pwaAppName?.message}
+          helperText={t("settings.pwaAppNameHelper")}
+          {...form.register("pwaAppName")}
+        />
 
         {/* Mail Server Settings Group */}
         <VStack align="stretch" gap={3}>

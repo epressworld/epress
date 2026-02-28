@@ -24,6 +24,7 @@ export function useSettingsForm() {
       defaultLanguage: "en",
       defaultTheme: "light",
       walletConnectProjectId: "",
+      pwaAppName: "",
       mailTransport: "",
       mailFrom: "",
     },
@@ -43,6 +44,7 @@ export function useSettingsForm() {
         walletConnectProjectId: settings.walletConnectProjectId,
         defaultLanguage: settings.defaultLanguage,
         defaultTheme: settings.defaultTheme,
+        pwaAppName: settings.pwaAppName || "",
         mailTransport: settings.mail?.mailTransport,
         mailFrom: settings.mail?.mailFrom,
       })
@@ -95,6 +97,7 @@ export function useSettingsForm() {
             defaultLanguage: data.defaultLanguage,
             defaultTheme: data.defaultTheme,
             walletConnectProjectId: data.walletConnectProjectId,
+            pwaAppName: data.pwaAppName,
             mailTransport: data.mailTransport,
             mailFrom: data.mailFrom,
             enableRSS: data.enableRSS === "on" || data.enableRSS === true,

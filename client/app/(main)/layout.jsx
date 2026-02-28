@@ -11,7 +11,6 @@ import "@/styles/globals.css"
 
 export const dynamic = "force-dynamic"
 
-// Metadata API configuration
 export const metadata = {
   applicationName: "epress",
   appleWebApp: {
@@ -47,7 +46,6 @@ export const metadata = {
   },
 }
 
-// Viewport configuration
 export const viewport = {
   themeColor: "#000000",
 }
