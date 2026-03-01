@@ -100,8 +100,14 @@ tools:
         description: "The media file to upload."
       description:
         type: string
-        required: false
-        description: "Caption or description for the media file."
+        required: true
+        description: |
+          Caption or description for the media file. REQUIRED — the server
+          enforces this at runtime even though the GraphQL schema marks it
+          optional. The request will fail with VALIDATION_FAILED if omitted.
+          Rules: plain text only, no newlines, no unescaped quotes or special
+          characters, max ~200 characters. If the user has not provided a
+          description, ask before proceeding.
       slug:
         type: string
         required: false
