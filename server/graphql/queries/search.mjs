@@ -129,18 +129,12 @@ export const searchQuery = {
         }
 
         const query = Comment.query().leftJoinRelated("commenter")
-
-        // 权限检查：如果没有 search:comments 权限，则只能看到已确认的评论
-        if (!ctx.request.cani("search:comments")) {
-          query.where("status", "CONFIRMED")
-        }
-
         return search(root, { ...args, query }, ctx, info)
       },
       resolverOptions: {
         sortable: ["created_at", "updated_at"],
         searchable: ["body"],
-        filterable: ["publication_id", "author_name", "status"],
+        filterable: ["publication_id", "author_name"],
       },
     },
   }),

@@ -58,10 +58,8 @@ const segments = {
       content_hash
     }
     body
-    status
-    auth_type
     author_name
-    author_id
+    author_address
     commenter {
       address
       url

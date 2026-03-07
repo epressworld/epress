@@ -1,14 +1,11 @@
 import mercurius from "mercurius"
 import { graphql } from "solidify.js"
-import validator from "validator"
-import { getAddress, isAddress, recoverTypedDataAddress } from "viem" // 导入 verifyTypedData
-import { Comment, Publication, Setting } from "../../models/index.mjs" // 导入 Node 用于 selfNode.address
-import { hash } from "../../utils/crypto.mjs" // 导入 hash 工具
-import { renderEmail, sendEmail } from "../../utils/email/index.mjs"
+import { getAddress, isAddress, recoverTypedDataAddress } from "viem"
+import { Comment, Publication, Setting } from "../../models/index.mjs"
+import { hash } from "../../utils/crypto.mjs"
 
 const { ErrorWithProps } = mercurius
 
-// 定义 CreateCommentInput 类型
 const CreateCommentInput = graphql.type("InputObjectType", {
   name: "CreateCommentInput",
   fields: {
@@ -17,25 +14,15 @@ const CreateCommentInput = graphql.type("InputObjectType", {
     author_name: {
       type: graphql.type("NonNull", graphql.type("String")),
     },
-    auth_type: { type: graphql.type("NonNull", graphql.type("String")) }, // 将根据 CommentAuthType 枚举进行验证
-    author_id: { type: graphql.type("String") }, // 用于EMAIL认证
+    author_address: { type: graphql.type("NonNull", graphql.type("String")) },
+    signature: { type: graphql.type("NonNull", graphql.type("String")) },
   },
 })
 
-// 定义 CommentAuthType 枚举
-const CommentAuthType = graphql.type("EnumType", {
-  name: "CommentAuthType",
-  values: {
-    EMAIL: { value: "EMAIL" },
-    ETHEREUM: { value: "ETHEREUM" },
-  },
-})
-
-// EIP-712 评论签名类型化数据结构 (CONFIRM)
 const COMMENT_SIGNATURE_DOMAIN = {
   name: "epress world",
   version: "1",
-  chainId: 1, // 暂时假设 chainId 为 1
+  chainId: 1,
 }
 
 const COMMENT_SIGNATURE_TYPES = {
@@ -47,20 +34,15 @@ const COMMENT_SIGNATURE_TYPES = {
   CommentSignature: [
     { name: "nodeAddress", type: "address" },
     { name: "commenterAddress", type: "address" },
-    { name: "publicationId", type: "uint256" }, // 修改为 publicationId
+    { name: "publicationId", type: "uint256" },
     { name: "commentBodyHash", type: "bytes32" },
-    { name: "timestamp", type: "uint256" },
   ],
 }
 
-// 评论签名有效期（秒）
-const COMMENT_SIGNATURE_VALIDITY_SECONDS = 600
-
-// EIP-712 评论删除签名类型化数据结构 (DELETE)
 const COMMENT_DELETION_DOMAIN = {
   name: "epress world",
   version: "1",
-  chainId: 1, // 暂时假设 chainId 为 1
+  chainId: 1,
 }
 
 const COMMENT_DELETION_TYPES = {
@@ -70,7 +52,7 @@ const COMMENT_DELETION_TYPES = {
     { name: "chainId", type: "uint256" },
   ],
   DeleteComment: [
-    { name: "nodeAddress", type: "address" }, // 添加 nodeAddress
+    { name: "nodeAddress", type: "address" },
     { name: "commentId", type: "uint256" },
     { name: "commenterAddress", type: "address" },
   ],
@@ -78,26 +60,23 @@ const COMMENT_DELETION_TYPES = {
 
 const commentMutations = {
   createComment: {
-    type: graphql.type("NonNull", graphql.model(Comment)), // 使用 graphql.model 来引用 Comment 模型
+    type: graphql.type("NonNull", graphql.model(Comment)),
     args: {
       input: { type: graphql.type("NonNull", CreateCommentInput) },
     },
     resolve: async (_parent, { input }, context) => {
       const { request } = context
-      const { publication_id, body, author_name, author_id } = input
-      const auth_type = input?.auth_type?.toUpperCase()
-      const { app } = context
+      const { publication_id, body, author_name, author_address, signature } =
+        input
 
       request.log.debug(
         {
           publication_id,
-          auth_type,
           author_name,
         },
         "Creating comment",
       )
 
-      // 1. 检查是否允许评论（放在最前面，避免不必要的查询）
       const allowCommentSetting = await Setting.query().findOne({
         key: "allow_comment",
       })
@@ -107,7 +86,6 @@ const commentMutations = {
         })
       }
 
-      // 2. 验证输入字段
       if (!body || body.trim() === "") {
         throw new ErrorWithProps("Comment body cannot be empty.", {
           code: "VALIDATION_FAILED",
@@ -118,11 +96,15 @@ const commentMutations = {
           code: "VALIDATION_FAILED",
         })
       }
-      if (!["EMAIL", "ETHEREUM"].includes(auth_type)) {
-        throw new ErrorWithProps(
-          "Invalid auth_type. Must be EMAIL or ETHEREUM.",
-          { code: "VALIDATION_FAILED" },
-        )
+      if (!author_address || !isAddress(author_address)) {
+        throw new ErrorWithProps("Invalid Ethereum address format.", {
+          code: "VALIDATION_FAILED",
+        })
+      }
+      if (!signature) {
+        throw new ErrorWithProps("Signature is required.", {
+          code: "VALIDATION_FAILED",
+        })
       }
 
       const selfNode = await request.config.getSelfNode()
@@ -131,255 +113,31 @@ const commentMutations = {
       if (!publication) {
         throw new ErrorWithProps("Publication not found.", {
           code: "NOT_FOUND",
-        }) // 在签名验证前检查 publication 是否存在
-      }
-
-      // 3. 验证 auth_type 特定字段
-      let status
-
-      if (auth_type === "EMAIL") {
-        if (!author_id || !validator.isEmail(author_id)) {
-          throw new ErrorWithProps("Invalid email format.", {
-            code: "VALIDATION_FAILED",
-          })
-        }
-        status = "PENDING"
-      } else if (auth_type === "ETHEREUM") {
-        if (!author_id || !isAddress(author_id)) {
-          throw new ErrorWithProps("Invalid Ethereum address format.", {
-            code: "VALIDATION_FAILED",
-          })
-        }
-        // 新流程：创建阶段不再校验或保存签名，一律标记为 PENDING
-        status = "PENDING"
-        // 保持 credential 为 null，待确认阶段写入
-      }
-
-      const newCommentData = {
-        publication_id,
-        body,
-        author_name,
-        auth_type,
-        author_id,
-        credential: null,
-        status,
-      }
-
-      // 4. 在数据库中创建评论
-      const newComment = await Comment.query().insert(newCommentData)
-
-      // 5. 创建阶段不更新 comment_count（待确认阶段更新）
-
-      // 6. 如果是 EMAIL 认证，检查邮件配置并发送确认邮件
-      if (auth_type === "EMAIL") {
-        // Check if mail is configured
-        const mailTransport = await Setting.query().findOne({
-          key: "mail_transport",
-        })
-        const mailFrom = await Setting.query().findOne({
-          key: "mail_from",
-        })
-
-        const isMailConfigured = mailTransport?.value && mailFrom?.value
-
-        if (!isMailConfigured) {
-          // Mail is not configured, cannot use EMAIL authentication
-          request.log.warn(
-            "Email authentication attempted but mail is not configured",
-          )
-          throw new ErrorWithProps(
-            "Email authentication is not available. Mail server is not configured. Please use Ethereum authentication instead.",
-            {
-              code: "MAIL_NOT_CONFIGURED",
-            },
-          )
-        }
-
-        const token = await app.jwt.sign(
-          {
-            aud: "comment",
-            comment_id: newComment.id,
-            sub: author_id,
-            iss: selfNode.address,
-            action: "confirm",
-          },
-          { expiresIn: "24h" },
-        )
-
-        // Send email (handle potential errors)
-        try {
-          const verificationLink = `${selfNode.url}/verify?token=${token}`
-          request.log.debug(
-            {
-              verificationLink,
-            },
-            "Verification link generated",
-          )
-          await sendEmail(
-            author_id,
-            "epress 评论确认",
-            await renderEmail("commentVerificationEmail", {
-              verificationLink,
-            }),
-          )
-        } catch (emailError) {
-          request.log.error(
-            { err: emailError },
-            "Failed to send verification email:",
-          )
-          // 邮件发送失败不应该阻止评论创建，但应该记录错误
-          // 评论仍然会被创建，状态为PENDING，用户可以通过其他方式验证
-        }
-      }
-
-      // 7. 返回创建的评论
-      request.log.info(
-        {
-          comment_id: newComment.id,
-          publication_id,
-          auth_type,
-          status,
-        },
-        "Comment created successfully",
-      )
-
-      return newComment
-    },
-  },
-
-  // 统一确认接口：支持 EMAIL（JWT）或 ETHEREUM（EIP-712 签名）
-  confirmComment: {
-    type: graphql.type("NonNull", graphql.model(Comment)),
-    args: {
-      id: { type: graphql.type("ID") }, // 以太坊确认需要 id；邮箱确认可不提供
-      tokenOrSignature: {
-        type: graphql.type("NonNull", graphql.type("String")),
-      },
-    },
-    resolve: async (_parent, { id, tokenOrSignature }, context) => {
-      const { app, request } = context
-      request.log.debug("Confirming comment")
-      const selfNode = await request.config.getSelfNode()
-
-      // 尝试作为 JWT 验证（EMAIL 路径）
-      let isJwt = false
-      let payload
-      try {
-        payload = await app.jwt.verify(tokenOrSignature, {
-          allowedIss: selfNode.address,
-        })
-        isJwt = true
-      } catch {
-        isJwt = false
-      }
-
-      if (isJwt) {
-        // 验证 JWT audience
-        if (payload.aud !== "comment") {
-          throw new ErrorWithProps("Invalid token audience.", {
-            code: "INVALID_SIGNATURE",
-          })
-        }
-        const { comment_id, action, sub } = payload
-        if (!comment_id || action !== "confirm") {
-          throw new ErrorWithProps("Invalid token payload or action.", {
-            code: "INVALID_SIGNATURE",
-          })
-        }
-
-        const comment = await Comment.query().findById(comment_id)
-        if (!comment) {
-          throw new ErrorWithProps("Comment not found.", {
-            code: "NOT_FOUND",
-          })
-        }
-
-        if (comment.status === "CONFIRMED") {
-          return comment
-        }
-        if (comment.auth_type !== "EMAIL" || comment.author_id !== sub) {
-          throw new ErrorWithProps("Token information does not match.", {
-            code: "FORBIDDEN",
-          })
-        }
-        if (comment.status !== "PENDING") {
-          throw new ErrorWithProps(
-            `Cannot verify comment with status: ${comment.status}`,
-            { code: "FORBIDDEN" },
-          )
-        }
-
-        const updatedComment = await comment.$query().patchAndFetch({
-          status: "CONFIRMED",
-          credential: tokenOrSignature, // 保存JWT token到credential字段
-        })
-        await Publication.updateCommentCount(comment.publication_id)
-
-        request.log.info(
-          { comment_id: updatedComment.id },
-          "Comment email confirmed successfully",
-        )
-        return updatedComment
-      }
-
-      // ETHEREUM 路径：tokenOrSignature 为签名，必须提供 id
-      if (!id) {
-        throw new ErrorWithProps(
-          "Comment id is required for signature confirmation.",
-          {
-            code: "VALIDATION_FAILED",
-          },
-        )
-      }
-      const comment = await Comment.query().findById(id)
-      if (!comment) {
-        throw new ErrorWithProps("Comment not found.", { code: "NOT_FOUND" })
-      }
-      if (comment.status === "CONFIRMED") {
-        return comment
-      }
-      if (comment.auth_type !== "ETHEREUM" || !comment.author_id) {
-        throw new ErrorWithProps("Signature information does not match.", {
-          code: "FORBIDDEN",
         })
       }
 
-      // 构建服务器侧的 typedData（防止客户端篡改）
-      const commentBodyHash = `0x${await hash.sha256(comment.body)}`
-      const timestampSec = Math.floor(
-        new Date(comment.created_at).getTime() / 1000,
-      )
-      const nowSec = Math.floor(Date.now() / 1000)
-
-      // 有效期检查
-      if (nowSec - timestampSec > COMMENT_SIGNATURE_VALIDITY_SECONDS) {
-        throw new ErrorWithProps("Signature expired.", {
-          code: "EXPIRED_SIGNATURE",
-        })
-      }
-
+      const commentBodyHash = `0x${await hash.sha256(body)}`
       const typedData = {
         domain: COMMENT_SIGNATURE_DOMAIN,
         types: COMMENT_SIGNATURE_TYPES,
         primaryType: "CommentSignature",
         message: {
           nodeAddress: getAddress(selfNode.address),
-          commenterAddress: getAddress(comment.author_id),
-          publicationId: parseInt(comment.publication_id, 10),
+          commenterAddress: getAddress(author_address),
+          publicationId: parseInt(publication_id, 10),
           commentBodyHash,
-          timestamp: timestampSec,
         },
       }
 
       let signerAddress
       try {
         signerAddress = await recoverTypedDataAddress({
-          address: getAddress(comment.author_id),
+          address: getAddress(author_address),
           domain: typedData.domain,
           types: typedData.types,
           primaryType: typedData.primaryType,
           message: typedData.message,
-          signature: tokenOrSignature,
+          signature: signature,
         })
       } catch {
         throw new ErrorWithProps("Invalid signature or message mismatch.", {
@@ -387,22 +145,30 @@ const commentMutations = {
         })
       }
 
-      if (getAddress(signerAddress) !== getAddress(comment.author_id)) {
+      if (getAddress(signerAddress) !== getAddress(author_address)) {
         throw new ErrorWithProps("Signature does not match address.", {
           code: "INVALID_SIGNATURE",
         })
       }
 
-      const updatedComment = await comment
-        .$query()
-        .patchAndFetch({ status: "CONFIRMED", credential: tokenOrSignature })
-      await Publication.updateCommentCount(comment.publication_id)
+      const newCommentData = {
+        publication_id,
+        body,
+        author_name,
+        author_address,
+        signature: signature,
+      }
+
+      const newComment = await Comment.query().insert(newCommentData)
+
+      await Publication.updateCommentCount(publication_id)
 
       request.log.info(
-        { comment_id: updatedComment.id },
-        "Comment signature confirmed successfully",
+        { comment_id: newComment.id, publication_id },
+        "Comment created successfully",
       )
-      return updatedComment
+
+      return newComment
     },
   },
 
@@ -411,10 +177,9 @@ const commentMutations = {
     args: {
       id: { type: graphql.type("NonNull", graphql.type("ID")) },
       signature: { type: graphql.type("String") },
-      email: { type: graphql.type("String") },
     },
-    resolve: async (_parent, { id, signature, email }, context) => {
-      const { app, request } = context
+    resolve: async (_parent, { id, signature }, context) => {
+      const { request } = context
 
       request.log.debug(
         {
@@ -427,13 +192,11 @@ const commentMutations = {
         "Destroying comment",
       )
 
-      // 1. 根据 ID 获取评论
       const comment = await Comment.query().findById(id)
       if (!comment) {
         throw new ErrorWithProps("Comment not found.", { code: "NOT_FOUND" })
       }
 
-      // 2. 权限检查：如果已登录且有 delete:comments 权限，直接删除
       if (context.user && context.request.cani("delete:comments")) {
         await comment.$query().delete()
         await Publication.updateCommentCount(comment.publication_id)
@@ -447,206 +210,61 @@ const commentMutations = {
         })
       }
 
-      // 3. 根据认证类型处理删除逻辑
-      if (comment.auth_type === "EMAIL") {
-        // 验证邮箱（仅当没有删除权限时）
-        if (!email || !validator.isEmail(email)) {
-          throw new ErrorWithProps(
-            "Email is required and must be valid for EMAIL authenticated comments.",
-            { code: "VALIDATION_FAILED" },
-          )
-        }
-        if (comment.author_id !== email) {
-          throw new ErrorWithProps(
-            "Provided email does not match the comment's email.",
-            { code: "FORBIDDEN" },
-          )
-        }
-
-        // 生成删除确认 JWT
-        const token = await app.jwt.sign(
-          {
-            aud: "comment",
-            comment_id: comment.id,
-            sub: comment.author_id,
-            iss: selfNode.address,
-            action: "destroy",
-          },
-          { expiresIn: "24h" },
-        )
-
-        // 发送确认邮件
-        try {
-          const deletionLink = `${selfNode.url}/verify?token=${token}`
-          request.log.debug({ deletionLink }, "Deletion link generated")
-          await sendEmail(
-            comment.author_id,
-            "epress comment deletion confirmation",
-            await renderEmail("commentDeletionEmail", {
-              deletionLink,
-            }),
-          )
-        } catch (emailError) {
-          request.log.error(
-            { err: emailError },
-            "Failed to send comment deletion confirmation email:",
-          )
-          throw new ErrorWithProps(
-            "Failed to send deletion confirmation email.",
-            { code: "INTERNAL_SERVER_ERROR" },
-          )
-        }
-
-        // 返回评论对象，状态不变，等待确认
-        request.log.info(
-          {
-            comment_id: comment.id,
-            auth_type: comment.auth_type,
-          },
-          "Comment deletion email sent",
-        )
-
-        return comment
-      } else if (comment.auth_type === "ETHEREUM") {
-        // 验证签名
-        if (!signature) {
-          throw new ErrorWithProps(
-            "Signature is required for ETHEREUM authenticated comments.",
-            { code: "VALIDATION_FAILED" },
-          )
-        }
-        if (!comment.author_id) {
-          throw new ErrorWithProps(
-            "Commenter Ethereum address not found for signature verification.",
-            { code: "INTERNAL_SERVER_ERROR" },
-          )
-        }
-
-        const typedData = {
-          domain: COMMENT_DELETION_DOMAIN,
-          types: COMMENT_DELETION_TYPES,
-          primaryType: "DeleteComment",
-          message: {
-            commentId: parseInt(comment.id, 10), // commentId 必须是 uint256，所以需要转换为数字
-            nodeAddress: getAddress(selfNode.address), // 添加 nodeAddress
-            commenterAddress: getAddress(comment.author_id),
-          },
-        }
-
-        let signerAddress
-        try {
-          signerAddress = await recoverTypedDataAddress({
-            address: getAddress(comment.author_id),
-            domain: typedData.domain,
-            types: typedData.types,
-            primaryType: typedData.primaryType,
-            message: typedData.message,
-            signature: signature,
-          })
-        } catch {
-          throw new ErrorWithProps("Invalid signature or message mismatch.", {
-            code: "INVALID_SIGNATURE",
-          })
-        }
-        if (getAddress(signerAddress) !== getAddress(comment.author_id)) {
-          throw new ErrorWithProps(
-            "Signature does not match the comment's Ethereum address.",
-            { code: "FORBIDDEN" },
-          )
-        }
-
-        // 删除评论
-        await comment.$query().delete()
-
-        // 更新 publication 的 comment_count
-        await Publication.updateCommentCount(comment.publication_id)
-
-        request.log.info(
-          {
-            comment_id: comment.id,
-            auth_type: comment.auth_type,
-          },
-          "Comment deleted successfully",
-        )
-
-        return comment
-      } else {
+      if (!signature) {
         throw new ErrorWithProps(
-          "Unsupported authentication type for comment deletion.",
+          "Signature is required for comment deletion.",
+          { code: "VALIDATION_FAILED" },
+        )
+      }
+      if (!comment.author_address) {
+        throw new ErrorWithProps(
+          "Commenter Ethereum address not found for signature verification.",
           { code: "INTERNAL_SERVER_ERROR" },
         )
       }
-    },
-  },
 
-  confirmCommentDeletion: {
-    type: graphql.type("NonNull", graphql.model(Comment)),
-    args: {
-      token: { type: graphql.type("NonNull", graphql.type("String")) },
-    },
-    resolve: async (_parent, { token }, context) => {
-      const { app, request } = context
-      let payload
-      const selfNode = await request.config.getSelfNode()
+      const typedData = {
+        domain: COMMENT_DELETION_DOMAIN,
+        types: COMMENT_DELETION_TYPES,
+        primaryType: "DeleteComment",
+        message: {
+          commentId: parseInt(comment.id, 10),
+          nodeAddress: getAddress(selfNode.address),
+          commenterAddress: getAddress(comment.author_address),
+        },
+      }
 
-      request.log.debug("Confirming comment deletion")
-
-      // 1. 验证 JWT
+      let signerAddress
       try {
-        payload = await app.jwt.verify(token, {
-          allowedIss: selfNode.address,
+        signerAddress = await recoverTypedDataAddress({
+          address: getAddress(comment.author_address),
+          domain: typedData.domain,
+          types: typedData.types,
+          primaryType: typedData.primaryType,
+          message: typedData.message,
+          signature: signature,
         })
       } catch {
-        throw new ErrorWithProps("Invalid or expired token.", {
+        throw new ErrorWithProps("Invalid signature or message mismatch.", {
           code: "INVALID_SIGNATURE",
         })
       }
-
-      // 2. 验证 JWT audience
-      if (payload.aud !== "comment") {
-        throw new ErrorWithProps("Invalid token audience.", {
-          code: "INVALID_SIGNATURE",
-        })
-      }
-
-      // 3. 从载荷中获取 comment_id 和 action
-      const { comment_id, sub: comment_email, action } = payload
-      if (!comment_id || !comment_email || action !== "destroy") {
-        throw new ErrorWithProps("Invalid token payload or action.", {
-          code: "INVALID_SIGNATURE",
-        })
-      }
-
-      // 3. 在数据库中查找对应的评论
-      const comment = await Comment.query().findById(comment_id)
-      if (!comment) {
-        throw new ErrorWithProps("Comment not found.", { code: "NOT_FOUND" })
-      }
-
-      // 4. 验证评论的认证类型和邮箱是否匹配
-      if (
-        comment.auth_type !== "EMAIL" ||
-        comment.author_id !== comment_email
-      ) {
+      if (getAddress(signerAddress) !== getAddress(comment.author_address)) {
         throw new ErrorWithProps(
-          "Token information does not match the comment.",
+          "Signature does not match the comment's Ethereum address.",
           { code: "FORBIDDEN" },
         )
       }
 
-      // 5. 删除评论
       await comment.$query().delete()
 
-      // 6. 更新 publication 的 comment_count
       await Publication.updateCommentCount(comment.publication_id)
 
-      // 7. 返回被删除的评论
       request.log.info(
         {
           comment_id: comment.id,
-          publication_id: comment.publication_id,
         },
-        "Comment deletion confirmed successfully",
+        "Comment deleted successfully",
       )
 
       return comment
@@ -654,5 +272,5 @@ const commentMutations = {
   },
 }
 
-const types = [CreateCommentInput, CommentAuthType]
+const types = [CreateCommentInput]
 export { commentMutations, types }

@@ -10,22 +10,12 @@ import { toaster } from "../../ui/toaster"
 import { CommentItem } from "./Item"
 
 export const CommentList = forwardRef(
-  (
-    {
-      publicationId,
-      onCommentDeleted,
-      localPendingComment,
-      onRetrySignature,
-      suspense = true,
-    },
-    ref,
-  ) => {
+  ({ publicationId, onCommentDeleted, suspense = true }, ref) => {
     const [hasMore, setHasMore] = useState(false)
     const [hasAttemptedLoadMore, setHasAttemptedLoadMore] = useState(false)
     const { t } = useIntl()
 
     const useQueryHook = suspense ? useSuspenseQuery : useQuery
-    // 获取评论列表 - 使用 Apollo Client
     const { data, loading, error, fetchMore, refetch } = useQueryHook(
       SEARCH_COMMENTS,
       {
@@ -35,11 +25,10 @@ export const CommentList = forwardRef(
           first: 10,
         },
         notifyOnNetworkStatusChange: true,
-        fetchPolicy: "cache-and-network", // 确保数据一致性
+        fetchPolicy: "cache-and-network",
       },
     )
 
-    // Expose refetch method to parent via ref
     useImperativeHandle(
       ref,
       () => ({
@@ -48,24 +37,19 @@ export const CommentList = forwardRef(
       [refetch],
     )
 
-    // 更新 hasMore 状态
     useEffect(() => {
       if (data?.search?.pageInfo) {
         setHasMore(data.search.pageInfo.hasNextPage)
       }
     }, [data])
 
-    // 处理评论删除后的回调
     const handleCommentDeleted = () => {
-      // 重新获取评论列表以更新缓存
       refetch()
-      // 通知父组件刷新 publication 数据
       if (onCommentDeleted) {
         onCommentDeleted()
       }
     }
 
-    // Load more comments - using Apollo Client's fetchMore
     const loadMore = async (event) => {
       if (event) {
         event.preventDefault()
@@ -79,7 +63,6 @@ export const CommentList = forwardRef(
         await fetchMore({
           variables: {
             after: data?.search?.pageInfo?.endCursor,
-            // 保持与初次查询一致的排序
             orderBy: "-created_at",
           },
           updateQuery: (prev, { fetchMoreResult }) => {
@@ -127,25 +110,6 @@ export const CommentList = forwardRef(
 
     return (
       <VStack gap={4} align="stretch">
-        {/* 本地待确认评论置顶显示 */}
-        {localPendingComment && (
-          <CommentItem
-            key={`local-pending-${localPendingComment.id}`}
-            comment={{
-              id: localPendingComment.id,
-              body: localPendingComment.body,
-              status: "PENDING",
-              auth_type: "ETHEREUM",
-              author_name: localPendingComment.authorName,
-              author_id: localPendingComment.authorId,
-              created_at: localPendingComment.createdAt,
-            }}
-            onCommentDeleted={handleCommentDeleted}
-            isLocalPending={true}
-            onRetrySignature={onRetrySignature}
-          />
-        )}
-
         {comments.map((comment, index) => (
           <CommentItem
             key={`${comment.id}-${index}`}
@@ -177,7 +141,7 @@ export const CommentList = forwardRef(
           </Text>
         )}
 
-        {comments.length === 0 && !loading && !localPendingComment && (
+        {comments.length === 0 && !loading && (
           <Text textAlign="center" color="gray.500" py={8}>
             {t("common.noComments")}
           </Text>

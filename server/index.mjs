@@ -187,7 +187,7 @@ export default async function () {
         request.user = undefined
       } else if (request.user) {
         // sub 验证通过后，检查 aud 字段
-        const allowedAudiences = ["client", "nonce", "comment", "integration"]
+        const allowedAudiences = ["client", "nonce", "integration"]
         const userAud = request.user?.aud
 
         if (!allowedAudiences.includes(userAud)) {
@@ -239,7 +239,7 @@ export default async function () {
             }
           }
         } else {
-          // 对于 nonce 和 comment 类型的 token，跳过数据库验证
+          // 对于 nonce 类型的 token，跳过数据库验证
           request.log.debug(
             {
               userId: userSub,

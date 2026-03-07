@@ -166,10 +166,8 @@ export const CREATE_COMMENT = gql`
     createComment(input: $input) {
       id
       body
-      status
-      auth_type
       author_name
-      author_id
+      author_address
       created_at
       publication {
         id
@@ -179,48 +177,12 @@ export const CREATE_COMMENT = gql`
   }
 `
 export const DESTROY_COMMENT = gql`
-  mutation DestroyComment($id: ID!, $signature: String, $email: String) {
-    destroyComment(id: $id, signature: $signature, email: $email) {
+  mutation DestroyComment($id: ID!, $signature: String) {
+    destroyComment(id: $id, signature: $signature) {
       id
       body
-      status
-      auth_type
       author_name
       created_at
-    }
-  }
-`
-
-export const CONFIRM_COMMENT = gql`
-  mutation ConfirmComment($id: ID, $tokenOrSignature: String!) {
-    confirmComment(id: $id, tokenOrSignature: $tokenOrSignature) {
-      id
-      body
-      status
-      auth_type
-      author_name
-      created_at
-      publication {
-        id
-        slug
-      }
-    }
-  }
-`
-
-export const CONFIRM_COMMENT_DELETION = gql`
-  mutation ConfirmCommentDeletion($token: String!) {
-    confirmCommentDeletion(token: $token) {
-      id
-      body
-      status
-      auth_type
-      author_name
-      created_at
-      publication {
-        id
-        slug
-      }
     }
   }
 `

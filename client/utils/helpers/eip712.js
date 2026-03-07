@@ -108,7 +108,6 @@ export const commentSignatureTypedData = (
   commenterEthereumAddress,
   publicationId,
   commentBodyHash,
-  timestamp,
 ) => {
   return {
     domain: {
@@ -128,7 +127,6 @@ export const commentSignatureTypedData = (
         { name: "commenterAddress", type: "address" },
         { name: "publicationId", type: "uint256" },
         { name: "commentBodyHash", type: "bytes32" },
-        { name: "timestamp", type: "uint256" },
       ],
     },
     message: {
@@ -136,7 +134,6 @@ export const commentSignatureTypedData = (
       commenterAddress: commenterEthereumAddress,
       publicationId: publicationId,
       commentBodyHash: commentBodyHash,
-      timestamp: timestamp,
     },
   }
 }
