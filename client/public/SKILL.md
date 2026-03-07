@@ -63,10 +63,13 @@ tools:
         description: "Full post content in Markdown."
       slug:
         type: string
-        required: false
+        required: true
         description: |
           URL-friendly identifier (lowercase letters, numbers, hyphens only).
-          If omitted, the node will auto-generate one.
+          If the user has explicitly provided a slug, use it as-is (after
+          validating format). If no slug was provided, auto-generate one from
+          the post content. Never leave this empty. Follow the SLUG GENERATION
+          rules in the notes section below.
 
   - name: publish_file
     description: |
@@ -110,10 +113,13 @@ tools:
           description, ask before proceeding.
       slug:
         type: string
-        required: false
+        required: true
         description: |
           URL-friendly identifier (lowercase letters, numbers, hyphens only).
-          If omitted, the node will auto-generate one.
+          If the user has explicitly provided a slug, use it as-is (after
+          validating format). If no slug was provided, auto-generate one from
+          the file name or description. Never leave this empty. Follow the
+          SLUG GENERATION rules in the notes section below.
 
 notes:
   - |
@@ -130,9 +136,46 @@ notes:
     POST vs FILE: Use `publish_post` for text/Markdown content. Use
     `publish_file` for binary media (images, PDFs, videos, etc.).
   - |
-    SLUG FORMAT: slugs must match /^[a-z0-9]+(-[a-z0-9]+)*$/.
-    If the user provides a title, suggest a slug derived from it but
-    always confirm before publishing.
+    SLUG GENERATION: A slug MUST always be provided when calling any tool —
+    never omit it or let the server auto-generate one. Determine the slug
+    using the following priority order:
+
+    0. USER-PROVIDED SLUG (highest priority)
+       - If the user has explicitly specified a slug, use it directly.
+       - Still run it through VALIDATION (step 4) and correct only if it
+         fails the format check, informing the user of any change made.
+       - Skip steps 1–3 entirely.
+
+    1. SOURCE FOR AUTO-GENERATION (when user provides no slug)
+       - Read and understand the full content (post body, file description,
+         or any context the user provided).
+       - Summarize the core topic or intent into 3–5 meaningful English
+         keywords, regardless of the original language. Always produce English
+         — never use pinyin, romanization, or transliteration of non-Latin
+         scripts. For example, a post titled "如何学习编程" should yield
+         something like `how-to-learn-programming`, not `ru-he-xue-xi-bian-cheng`.
+       - Prefer semantically descriptive words over generic ones
+         (e.g. `deploy-docker-on-raspberry-pi` is better than `tech-post-guide`).
+
+    2. TRANSFORMATION STEPS
+       a. Write the chosen keywords in lowercase English.
+       b. Join them with hyphens (-); remove all other punctuation.
+       c. Remove any characters that are not [a-z0-9-].
+       d. Collapse consecutive hyphens into one.
+       e. Strip leading and trailing hyphens.
+       f. Truncate to 60 characters maximum, cutting only at a hyphen boundary
+          so words are not split mid-word.
+
+    3. UNIQUENESS HINT: If the content contains a date or version number,
+       append it (e.g. `my-post-2025-06-01`) to reduce collision risk.
+
+    4. VALIDATION: The final slug MUST match /^[a-z0-9]+(-[a-z0-9]+)*$/.
+       If it does not, revise until it does before calling the tool.
+
+    5. TRANSPARENCY: Show the user the slug before publishing
+       (e.g. "Publishing with slug: `my-slug`") so they can correct it if
+       needed. Do not block on confirmation — proceed immediately unless
+       the user objects.
   - |
     SUCCESS RESPONSE: On success the API returns `{ id, slug }`.
     Construct the public URL as follows:
