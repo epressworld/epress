@@ -85,7 +85,6 @@ export class Publication extends Model {
   static async updateCommentCount(publicationId) {
     const count = await Comment.query()
       .where("publication_id", publicationId)
-      .where("status", "CONFIRMED")
       .resultSize()
 
     await Publication.query()

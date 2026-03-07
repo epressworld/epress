@@ -96,25 +96,20 @@ test.serial.before(async (t) => {
     comment_count: 0,
   })
 
-  // Create test comments
   t.context.comment = await Comment.query().insert({
     publication_id: t.context.publicationSigned.id,
     body: "This is a test comment",
-    status: "CONFIRMED",
-    auth_type: "EMAIL",
     author_name: "testuser",
-    author_id: "test@example.com",
-    credential: null,
+    author_address: t.context.selfNode.address,
+    signature: null,
   })
 
   t.context.comment2 = await Comment.query().insert({
     publication_id: t.context.publicationSigned.id,
     body: "Another test comment",
-    status: "CONFIRMED",
-    auth_type: "ETHEREUM",
     author_name: "cryptouser",
-    author_id: "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6",
-    credential: null,
+    author_address: "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6",
+    signature: null,
   })
 })
 
@@ -634,10 +629,8 @@ test("Success: search COMMENT should return comments for specified publication",
           node {
             ... on Comment {
               body
-              status
-              auth_type
               author_name
-              author_id
+              author_address
               created_at
               updated_at
               publication {
@@ -661,11 +654,11 @@ test("Success: search COMMENT should return comments for specified publication",
   const comments = data.search.edges.map((edge) => edge.node)
   t.true(
     comments.some((c) => c.author_name === "testuser"),
-    "Should include email comment",
+    "Should include testuser comment",
   )
   t.true(
     comments.some((c) => c.author_name === "cryptouser"),
-    "Should include ethereum comment",
+    "Should include cryptouser comment",
   )
 })
 
@@ -682,7 +675,7 @@ test("Success: search COMMENT should support filtering by author_name", async (t
             ... on Comment {
               body
               author_name
-              auth_type
+              author_address
             }
           }
         }
@@ -1083,9 +1076,8 @@ test("Success: search COMMENT with integration token should return all comments"
     publication_id: otherNodePublication.id,
     body: `Other node comment for search test ${Date.now()}`,
     author_name: "other_user",
-    author_id: "other@example.com",
-    auth_type: "EMAIL",
-    status: "PENDING", // 未确认状态，只有 integration token 才能看到
+    author_address: t.context.nodeB.address,
+    signature: null,
   })
 
   // 使用 integration token 搜索评论
@@ -1099,7 +1091,6 @@ test("Success: search COMMENT with integration token should return all comments"
           node {
             ... on Comment {
               body
-              status
               author_name
             }
           }
@@ -1119,13 +1110,6 @@ test("Success: search COMMENT with integration token should return all comments"
   t.falsy(errors, "Should not have any GraphQL errors")
   t.truthy(data.search, "Search result should exist")
   t.true(data.search.total >= 0, "Should return results or empty set")
-
-  // 验证返回的数据包含未确认状态的评论
-  const statuses = data.search.edges.map((edge) => edge.node.status)
-  t.true(
-    statuses.includes("PENDING"),
-    "Should include pending comments with integration token",
-  )
 })
 
 test("Success: search PUBLICATION without token should return only self-authored publications", async (t) => {
@@ -1174,10 +1158,9 @@ test("Success: search PUBLICATION without token should return only self-authored
   }
 })
 
-test("Success: search COMMENT without token should return only confirmed comments", async (t) => {
+test("Success: search COMMENT without token should return comments", async (t) => {
   const { graphqlClient } = t.context
 
-  // 不使用 token 搜索评论（游客模式）
   const query = `
     query SearchComments($first: Int) {
       search(type: COMMENT, first: $first, filterBy: { publication_id: "1" }) {
@@ -1186,7 +1169,6 @@ test("Success: search COMMENT without token should return only confirmed comment
           node {
             ... on Comment {
               body
-              status
               author_name
             }
           }
@@ -1197,23 +1179,11 @@ test("Success: search COMMENT without token should return only confirmed comment
 
   const { data, errors } = await graphqlClient.query(query, {
     variables: { first: 10 },
-    // 不传递 Authorization header
   })
 
   t.falsy(errors, "Should not have any GraphQL errors")
   t.truthy(data.search, "Search result should exist")
   t.true(data.search.total >= 0, "Should return results or empty set")
-
-  // 验证返回的数据只包含已确认的评论
-  if (data.search.edges.length > 0) {
-    data.search.edges.forEach((edge) => {
-      t.is(
-        edge.node.status,
-        "CONFIRMED",
-        "Should only return confirmed comments",
-      )
-    })
-  }
 })
 
 test("search: Should filter publications by hashtag", async (t) => {

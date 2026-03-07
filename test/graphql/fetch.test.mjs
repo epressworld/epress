@@ -155,11 +155,9 @@ test("Success: fetch COMMENT should return comment information", async (t) => {
   const comment = await Comment.query().insert({
     publication_id: publication.id,
     body: "This is a test comment",
-    status: "CONFIRMED",
-    auth_type: "EMAIL",
     author_name: "testuser",
-    author_id: "test@example.com",
-    credential: null,
+    author_address: node.address,
+    signature: null,
   })
 
   const query = `
@@ -167,11 +165,8 @@ test("Success: fetch COMMENT should return comment information", async (t) => {
       fetch(type: COMMENT, id: $id) {
         ... on Comment {
           body
-          status
-          auth_type
           author_name
-          author_id
-          credential
+          author_address
           created_at
           updated_at
           publication {
@@ -195,9 +190,12 @@ test("Success: fetch COMMENT should return comment information", async (t) => {
   t.falsy(errors, "Should not have any GraphQL errors")
   t.truthy(data.fetch, "Comment data should exist")
   t.is(data.fetch.body, "This is a test comment", "Comment body should match")
-  t.is(data.fetch.status, "CONFIRMED", "Comment status should match")
-  t.is(data.fetch.auth_type, "EMAIL", "Comment auth type should match")
   t.is(data.fetch.author_name, "testuser", "Commenter username should match")
+  t.is(
+    data.fetch.author_address,
+    node.address,
+    "Comment author address should match",
+  )
   // commenter_email field is hidden to protect user privacy
   t.truthy(data.fetch.publication, "Publication association should be loaded")
   t.is(
@@ -436,14 +434,12 @@ test("Success: fetch COMMENT with integration token should return any comment", 
     signature: `0x${Math.random().toString(16).substr(2, 130)}`,
   })
 
-  // 创建一个测试评论（PENDING 状态，只有 integration token 才能看到）
   const comment = await Comment.query().insert({
     publication_id: publication.id,
     body: `Test comment for fetch permission test ${Date.now()}`,
     author_name: "test_user",
-    author_id: "test@example.com",
-    auth_type: "EMAIL",
-    status: "PENDING",
+    author_address: t.context.nodeB.address,
+    signature: null,
   })
 
   // 使用 integration token 获取评论
@@ -455,7 +451,6 @@ test("Success: fetch COMMENT with integration token should return any comment", 
         ... on Comment {
           id
           body
-          status
           author_name
         }
       }
@@ -470,14 +465,9 @@ test("Success: fetch COMMENT with integration token should return any comment", 
   t.truthy(data.fetch, "Should return comment with integration token")
   t.is(data.fetch.id, comment.id.toString())
   t.is(data.fetch.body, comment.body)
-  t.is(
-    data.fetch.status,
-    "PENDING",
-    "Should return pending comment with integration token",
-  )
 })
 
-test("Success: fetch COMMENT without token should return only confirmed comments", async (t) => {
+test("Success: fetch COMMENT without token should return comments", async (t) => {
   const { graphqlClient } = t.context
 
   // 创建一个测试内容
@@ -493,24 +483,20 @@ test("Success: fetch COMMENT without token should return only confirmed comments
     signature: `0x${Math.random().toString(16).substr(2, 130)}`,
   })
 
-  // 创建一个测试评论（PENDING 状态，游客应该看不到）
-  const pendingComment = await Comment.query().insert({
+  const comment1 = await Comment.query().insert({
     publication_id: publication.id,
-    body: `Pending comment for fetch without token test ${Date.now()}`,
+    body: `Comment one for fetch without token test ${Date.now()}`,
     author_name: "test_user",
-    author_id: "test@example.com",
-    auth_type: "EMAIL",
-    status: "PENDING",
+    author_address: t.context.selfNode.address,
+    signature: null,
   })
 
-  // 创建一个测试评论（CONFIRMED 状态，游客可以看到）
-  const confirmedComment = await Comment.query().insert({
+  const comment2 = await Comment.query().insert({
     publication_id: publication.id,
-    body: `Confirmed comment for fetch without token test ${Date.now()}`,
+    body: `Comment two for fetch without token test ${Date.now()}`,
     author_name: "test_user2",
-    author_id: "test2@example.com",
-    auth_type: "EMAIL",
-    status: "CONFIRMED",
+    author_address: t.context.selfNode.address,
+    signature: null,
   })
 
   const query = `
@@ -519,33 +505,25 @@ test("Success: fetch COMMENT without token should return only confirmed comments
         ... on Comment {
           id
           body
-          status
           author_name
         }
       }
     }
   `
 
-  // 测试 PENDING 评论 - 游客应该看不到
-  const { data: pendingData } = await graphqlClient.query(query, {
-    variables: { id: pendingComment.id.toString() },
-    // 不传递 Authorization header
+  const { data: data1 } = await graphqlClient.query(query, {
+    variables: { id: comment1.id.toString() },
   })
 
-  t.falsy(pendingData.fetch, "Should not return pending comment without token")
+  t.truthy(data1.fetch, "Should return comment without token")
+  t.is(data1.fetch.id, comment1.id.toString())
+  t.is(data1.fetch.body, comment1.body)
 
-  // 测试 CONFIRMED 评论 - 游客应该能看到
-  const { data: confirmedData } = await graphqlClient.query(query, {
-    variables: { id: confirmedComment.id.toString() },
-    // 不传递 Authorization header
+  const { data: data2 } = await graphqlClient.query(query, {
+    variables: { id: comment2.id.toString() },
   })
 
-  t.truthy(confirmedData.fetch, "Should return confirmed comment without token")
-  t.is(confirmedData.fetch.id, confirmedComment.id.toString())
-  t.is(confirmedData.fetch.body, confirmedComment.body)
-  t.is(
-    confirmedData.fetch.status,
-    "CONFIRMED",
-    "Should return confirmed comment without token",
-  )
+  t.truthy(data2.fetch, "Should return comment without token")
+  t.is(data2.fetch.id, comment2.id.toString())
+  t.is(data2.fetch.body, comment2.body)
 })

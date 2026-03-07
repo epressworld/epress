@@ -249,7 +249,8 @@
     "commentDeletedSuccessfully": "Your comment has been successfully deleted.",
     "verifyingComment": "Verifying comment...",
     "deletingComment": "Deleting comment...",
-    "mailNotConfiguredWarning": "Email authentication is not available because the mail server is not configured. Please connect your wallet to use Ethereum authentication."
+    "mailNotConfiguredWarning": "Email authentication is not available because the mail server is not configured. Please connect your wallet to use Ethereum authentication.",
+    "connectWalletToComment": "Connect wallet to comment"
   },
   "connection": {
     "follow": "Follow",

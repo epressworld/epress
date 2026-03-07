@@ -4,7 +4,7 @@ import FormData from "form-data"
 import { createMercuriusTestClient } from "mercurius-integration-testing"
 import nock from "nock"
 import setupServer from "../server/index.mjs"
-import { Comment, Model, Node, Token } from "../server/models/index.mjs"
+import { Model, Node, Token } from "../server/models/index.mjs"
 import { cleanupInterval } from "../server/routes/api/visitors.mjs"
 import { generateTestAccount, TEST_ETHEREUM_ADDRESS_NODE_A } from "./env.mjs"
 
@@ -60,27 +60,6 @@ test.before(async (t) => {
       iss: selfNode.address,
       expiresIn,
     })
-  }
-  t.context.createCommentJwt = async (
-    commentId,
-    action,
-    email = null,
-    expiresIn = "24h",
-  ) => {
-    const payload = { aud: "comment", comment_id: commentId, action }
-    if (email) {
-      payload.sub = email
-    } else {
-      // 如果没有提供 email，从数据库中获取评论的 email
-      const comment = await Comment.query()
-        .findOne({ id: commentId, auth_type: "EMAIL" })
-        .throwIfNotFound()
-      if (comment?.author_id) {
-        payload.sub = comment.author_id
-      }
-    }
-    payload.iss = selfNode.address
-    return await app.jwt.sign(payload, { expiresIn })
   }
   t.context.createIntegrationJwt = async (scope, expiresIn = "24h") => {
     return await Token.issue({

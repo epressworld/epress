@@ -61,7 +61,6 @@ export function PublicationItem({
   const [commentCount, setCommentCount] = useState(
     publication.comment_count || 0,
   )
-  const [localPendingComment, setLocalPendingComment] = useState(null)
 
   // 生成引用文本
   const generateQuote = () => {
@@ -234,11 +233,6 @@ export function PublicationItem({
     await commentsRef?.current?.refetch()
     // 更新评论数量
     setCommentCount((prev) => Math.max(0, prev - 1))
-  }
-
-  // 处理待确认评论状态变化
-  const handlePendingCommentChange = (comment, retryFn) => {
-    setLocalPendingComment(comment ? { ...comment, retryFn } : null)
   }
 
   return (
@@ -483,15 +477,12 @@ export function PublicationItem({
                   key={`commentForm-${publication.id}-${commentCount}`}
                   publicationId={publication.id}
                   onCommentCreated={handleCommentCreated}
-                  onPendingCommentChange={handlePendingCommentChange}
                 />
                 <Separator my={5} />
                 <CommentList
                   ref={commentsRef}
                   publicationId={publication.id}
                   onCommentDeleted={handleCommentDeleted}
-                  localPendingComment={localPendingComment}
-                  onRetrySignature={localPendingComment?.retryFn || undefined}
                   suspense={false}
                 />
               </Drawer.Body>

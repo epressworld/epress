@@ -1,7 +1,7 @@
 "use client"
 import { useApolloClient } from "@apollo/client/react"
 import { Alert, Badge, HStack, Separator, Text, VStack } from "@chakra-ui/react"
-import { useRef, useState } from "react"
+import { useRef } from "react"
 import { CommentForm, CommentList } from "@/components/features/comment"
 import {
   PublicationEditForm,
@@ -27,8 +27,6 @@ import { stripMarkdown, truncateText } from "@/utils/format"
 export function PublicationItemPage({ variables }) {
   const { t } = useIntl()
   const { settings } = usePage()
-  const [localPendingComment, setLocalPendingComment] = useState(null)
-  const [retrySignatureFn, setRetrySignatureFn] = useState(null)
   const client = useApolloClient()
 
   // Pull to refresh trigger ref
@@ -190,10 +188,6 @@ export function PublicationItemPage({ variables }) {
                   })
                   await handleCommentCreated()
                 }}
-                onPendingCommentChange={(pending, retryFn) => {
-                  setLocalPendingComment(pending)
-                  setRetrySignatureFn(() => retryFn)
-                }}
               />
               <Separator my={6} />
               {/* Comment list - above the form */}
@@ -205,8 +199,6 @@ export function PublicationItemPage({ variables }) {
                   })
                   await handleCommentCreated()
                 }}
-                localPendingComment={localPendingComment}
-                onRetrySignature={retrySignatureFn}
               />
             </UnifiedCard.Body>
           </UnifiedCard.Root>

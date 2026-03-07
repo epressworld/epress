@@ -63,13 +63,6 @@ export const fetchQuery = {
           "Fetching comment",
         )
 
-        // 权限检查：如果没有 fetch:comments 权限，则只能获取已确认的评论
-        if (!context.request.cani("fetch:comments")) {
-          return await Comment.query()
-            .where({ id: args.id, status: "CONFIRMED" })
-            .first()
-        }
-
         return await Comment.query().findById(args.id)
       },
     },

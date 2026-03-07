@@ -128,7 +128,7 @@ export const up = async (knex) => {
     table.index("followee_address")
   })
 
-  // 创建评论表
+  // 创建评论表（仅钱包认证：author_address + signature，无 status/auth_type）
   await knex.schema.createTable("comments", (table) => {
     table.increments("id").primary()
     table
@@ -137,21 +137,14 @@ export const up = async (knex) => {
       .references("id")
       .inTable("publications")
     table.text("body").notNullable()
-    table.string("status").notNullable()
-    table.string("auth_type").notNullable()
     table.string("author_name").notNullable()
-    table.string("author_id").notNullable()
-    table.text("credential").nullable()
+    table.string("author_address").notNullable()
+    table.string("signature").nullable()
     table.timestamp("created_at").defaultTo(knex.fn.now())
     table.timestamp("updated_at").defaultTo(knex.fn.now())
 
-    // 复合索引：极大优化 "查询某篇publication下的评论并按时间排序"
-    // (WHERE publication_id = ? ORDER BY created_at DESC)
     table.index(["publication_id", "created_at"])
-    // 索引：优化按状态查询 (e.g., WHERE status = 'approved')
-    table.index("status")
-    // 索引：优化按作者ID查询
-    table.index("author_id")
+    table.index("author_address")
   })
 
   // 创建 tokens 表（用于 token 撤销和审计）
