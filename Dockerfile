@@ -16,6 +16,7 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 # 复制 package 文件（包含新增的 pm2 依赖）
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
+RUN npm install -g pm2
 
 # 复制应用文件
 COPY --from=builder /app/client/.next ./client/.next

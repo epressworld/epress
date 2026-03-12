@@ -1,14 +1,29 @@
 import "../config/index.mjs"
+import { mkdir } from "node:fs/promises"
+import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
-import { execa } from "execa"
 import cron from "node-cron"
 import { Command } from "solidify.js"
 import server from "../server/index.mjs"
 import { CleanContentCommand } from "./clean.mjs"
 import { SyncCommand } from "./sync.mjs"
 
+const __dirname = dirname(fileURLToPath(import.meta.url))
+
 function isMainModule(meta) {
   return process.argv[1] === fileURLToPath(meta.url)
+}
+
+async function ensureLogsDirectory() {
+  const logsDir = join(__dirname, "../data/logs")
+  try {
+    await mkdir(logsDir, { recursive: true })
+  } catch (error) {
+    // Directory already exists, ignore error
+    if (error.code !== "EEXIST") {
+      console.error("Failed to create logs directory:", error.message)
+    }
+  }
 }
 
 export async function startServer() {
@@ -19,13 +34,6 @@ export async function startServer() {
   const app = await server()
   await app.listen(listen)
   console.log(`Server is running on port ${listen.port}`)
-}
-
-export async function startClient() {
-  await execa({
-    stdout: "inherit",
-    stderr: "inherit",
-  })`npx next ${process.env.NODE_ENV === "development" ? "dev" : "start"} -p ${process.env.EPRESS_CLIENT_PORT || 8543} ./client`
 }
 
 export async function startScheduler() {
@@ -75,43 +83,16 @@ export async function startSync() {
   }
 }
 
-export class StartCommand extends Command {
-  arguments = {
-    item: {
-      optional: true,
-      multiple: false,
-      choices: ["all", "server", "client", "scheduler", "sync"],
-      description: "Start server, client, scheduler, sync or all",
-      default: "all",
-    },
-  }
+export class ServerCommand extends Command {
+  async action() {
+    // Ensure logs directory exists
+    await ensureLogsDirectory()
 
-  async action(item) {
-    switch (item) {
-      case "server":
-        await startServer()
-        break
-      case "client":
-        await startClient()
-        break
-      case "scheduler":
-        await startScheduler()
-        break
-      case "sync":
-        await startSync()
-        break
-      case "all":
-        await Promise.all([
-          startServer(),
-          startClient(),
-          startScheduler(),
-          startSync(),
-        ])
-        break
-    }
+    // Start all services
+    await Promise.all([startServer(), startScheduler(), startSync()])
   }
 }
 
 if (isMainModule(import.meta)) {
-  new StartCommand().execute(process.argv)
+  new ServerCommand().execute(process.argv)
 }

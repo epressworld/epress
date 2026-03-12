@@ -1,32 +1,35 @@
 module.exports = {
   apps: [
     {
-      name: "app",
-      script: "npm", // 修改为 npm
-      args: "run start",
+      name: "epress-server",
+      script: "./commands/server.mjs",
       instances: 1,
-      exec_mode: "fork",
+      autorestart: true,
+      watch: false,
+      max_memory_restart: "512M",
+      out_file: "./data/logs/server-out.log",
+      error_file: "./data/logs/server-error.log",
+      merge_logs: true,
       env: {
         NODE_ENV: "production",
       },
-      // 自动重启配置
+    },
+    {
+      name: "epress-client",
+      script: "./node_modules/.bin/next",
+      args: "start -p 8543",
+      cwd: "./client",
+      instances: 1,
       autorestart: true,
-      max_restarts: 10,
-      min_uptime: "10s",
-      max_memory_restart: "1G", // 内存超过1G自动重启
-
-      // 日志配置
-      error_file: "./data/logs/pm2-error.log",
-      out_file: "./data/logs/pm2-out.log",
-      log_date_format: "YYYY-MM-DD HH:mm:ss Z",
+      watch: false,
+      max_memory_restart: "512M",
+      out_file: "../data/logs/client-out.log",
+      error_file: "../data/logs/client-error.log",
       merge_logs: true,
-
-      // 重启策略
-      restart_delay: 4000,
-
-      // 监控
-      listen_timeout: 10000,
-      kill_timeout: 5000,
+      env: {
+        NODE_ENV: "production",
+        EPRESS_API_URL: "http://localhost:8544",
+      },
     },
   ],
 }

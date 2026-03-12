@@ -33,14 +33,23 @@ npm install
 # Run setup wizard
 node commands/install.mjs
 
+# Development server (hot reload) - runs server and client in parallel
+npm run dev
+
 # Build the project
 npm run build
 
-# Start in production
+# Production start (uses PM2, requires global pm2: npm install -g pm2)
 npm run start
 
-# Start development server
-npm run dev
+# PM2 management
+npm run stop      # Stop all processes
+npm run restart   # Restart all processes
+npm run logs      # View PM2 logs
+
+# Standalone server/client
+npm run start:server   # Run server only (port 8544)
+npm run start:client   # Run client only (port 8543)
 
 # Run tests
 npm test

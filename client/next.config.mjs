@@ -1,5 +1,7 @@
 import "../config/index.mjs"
 
+const useExternalProxy = process.env.EPRESS_REVERSE_PROXY === "true"
+
 export default {
   // 新增这一项配置
   serverExternalPackages: [
@@ -53,6 +55,9 @@ export default {
     ]
   },
   async rewrites() {
+    if (useExternalProxy) {
+      return []
+    }
     return [
       {
         source: "/ewp/:path*",
