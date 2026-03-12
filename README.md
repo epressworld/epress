@@ -1,208 +1,352 @@
 <div align="center">
-  <img src="/client/public/assets/logo-light.svg" alt="epress logo" width="200">
-  <h1><strong>epress: A Decentralized Content and Social Network</strong></h1>
-  <p align="center">Building a fully decentralized content and social network, self-hosted by everyone.</p>
-  <p>
-    <a href="https://github.com/epressworld/epress/actions/workflows/main.yml"><img src="https://github.com/epressworld/epress/actions/workflows/main.yml/badge.svg" alt="GitHub Actions Main"></a>
-    <a href="https://codecov.io/gh/epressworld/epress"><img src="https://codecov.io/gh/epressworld/epress/graph/badge.svg" /></a>
-    <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
-    <a href="https://t.me/+mZMgNSIVy1MwMmVl"><img src="https://img.shields.io/badge/Telegram-Join%20Community-2CA5E0?logo=telegram&logoColor=white" alt="Telegram Community"></a>
-  </p>
-  <p align="center">
-    <a href="/docs/zh/README.md">中文</a> •
-    <a href="/docs/en/WHITEPAPER.md">White Paper</a> •
-    <a href="https://youtu.be/BB1Zn3oFDVc">Video Demo</a> •
-    <a href="/docs/en/SELF_HOSTING.md">Installation</a>
-  </p>
+  <img src="/client/public/assets/logo-light.svg" alt="epress" width="140"><br><br>
+
+  <strong>You don't own your social presence. You rent it.</strong><br><br>
+
+  <p>epress is an open-source protocol and software for a decentralized social network<br>
+  where each participant runs their own node — their sovereign digital home, for life.</p>
+
+  <a href="https://github.com/epressworld/epress/actions/workflows/main.yml"><img src="https://github.com/epressworld/epress/actions/workflows/main.yml/badge.svg"></a>
+  <a href="https://codecov.io/gh/epressworld/epress"><img src="https://codecov.io/gh/epressworld/epress/graph/badge.svg"></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg"></a>
+  <a href="https://t.me/+mZMgNSIVy1MwMmVl"><img src="https://img.shields.io/badge/Telegram-Community-2CA5E0?logo=telegram"></a>
+
+  <br><br>
+
+  [Website](https://epress.world) · [Whitepaper](/docs/en/WHITEPAPER.md) · [Deploy Your Node](/docs/en/SELF_HOSTING.md) · [Demo](https://youtu.be/BB1Zn3oFDVc) · [中文](/docs/zh/README.md)
+
 </div>
 
----
-
-### What is epress?
-
-epress is an open-source software and protocol for a truly decentralized content and social network. It is built on a simple, powerful idea: **your node is your sovereign territory.**
-
-Unlike platforms where you are a "user," in epress, you are an "owner." You run your own **Node**—a self-hosted website cryptographically tied to your **Ethereum identity**. The name `epress` itself derives from **E**thereum + **Press**, reflecting these technical roots and its focus on publishing.
-
-This node is your digital homestead:
-
-*   **As a personal space**, it's a fully-featured blog and content management system.
-*   **As a social entity**, it connects to other nodes, forming a resilient, peer-to-peer network where you control the rules.
-
-## Why epress?
-
-With numerous social platforms available, including decentralized federated networks like Mastodon based on ActivityPub, why create epress? The answer stems from a personal experience and critical reflections.
-
-### A Decade of Memories Erased Overnight
-
-In 2010, I created a Sina Weibo account during my teenage years, documenting my life, building connections, and preserving countless memories over a decade. Recently, that account was banned without reason, warning, or appeal process. My attempts to recover it were met with silence.
-
-That moment revealed how fragile our "digital assets" are under platform rules. The content we pour our hearts into and the connections we build are never truly ours—platforms can take them away, reducing everything to zero.
-
-### Why Not Stick with X (Formerly Twitter)?
-
-X remains a top social network, but it’s fundamentally no different from Sina Weibo, carrying the same risks. Additionally, I recently wanted an AI to analyze my timeline for fun, only to discover that accessing my own timeline programmatically requires an expensive monthly API subscription. Without it, there’s no reliable way to access even my own posts. X offers no alternatives like RSS feeds, which I believe should be a basic feature for all users. This led to another realization: creators share content altruistically, yet platforms monetize it by locking access behind paywalls. Is this fair?
-
-### Will Federation Be the Final Answer?
-
-I also tried federated social networks like Mastodon and Bluesky. They are indeed a step forward from traditional centralized platforms, but they don't solve the fundamental problem.
-
-We merely shift our trust from a "big center" (like X) to a "smaller center" (the admin of a federated instance). This "small center" not only holds the power to censor or shut down, but its significant operational costs also create inevitable pressure to commercialize, leading back to the same dilemmas found on centralized platforms. Our data and identity are, in essence, still hosted in someone else's hands, and I am skeptical of its stability and sustainability.
-
-**epress was born to address these problems.**
-
-It pursues radical decentralization. Your identity is your Ethereum address, independent of any platform. Your data lives on your node, under your absolute control. Connections are free, and your content is yours—a social platform you can use from birth to old age.
-
-Before epress, projects like Mastodon, Nostr, and Bluesky tackled centralized platform issues to varying degrees. I don’t claim epress is the ultimate decentralized social network, but it fulfills my vision for one and may even unlock [possibilities beyond imagination](/docs/en/WHITEPAPER.md). This is the epress you see today.
-
-If you share this vision, join us in building a truly decentralized social network.
-
-### How It Works: The Core Principles
-
-epress achieves radical decentralization through a few key primitives, detailed in our [White Paper](/docs/en/WHITEPAPER.md):
-
-*   **Self-Hosting First**: Instead of relying on a federated or relay-based model, epress returns to the internet's origins. Each user hosts their own node, ensuring true data ownership and eliminating third-party trust.
-*   **Verifiable Content**: All content shared on the network is cryptographically signed as a "Proof of Source" (PoS). This makes every piece of information traceable, tamper-proof, and uniquely identifiable.
-*   **Peer-to-Peer Replication**: Content flows directly between nodes via an open protocol (EWP). A "Notify-Pull" mechanism allows for efficient and resilient content distribution without central servers.
+<br>
 
 ---
 
-🚀 **Ready to dive in?**
+## An account is rented. A node is owned.
 
-*   **[Get Started with Docker](#option-1-docker-recommended)** — The fastest way to launch your own node.
-*   **[Read the White Paper](/docs/en/WHITEPAPER.md)** — For a deep dive into the protocol and philosophy.
-*   **[Join our Telegram](https://t.me/+mZMgNSIVy1MwMmVl)** — To connect with the community.
+You've spent years building your social presence. Your posts, your followers, your reputation.
+None of it is yours.
+epress is the fix: a self-hosted node you own completely, connected to a global open network.
+
+Every platform gives you an account. epress gives you a node.
+An account is rented. A node is owned — by you, for life, inheritable like property.
+
+<br>
 
 ---
 
-### ✨ Key Features
+## Deploy your node in one command
 
-#### 📝 Web3 Personal Publishing Platform (Blog)
-
-- **Web3-Native Identity**: Use your Ethereum address for identity, managed via Sign-In With Ethereum (SIWE).
-- **Markdown Authoring**: Full Markdown support for distraction-free content creation.
-- **Multimedia Publishing**: Upload images, videos, PDFs, and more, each with independent descriptions.
-- **Personal Branding**: Customize your node’s title, bio, and avatar to reflect your unique identity.
-- **Comment System**: Supports dual authentication via email or wallet signatures.
-- **RSS Feed**: Share your content as an RSS feed, allowing anyone to subscribe via their preferred RSS reader.
-- **Node Control**: Full control over your node, including follow permissions and comment settings.
-
-#### 🌐 Fully Decentralized Social Network
-
-- **Node Connections**: Follow or be followed by other epress nodes to create social links.
-- **Signed Content**: Digitally sign your posts, which appear in your followers’ timelines.
-- **Content Hashing**: Every piece of content has a unique, network-wide Content Hash identifier.
-- **Personal Timeline**: Log in with your Ethereum account to view updates from all nodes you follow.
-- **Timeline RSS**: Use an authenticated token to access your social network timeline via RSS, enabling AI or other apps to fetch your timeline freely.
-
-### 🛠️ Tech Stack
-
-* **Backend**: Swiftify (built on Fastify and Objection.js)
-* **Frontend**: Next.js (React), Chakra UI
-* **Database**: SQLite (default)
-* **API**: GraphQL, RESTful (EWP)
-* **Testing**: Ava.js
-
-### 🚀 Get Started
-
-Run your own `epress` node in two ways:
-
-#### Option 1: Docker (Recommended)
-
-The fastest and easiest deployment method, using the official pre-built image `ghcr.io/epressworld/epress`.
-
-1. **Start Your Node**:
-    ```bash
-    docker run -d -p 8543:8543 -p 8544:8544 -v epress-data:/app/data --name my-epress-node ghcr.io/epressworld/epress
-    ```
-
-2. **Complete Setup via Web Interface**:
-    Open your browser and navigate to `http://localhost:8543`. You'll be automatically redirected to the installation wizard where you can configure your node through a beautiful, user-friendly interface.
-
-For advanced Docker options (e.g., separating frontend/backend or custom builds), see [**`docs/en/SELF_HOSTING.md`**](/docs/en/SELF_HOSTING.md).
-
-#### Option 2: Run from Source
-
-Ideal for developers who want to customize or contribute.
-
-1. **Clone and Install Dependencies**:
-    ```bash
-    git clone https://github.com/epressworld/epress.git
-    cd epress
-    npm install
-    ```
-
-2. **Build the Project**:
-    ```bash
-    npm run build
-    ```
-
-3. **Start Your Node**:
-    ```bash
-    npm run start
-    ```
-
-4. **Complete Setup via Web Interface**:
-    Open your browser and navigate to `http://localhost:8543`. You'll be automatically redirected to the installation wizard at `/install` where you can configure your node.
-
-    **Note**: The project now includes a default `.env` file for standard configuration. If you need to customize infrastructure settings (e.g., ports, database path), create a `.env.local` file to override the defaults. Do not edit the `.env` file directly if you plan to pull future updates.
-
-For more details, see [**`docs/en/INSTALLATION.md`**](/docs/en/INSTALLATION.md).
-
-### 👨‍💻 Developer Guide
-
-To contribute to epress or build on top of it:
-
-1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/epressworld/epress.git
-   cd epress
-   npm install
-   ```
-
-2. **Start Development Server**:
-   Start the server, which will use the default `.env` configuration.
-   ```bash
-   npm run dev
-   ```
-
-3. **Complete Setup & Develop**:
-   Open `http://localhost:8543/install` to complete the web-based setup. For any infrastructure customizations (like ports), create a `.env.local` file. The development server supports hot reloading.
-
-3. **Start Development Server**:
-   ```bash
-   npm run dev
-   ```
-   This launches the frontend and backend with hot reloading for real-time debugging.
-
-4. **Run Tests**:
-   ```bash
-   npm test
-   ```
-
-### 📁 Project Structure
-
-```
-.
-├── client/         # Frontend (Next.js)
-├── commands/       # Core CLI tools (install, migrate, start)
-├── docs/           # Design and specification docs
-├── server/         # Backend (Swiftify, Fastify)
-│   ├── graphql/    # GraphQL API implementation
-│   ├── models/     # Database models (Objection.js)
-│   └── routes/     # EWP RESTful API implementation
-└── test/           # Test cases (Ava.js)
+```bash
+docker run -d \
+  -p 8543:8543 -p 8544:8544 \
+  -v epress-data:/app/data \
+  --name my-epress-node \
+  ghcr.io/epressworld/epress
 ```
 
-### 🤝 Contributing
+Open `http://localhost:8543`. Your node is live. **You now own a piece of the network.**
 
-We welcome contributions of all kinds! Please read our [**`CONTRIBUTING.md`**](/CONTRIBUTING.md) to learn how to get involved.
+→ [Full self-hosting guide](/docs/en/SELF_HOSTING.md) &nbsp;·&nbsp; [Run from source](#run-from-source)
 
-## 👥 Community & Ecosystem
+<br>
 
-*   **[Awesome Nodes](https://github.com/epressworld/awesome-nodes)**: A curated list of nodes in the `epress` network. The goal of this list is to provide a community-maintained resource for discovering reliable and interesting nodes to connect with.
-*   **[Telegram Group](https://t.me/+mZMgNSIVy1MwMmVl)**: Join our community for real-time discussions and support.
+---
 
-### 📄 License
+## The architecture: nodes all the way down
 
-This project is licensed under the [MIT License](/LICENSE).
+```
+                    The epress Network
+
+      ┌─────────────────────────────────────────────┐
+      │                                             │
+      │   alice.example.com      bob.example.com    │
+      │   ┌──────────────┐      ┌──────────────┐   │
+      │   │ Alice's Node │◄────►│  Bob's Node  │   │
+      │   │              │      │              │   │
+      │   │ • identity   │      │ • identity   │   │
+      │   │ • content    │      │ • content    │   │
+      │   │ • social     │      │ • social     │   │
+      │   │   graph      │      │   graph      │   │
+      │   └──────┬───────┘      └──────┬───────┘   │
+      │          │                     │           │
+      │          └──────────┬──────────┘           │
+      │                     │                      │
+      │              carol.net/node                │
+      │              ┌──────────────┐              │
+      │              │ Carol's Node │              │
+      │              └──────────────┘              │
+      │                                             │
+      │  No central server. No platform. No admin. │
+      └─────────────────────────────────────────────┘
+```
+
+Every node is a complete, independent social entity. Nodes talk to each other directly via the **epress World Protocol (EWP)** — an open peer-to-peer protocol anyone can implement.
+
+There is no "epress server." The network *is* the nodes.
+
+<br>
+
+---
+
+## Identity: your Ethereum address, nothing else
+
+```
+  Traditional social network          epress
+  ───────────────────────────         ──────────────────────────────
+  You → create account                You → generate Ethereum keypair
+        │                                   │
+        ▼                                   ▼
+        Platform assigns you an ID          0x7a3f...c9d2  ← that's you
+        │                                   │
+        ▼                                   ▼
+        Platform stores your data           Your node stores your data
+        │                                   │
+        ▼                                   ▼
+        Platform can ban/delete you         Nobody can take this from you
+        │
+        ▼
+        Platform shuts down → you lose everything
+```
+
+Your Ethereum address is your identity in epress. Controlled by your private key. No username, no password, no platform account. Authentication uses [Sign-In With Ethereum (EIP-4361)](https://eips.ethereum.org/EIPS/eip-4361) and [EIP-712](https://eips.ethereum.org/EIPS/eip-712) structured signatures — open standards, no vendor lock-in.
+
+<br>
+
+---
+
+## Proof of Source: why this matters in the AI era
+
+Every public post on epress is a **Proof of Source (PoS)**:
+
+```
+  You write a post
+        │
+        ▼
+  ┌─────────────────────────────────────────────────┐
+  │  Statement of Source (SoS)                      │
+  │  ┌─────────────────────────────────────────┐   │
+  │  │  contentHash:      SHA-256("your post") │   │
+  │  │  publisherAddress: 0x7a3f...c9d2        │   │
+  │  │  timestamp:        1735000000           │   │
+  │  └─────────────────────────────────────────┘   │
+  │                    +                           │
+  │  signature: sign(SoS, your_private_key)        │
+  └─────────────────────────────────────────────────┘
+        │
+        ▼
+  Anyone can verify in seconds:
+  ✓ This address published this exact content
+  ✓ At this exact timestamp
+  ✓ Nothing has been modified since
+```
+
+**Why this matters now:** AI can generate infinite content at zero cost. Within years, most text on the internet will be machine-generated. Without source proof, no one will know what to trust.
+
+PoS provides cryptographic proof of human authorship. People don't give their private keys to bots — Ethereum addresses have real assets behind them. **That asymmetry is the signal.**
+
+<br>
+
+---
+
+## Why epress for the AI Agent era
+
+```
+  Today's social networks:                epress:
+  ──────────────────────────              ──────────────────────────
+  Your AI Agent wants to                  Your AI Agent wants to
+  read your feed                          read your feed
+        │                                       │
+        ▼                                       ▼
+  "Pay $100/month for API access"         Open RSS feed — no auth
+  "Sign our developer agreement"          Open API — no auth
+  "You've hit the rate limit"             No rate limits
+  "This content is not available"         All public content is public
+        │                                       │
+        ▼                                       ▼
+  Your Agent can't function               Your Agent works perfectly
+```
+
+Every epress node exposes fully open RSS and API endpoints. No keys, no payment, no permission. Any AI agent — yours or anyone else's — can read the entire public network freely.
+
+This isn't a feature. It's a design principle: **open is the only model that survives the Agent era.**
+
+<br>
+
+---
+
+## How following works: a synchronous handshake
+
+```
+  Alice wants to follow Bob:
+
+  Alice's Browser       Bob's Node           Alice's Node
+        │                    │                    │
+        ├─"I want to follow"─►│                    │
+        │                    │                    │
+        │◄─"Sign this" ───────┤                    │
+        │                    │                    │
+        ├─signed intent ──────►│                    │
+        │                    │                    │
+        │             ┌──────┴────────────────────┤
+        │             │  sync confirm request      │
+        │             ├───────────────────────────►│
+        │             │                            │ verify signature
+        │             │                            │ record "I follow Bob"
+        │             │◄──── "confirmed" ──────────┤
+        │             └──────┬────────────────────┘
+        │                    │ only NOW record
+        │                    │ "Alice follows me"
+        │◄─"follow success" ──┤
+        │
+  Result: both nodes have the relationship, or neither does.
+          No unilateral follows. No inconsistent state.
+```
+
+<br>
+
+---
+
+## How content flows: Notify-Pull
+
+```
+  Alice publishes a post:
+
+  Alice's Node        Bob's Node        Carol's Node
+       │                   │                  │
+       │  1. generate PoS  │                  │
+       │                   │                  │
+       ├──PoS only (tiny)──►│                  │
+       ├──PoS only (tiny)───────────────────► │
+       │                   │                  │
+       │                   │ 2. verify PoS    │ 2. verify PoS
+       │                   │                  │
+       │◄──"send content"───┤                  │
+       │◄──"send content"────────────────────-┤
+       │                   │                  │
+       ├──full content ─────►│                  │
+       ├──full content ──────────────────────► │
+       │                   │                  │
+       │            3. store replica   3. store replica
+
+  Publisher sends only a lightweight PoS notification.
+  Followers pull at their own pace.
+  No bandwidth spike. Works even if followers are temporarily offline.
+```
+
+<br>
+
+---
+
+## One node. One lifetime.
+
+This is the part people don't grasp immediately — and then can't stop thinking about.
+
+```
+  ──────────────────────────────────────────────────────────────────► time
+
+  Birth          Childhood        Adulthood        Death        After
+    │                │                │              │            │
+    ▼                ▼                ▼              ▼            ▼
+  Parents        Memories         Private key     Node still   Children
+  deploy         recorded         transferred     runs.        inherit
+  your node.     on your node.    to you.         Data intact. private key.
+
+
+  Your Twitter:  deleted if you stop paying / platform acquired / policy change
+  Your Mastodon: gone when your instance admin gives up
+  Your epress:   yours. always. inheritable like property.
+```
+
+A parent can deploy a node for their newborn. Record childhood. Hand it over at adulthood. The owner carries it through life, then leaves it — intact, complete — to their children.
+
+**A social presence you can write into your will.** That's new.
+
+<br>
+
+---
+
+## vs. everything else
+
+|                                   | Twitter/X | Mastodon | Nostr | Farcaster | **epress** |
+|-----------------------------------|:---------:|:--------:|:-----:|:---------:|:----------:|
+| You own your data                 | ✗ | △ | △ | △ | ✓ |
+| Zero third-party infrastructure   | ✗ | ✗ | ✗ | ✗ | ✓ |
+| Cryptographic content proof       | ✗ | ✗ | △ | △ | ✓ |
+| Fully open API (no auth/payment)  | ✗ | △ | △ | △ | ✓ |
+| Inheritable identity & data       | ✗ | ✗ | ✗ | ✗ | ✓ |
+| No instance/relay dependency      | ✗ | ✗ | ✗ | ✗ | ✓ |
+
+**Mastodon/Bluesky** shift trust from one big center to many small centers. Instance admins still hold your data and face commercialization pressure.
+
+**Nostr** depends on relay operators for availability. Trust is distributed, not eliminated.
+
+**Farcaster** puts identity on-chain (good) but social data in off-chain Hubs — still third-party infrastructure.
+
+epress doesn't redistribute trust. It eliminates the need for it.
+
+<br>
+
+---
+
+## Run from source
+
+```bash
+git clone https://github.com/epressworld/epress.git
+cd epress
+npm install
+npm run build
+npm start
+# open http://localhost:8543
+```
+
+**For development:**
+
+```bash
+npm run dev   # hot reload, runs server + client in parallel
+npm test
+```
+
+→ [Full self-hosting guide](/docs/en/SELF_HOSTING.md) &nbsp;·&nbsp; [Contributing](/CONTRIBUTING.md)
+
+<br>
+
+---
+
+## Tech stack
+
+| | |
+|---|---|
+| **Backend** | Node.js · Fastify · Objection.js |
+| **Frontend** | Next.js · React · Chakra UI |
+| **Database** | SQLite |
+| **Protocol** | EWP (RESTful) · GraphQL |
+| **Identity** | Ethereum · SIWE (EIP-4361) · EIP-712 |
+| **Tests** | Ava.js |
+
+<br>
+
+---
+
+## Read further
+
+- **[Whitepaper](/docs/en/WHITEPAPER.md)** — full protocol spec, design philosophy, and the vision for a Value Internet built on epress
+- **[epress.world](https://epress.world)** — website with visual explanations of every concept above
+- **[Awesome Nodes](https://github.com/epressworld/awesome-nodes)** — live nodes in the network to follow and connect with
+- **[Telegram](https://t.me/+mZMgNSIVy1MwMmVl)** — community discussion and support
+
+<br>
+
+---
+
+<div align="center">
+
+epress is early. The protocol is stable. The network is growing.
+
+**If you think the direction is right — star the repo.**<br>
+It's the highest-signal thing you can do right now.
+
+<br>
+
+MIT License · Built by [Garbin Huang](https://garbin.blog) and contributors
+
+</div>

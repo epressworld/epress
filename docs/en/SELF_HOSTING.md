@@ -30,14 +30,19 @@ For a quick setup without custom configurations, use the official pre-built imag
 Start your node using the following command. Docker will automatically create the `epress-data` volume on the first run if it doesn't exist.
 
 ```bash
-docker run -d -p 8543:8543 -p 8544:8544 -v epress-data:/app/data --name my-epress-node --restart=always ghcr.io/epressworld/epress:latest
+docker run -d \
+  -p 8543:8543 -p 8544:8544 \
+  -v epress-data:/app/data \
+  --restart unless-stopped \
+  --name my-epress-node \
+  ghcr.io/epressworld/epress:latest
 ```
 
 - `-d`: Runs the container in the background.
 - `-p 8543:8543` (frontend) and `-p 8544:8544` (backend): Maps the necessary container ports to your host.
-- `-v epress-data:/app/data`: Mounts the `epress-data` volume to persist your node’s database and configuration.
+- `-v epress-data:/app/data`: Mounts the `epress-data` volume to persist your node's database and configuration.
+- `--restart unless-stopped`: Ensures the node automatically restarts if it crashes or the system reboots.
 - `--name my-epress-node`: Assigns a convenient name to your container.
-- `--restart=always`: Ensures the node automatically restarts if it goes down.
 
 #### 2.2 Complete Setup via Web Interface
 
@@ -92,33 +97,283 @@ docker build -t my-epress-custom:latest .
 2.  **Complete Setup**:
     Open `http://localhost:8543` in your browser to access the web-based installation wizard.
 
-#### 3.5 Start the epress Node (Frontend-Backend Separation)
+---
 
-**Full-Stack Mode** (default, includes both frontend and API server):
+## Running an epress Node from Source
+
+This section is for developers or users who prefer running `epress` from source without Docker.
+
+### 1. Prerequisites
+
+Ensure the following software is installed:
+
+- **Git**: For cloning the repository.
+- **Node.js**: Version 20.x or higher (download from [Node.js official site](https://nodejs.org/)).
+- **npm**: Typically included with Node.js.
+
+### 2. Clone the epress Repository
+
+Clone the project code:
 
 ```bash
-docker run -d -p 8543:8543 -p 8544:8544 -v epress-data:/app/data --name my-epress-node my-epress-custom:latest
+git clone https://github.com/epressworld/epress.git
+cd epress
 ```
 
-**API Server Only**:
+### 3. Install Project Dependencies
+
+Install required Node.js dependencies:
 
 ```bash
-docker run -d -p 8544:8544 -v epress-data:/app/data --name my-epress-api my-epress-custom:latest start server
+npm install
 ```
 
-**Frontend Only**:
+### 4. Development Mode
+
+For development with hot-reload:
 
 ```bash
-docker run -d -p 8543:8543 -v epress-data:/app/data --name my-epress-client my-epress-custom:latest start client
+npm run dev
 ```
 
-- `start server`: Runs only the API server (port 8544).
-- `start client`: Runs only the frontend application (port 8543).
-- Ensure `EPRESS_API_URL` is set to the API server’s address.
+This starts both the server and client in parallel with colored output:
+- Server (blue): Fastify server on port 8544
+- Client (green): Next.js development server on port 8543
+
+### 5. Production Mode
+
+For production deployment:
+
+```bash
+npm run build
+npm start
+```
+
+This starts both server and client processes. Logs are prefixed with `[server]` and `[client]` for easy identification.
+
+**Note**: `npm start` does not provide process supervision. If the process crashes, it will not automatically restart. For production, consider using a process manager like systemd or Docker.
+
+### 6. Using systemd for Process Management (Linux)
+
+For production deployments on Linux, you can use systemd to manage the epress node:
+
+**Create a service file** `/etc/systemd/system/epress.service`:
+```ini
+[Unit]
+Description=ePress Node
+After=network.target
+
+[Service]
+Type=simple
+User=epress
+WorkingDirectory=/path/to/epress
+ExecStart=/usr/bin/node commands/start.mjs
+Restart=on-failure
+RestartSec=10
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
+```
+
+**Enable and start the service**:
+```bash
+sudo systemctl enable epress
+sudo systemctl start epress
+```
+
+**View logs**:
+```bash
+sudo journalctl -u epress -f
+```
+
+### 7. Standalone Server/Client
+
+You can also run the server and client separately:
+
+**Server only**:
+```bash
+npm run start:server
+```
+
+**Client only**:
+```bash
+npm run start:client
+```
+
+### 8. Complete Setup via Web Interface
+
+Once the server is running, open your browser and navigate to `http://localhost:8543`.
+
+You will be automatically redirected to the web-based installation wizard. This interface will guide you through configuring your node's application settings (Node Address, Profile, Mail Server, etc.). These settings will be saved to the database.
+
+### 9. Customizing Infrastructure Configuration (Optional)
+
+The project includes a default `.env` file with standard infrastructure settings. If you need to override these settings (e.g., to change server ports or the database file path), create a new file named `.env.local` in the project root.
+
+Any variables you define in `.env.local` will take precedence over the ones in `.env`.
+
+**Example `.env.local`**:
+```
+# .env.local
+# Change the default client and server ports
+EPRESS_CLIENT_PORT=8080
+EPRESS_SERVER_PORT=8081
+```
+
+### 10. Using a Different Database (e.g., PostgreSQL)
+
+By default, epress uses SQLite for easy setup. For production environments, you can switch to a more robust database like PostgreSQL or MySQL.
+
+1.  **Install the Database Driver**:
+    Install the required driver for your chosen database. For example, for PostgreSQL:
+    ```bash
+    npm install pg
+    ```
+
+2.  **Configure Environment Variables**:
+    Create or edit your `.env.local` file to set the database client and connection string.
+
+    **Example for PostgreSQL**:
+    ```
+    # .env.local
+    EPRESS_DATABASE_CLIENT=pg
+    EPRESS_DATABASE_CONNECTION=postgres://user:password@host:port/database
+    ```
+
+    - `EPRESS_DATABASE_CLIENT`: Set this to the knex client for your database (`pg` for PostgreSQL, `mysql` for MySQL, etc.).
+    - `EPRESS_DATABASE_CONNECTION`: The connection string for your database.
 
 ---
 
-## Managing and Upgrading Your Node
+## Reverse Proxy Mode (Caddy/Nginx)
+
+For production deployments with large file uploads, you can use an external reverse proxy (Caddy or Nginx) instead of Next.js's built-in rewrites. This eliminates the double memory overhead for file uploads.
+
+### 1. Enable Reverse Proxy Mode
+
+Set the environment variable in your `.env.local`:
+```
+EPRESS_REVERSE_PROXY=true
+```
+
+### 2. Configure Your Reverse Proxy
+
+**Caddy Example** (`Caddyfile`):
+```
+yourdomain.com {
+    reverse_proxy /api/* localhost:8544
+    reverse_proxy /ewp/* localhost:8544
+    reverse_proxy /* localhost:8543
+}
+```
+
+**Nginx Example**:
+```nginx
+server {
+    listen 80;
+    server_name yourdomain.com;
+
+    location /api/ {
+        proxy_pass http://localhost:8544;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_request_buffering off;  # Important for large file uploads
+    }
+
+    location /ewp/ {
+        proxy_pass http://localhost:8544;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_request_buffering off;
+    }
+
+    location / {
+        proxy_pass http://localhost:8543;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+**Note**: `proxy_request_buffering off` is crucial for handling large file uploads efficiently in Nginx.
+
+---
+
+## Frontend-Backend Separation
+
+For advanced deployments, you can run the frontend and backend on separate servers.
+
+### 1. Backend Server
+
+On your backend server:
+```bash
+# .env
+EPRESS_SERVER_PORT=8544
+
+npm run start:server
+```
+
+### 2. Frontend Server
+
+On your frontend server:
+```bash
+# .env
+EPRESS_API_URL=http://your-backend-server:8544
+EPRESS_CLIENT_PORT=8543
+
+npm run start:client
+```
+
+The frontend will connect to the backend API via `EPRESS_API_URL`.
+
+---
+
+## Optional: Using PM2 (Advanced Users)
+
+If you prefer PM2 for process management, you can create your own `ecosystem.config.cjs`:
+
+```javascript
+module.exports = {
+  apps: [
+    {
+      name: 'epress-server',
+      script: './commands/server.mjs',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '512M',
+      env: {
+        NODE_ENV: 'production'
+      }
+    },
+    {
+      name: 'epress-client',
+      script: 'node_modules/.bin/next',
+      args: 'start -p 8543',
+      cwd: './client',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '512M',
+      env: {
+        NODE_ENV: 'production',
+        EPRESS_API_URL: 'http://localhost:8544'
+      }
+    }
+  ]
+}
+```
+
+Then run with:
+```bash
+npm install -g pm2
+pm2 start ecosystem.config.cjs
+```
+
+---
+
+## Managing and Upgrading Your Node (Docker)
 
 ### Managing Your Node
 
@@ -177,7 +432,12 @@ Common Docker commands:
 3.  **Restart Your Node with the New Image**:
     Start a new container using the same `docker run` command from the initial setup. Docker will automatically attach the existing `epress-data` volume to the new container.
     ```bash
-    docker run -d -p 8543:8543 -p 8544:8544 -v epress-data:/app/data --name my-epress-node --restart=always ghcr.io/epressworld/epress:latest
+    docker run -d \
+      -p 8543:8543 -p 8544:8544 \
+      -v epress-data:/app/data \
+      --restart unless-stopped \
+      --name my-epress-node \
+      ghcr.io/epressworld/epress:latest
     ```
 
 4.  **Run Database Migrations (If Required)**:
@@ -188,107 +448,11 @@ Common Docker commands:
 
 Your node is now upgraded and running the latest version.
 
-### Troubleshooting (Docker)
-
-Check container logs for diagnostic information:
-
-```bash
-docker logs my-epress-node
-```
-
----
-
-## Running an epress Node from Source
-
-This section is for developers or users who prefer running `epress` from source without Docker.
-
-### 1. Prerequisites
-
-Ensure the following software is installed:
-
-- **Git**: For cloning the repository.
-- **Node.js**: Version 20.x or higher (download from [Node.js official site](https://nodejs.org/)).
-- **npm**: Typically included with Node.js.
-
-### 2. Clone the epress Repository
-
-Clone the project code:
-
-```bash
-git clone https://github.com/epressworld/epress.git
-cd epress
-```
-
-### 3. Install Project Dependencies
-
-Install required Node.js dependencies:
-
-```bash
-npm install
-```
-
-### 4. Build and Start the Node
-
-Build the project and start the server:
-
-```bash
-npm run build
-npm run start
-```
-
-### 5. Complete Setup via Web Interface
-
-Once the server is running, open your browser and navigate to `http://localhost:8543`.
-
-You will be automatically redirected to the web-based installation wizard. This interface will guide you through configuring your node's application settings (Node Address, Profile, Mail Server, etc.). These settings will be saved to the database.
-
-### 6. Customizing Infrastructure Configuration (Optional)
-
-The project includes a default `.env` file with standard infrastructure settings. If you need to override these settings (e.g., to change server ports or the database file path), create a new file named `.env.local` in the project root.
-
-Any variables you define in `.env.local` will take precedence over the ones in `.env`.
-
-**Example `.env.local`**:
-```
-# .env.local
-# Change the default client and server ports
-EPRESS_CLIENT_PORT=8080
-EPRESS_SERVER_PORT=8081
-```
-
-### 7. Using a Different Database (e.g., PostgreSQL)
-
-By default, epress uses SQLite for easy setup. For production environments, you can switch to a more robust database like PostgreSQL or MySQL.
-
-1.  **Install the Database Driver**:
-    Install the required driver for your chosen database. For example, for PostgreSQL:
-    ```bash
-    npm install pg
-    ```
-
-2.  **Configure Environment Variables**:
-    Create or edit your `.env.local` file to set the database client and connection string.
-
-    **Example for PostgreSQL**:
-    ```
-    # .env.local
-    EPRESS_DATABASE_CLIENT=pg
-    EPRESS_DATABASE_CONNECTION=postgres://user:password@host:port/database
-    ```
-
-    - `EPRESS_DATABASE_CLIENT`: Set this to the knex client for your database (`pg` for PostgreSQL, `mysql` for MySQL, etc.).
-    - `EPRESS_DATABASE_CONNECTION`: The connection string for your database.
-
-### 8. Managing an epress Node (Source)
-
-- **Stop the Node**: Press `Ctrl + C` in the terminal.
-- **Update Configuration**: Infrastructure settings can be changed in the `.env.local` file (requires a server restart). Application settings can be updated from the settings panel within the epress application itself.
-
-### 9. Upgrading from Source
+### Upgrading from Source
 
 To upgrade your node when running from source, follow these steps:
 
-1.  **Stop your server**: Press `Ctrl + C` in the terminal where it's running.
+1.  **Stop your server** (press `Ctrl+C` if running in foreground).
 2.  **Get the latest code**:
     ```bash
     git pull
@@ -304,12 +468,20 @@ To upgrade your node when running from source, follow these steps:
 5.  **Build and restart the server**:
     ```bash
     npm run build
-    npm run start
+    npm start
     ```
 
-### 10. Troubleshooting (Source)
+### Troubleshooting
 
-Check the terminal output for logs to diagnose issues.
+**Docker**: Check container logs for diagnostic information:
+```bash
+docker logs my-epress-node
+```
+
+**Source**: Check terminal output for logs. If using systemd:
+```bash
+sudo journalctl -u epress -f
+```
 
 ---
 
@@ -317,6 +489,7 @@ Check the terminal output for logs to diagnose issues.
 
 - **Official Image**: Best for quick deployments or when no customization is needed, avoiding the build process.
 - **Custom Build**: Recommended for:
-  - Separating frontend and backend (set `EPRESS_API_URL` and run `start client` or `start server`).
+  - Separating frontend and backend (set `EPRESS_API_URL` and run `start:server` or `start:client`).
+  - Using an external reverse proxy (set `EPRESS_REVERSE_PROXY=true`).
   - Modifying source code or adding custom features.
   - Requiring specific environment variables or configurations.

@@ -1,3 +1,5 @@
+import { dirname, resolve } from "node:path"
+import { fileURLToPath } from "node:url"
 import { config } from "dotenv"
 import { validateConfig } from "./validation.mjs"
 
@@ -12,10 +14,19 @@ import { validateConfig } from "./validation.mjs"
  * 5. Support pre-install mode with minimal configuration requirements
  */
 
+// Get the project root directory (parent of config directory)
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const projectRoot = resolve(__dirname, "..")
+
 // Load different configuration files based on environment
 // Priority: .env.${NODE_ENV} > .env.local > .env
+// Use absolute paths to ensure correct loading from any working directory
 config({
-  path: [`.env.${process.env.NODE_ENV || "development"}`, ".env.local", ".env"],
+  path: [
+    resolve(projectRoot, `.env.${process.env.NODE_ENV || "development"}`),
+    resolve(projectRoot, ".env.local"),
+    resolve(projectRoot, ".env"),
+  ],
 })
 
 // Validate infrastructure configuration only (allows pre-install mode)
