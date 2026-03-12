@@ -59,7 +59,7 @@ function start() {
   // Start client process
   const client = spawn(
     "node",
-    ["node_modules/.bin/next", "start", "-p", clientPort],
+    [resolve(root, "node_modules/.bin/next"), "start", "-p", clientPort],
     {
       cwd: resolve(root, "client"),
       env: {
