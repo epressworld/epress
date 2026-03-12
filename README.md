@@ -295,8 +295,7 @@ git clone https://github.com/epressworld/epress.git
 cd epress
 npm install
 npm run build
-npm install -g pm2    # PM2 is required for production
-npm run start
+npm start
 # open http://localhost:8543
 ```
 

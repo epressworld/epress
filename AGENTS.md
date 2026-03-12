@@ -39,13 +39,8 @@ npm run dev
 # Build the project
 npm run build
 
-# Production start (uses PM2, requires global pm2: npm install -g pm2)
-npm run start
-
-# PM2 management
-npm run stop      # Stop all processes
-npm run restart   # Restart all processes
-npm run logs      # View PM2 logs
+# Production start (runs both server and client)
+npm start
 
 # Standalone server/client
 npm run start:server   # Run server only (port 8544)

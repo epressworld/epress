@@ -295,8 +295,7 @@ git clone https://github.com/epressworld/epress.git
 cd epress
 npm install
 npm run build
-npm install -g pm2    # PM2 是生产环境必需的
-npm run start
+npm start
 # 打开 http://localhost:8543
 ```
 

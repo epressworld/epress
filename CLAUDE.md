@@ -15,13 +15,8 @@ npm run dev
 # Production build
 npm run build
 
-# Production start (uses PM2)
-npm run start
-
-# PM2 management
-npm run stop      # Stop all processes
-npm run restart   # Restart all processes
-npm run logs      # View PM2 logs
+# Production start (runs both server and client)
+npm start
 
 # Standalone server/client
 npm run start:server   # Run server only (port 8544)
@@ -75,7 +70,8 @@ Components follow atomic design:
 
 ### Commands (commands/)
 CLI tools that run the application:
-- `server.mjs` - Starts server, scheduler, and sync services (used by PM2 and dev mode)
+- `start.mjs` - Starts both server and client processes with native child_process
+- `server.mjs` - Starts server, scheduler, and sync services
 - `migrate.mjs` - Database migrations via Knex
 - `sync.mjs` - Content synchronization from followed nodes
 - `clean.mjs` - Cleanup of stale content
