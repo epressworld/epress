@@ -23,9 +23,12 @@
 
 ## An account is rented. A node is owned.
 
+You've spent years building your social presence. Your posts, your followers, your reputation.
+None of it is yours.
+epress is the fix: a self-hosted node you own completely, connected to a global open network.
+
 Every platform gives you an account. epress gives you a node.
 An account is rented. A node is owned — by you, for life, inheritable like property.
-epress is a different answer: don't trust anyone's infrastructure. Run your own.
 
 <br>
 
