@@ -21,15 +21,11 @@
 
 ---
 
-## Every social network you've ever used will eventually do this to you
+## An account is rented. A node is owned.
 
-In 2010, I built a decade of my life on Sina Weibo — memories, relationships, writing. One day, the account was banned without reason, warning, or appeal. A decade of digital life, gone overnight.
-
-This isn't a Weibo story. It's how every platform works. **You are a tenant. Tenants get evicted.**
-
-Twitter controls your API access. Instagram owns your graph. Mastodon instance admins hold your data. Even in "decentralized" networks, you're trusting someone else's infrastructure.
-
-epress is a different answer: **don't trust anyone's infrastructure. Run your own.**
+Every platform gives you an account. epress gives you a node.
+An account is rented. A node is owned — by you, for life, inheritable like property.
+epress is a different answer: don't trust anyone's infrastructure. Run your own.
 
 <br>
 
