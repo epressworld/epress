@@ -30,14 +30,19 @@
 使用以下命令启动您的节点。首次运行时，如果 `epress-data` 数据卷不存在，Docker 将自动创建它。
 
 ```bash
-docker run -d -p 8543:8543 -p 8544:8544 -v epress-data:/app/data --name my-epress-node --restart=always ghcr.io/epressworld/epress:latest
+docker run -d \
+  -p 8543:8543 -p 8544:8544 \
+  -v epress-data:/app/data \
+  --restart unless-stopped \
+  --name my-epress-node \
+  ghcr.io/epressworld/epress:latest
 ```
 
 - `-d`：后台运行容器。
 - `-p 8543:8543` (前端) 和 `-p 8544:8544` (后端): 映射必要的容器端口到您的主机。
 - `-v epress-data:/app/data`：挂载 `epress-data` 数据卷以持久化节点的数据库和配置。
+- `--restart unless-stopped`：确保节点在崩溃或系统重启时自动重启。
 - `--name my-epress-node`：为容器命名，便于管理。
-- `--restart=always`: 确保节点在发生故障时自动重启。
 
 #### 2.2 通过 Web 界面完成设置
 
@@ -105,7 +110,6 @@ docker build -t my-epress-custom:latest .
 - **Git**：用于克隆项目代码。
 - **Node.js**：版本 20.x 或更高（从 [Node.js 官网](https://nodejs.org/) 下载）。
 - **npm**：通常随 Node.js 安装。
-- **PM2**：生产环境的进程管理器（通过 `npm install -g pm2` 全局安装）。
 
 ### 2. 获取 epress 项目代码
 
@@ -142,22 +146,48 @@ npm run dev
 
 ```bash
 npm run build
-npm run start
+npm start
 ```
 
-这使用 PM2 管理服务器和客户端进程。PM2 提供：
-- 崩溃时自动重启
-- 日志管理
-- 进程监控
+这将同时启动服务器和客户端进程。日志会以 `[server]` 和 `[client]` 前缀区分，便于识别。
 
-**PM2 常用命令**：
-- `npm run stop` - 停止所有进程
-- `npm run restart` - 重启所有进程
-- `npm run logs` - 查看进程日志
-- `pm2 list` - 列出所有运行中的进程
-- `pm2 monit` - 实时监控
+**注意**：`npm start` 不提供进程守护功能。如果进程崩溃，不会自动重启。生产环境建议使用 systemd 或 Docker 等进程管理工具。
 
-### 6. 独立运行服务器/客户端
+### 6. 使用 systemd 管理进程（Linux）
+
+在 Linux 生产环境中，您可以使用 systemd 来管理 epress 节点：
+
+**创建服务文件** `/etc/systemd/system/epress.service`：
+```ini
+[Unit]
+Description=ePress Node
+After=network.target
+
+[Service]
+Type=simple
+User=epress
+WorkingDirectory=/path/to/epress
+ExecStart=/usr/bin/node commands/start.mjs
+Restart=on-failure
+RestartSec=10
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
+```
+
+**启用并启动服务**：
+```bash
+sudo systemctl enable epress
+sudo systemctl start epress
+```
+
+**查看日志**：
+```bash
+sudo journalctl -u epress -f
+```
+
+### 7. 独立运行服务器/客户端
 
 您也可以分别运行服务器和客户端：
 
@@ -171,13 +201,13 @@ npm run start:server
 npm run start:client
 ```
 
-### 7. 通过 Web 界面完成设置
+### 8. 通过 Web 界面完成设置
 
 服务器运行后，在浏览器中打开 `http://localhost:8543`。
 
 您将被自动重定向到网页安装向导。该界面将引导您配置节点的应用设置（节点地址、个人资料、邮件服务器等）。这些设置将保存到数据库中。
 
-### 8. 自定义基础设施配置 (可选)
+### 9. 自定义基础设施配置 (可选)
 
 项目包含一个带有标准基础设施设置的默认 `.env` 文件。如果您需要覆盖这些设置（例如，更改服务器端口或数据库文件路径），请在项目根目录中创建一个名为 `.env.local` 的新文件。
 
@@ -191,7 +221,7 @@ EPRESS_CLIENT_PORT=8080
 EPRESS_SERVER_PORT=8081
 ```
 
-### 9. 使用不同的数据库（如 PostgreSQL）
+### 10. 使用不同的数据库（如 PostgreSQL）
 
 默认情况下，epress 使用 SQLite 以便于设置。对于生产环境，您可以切换到更强大的数据库，如 PostgreSQL 或 MySQL。
 
@@ -222,7 +252,7 @@ EPRESS_SERVER_PORT=8081
 
 ### 1. 启用反向代理模式
 
-设置环境变量：
+在 `.env.local` 中设置环境变量：
 ```
 EPRESS_REVERSE_PROXY=true
 ```
@@ -248,12 +278,14 @@ server {
         proxy_pass http://localhost:8544;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
+        proxy_request_buffering off;  # 大文件上传必须
     }
 
     location /ewp/ {
         proxy_pass http://localhost:8544;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
+        proxy_request_buffering off;
     }
 
     location / {
@@ -263,6 +295,8 @@ server {
     }
 }
 ```
+
+**注意**：`proxy_request_buffering off` 对于高效处理大文件上传至关重要。
 
 ---
 
@@ -292,6 +326,50 @@ npm run start:client
 ```
 
 前端将通过 `EPRESS_API_URL` 连接到后端 API。
+
+---
+
+## 可选：使用 PM2（高级用户）
+
+如果您偏好使用 PM2 进行进程管理，可以创建自己的 `ecosystem.config.cjs`：
+
+```javascript
+module.exports = {
+  apps: [
+    {
+      name: 'epress-server',
+      script: './commands/server.mjs',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '512M',
+      env: {
+        NODE_ENV: 'production'
+      }
+    },
+    {
+      name: 'epress-client',
+      script: 'node_modules/.bin/next',
+      args: 'start -p 8543',
+      cwd: './client',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '512M',
+      env: {
+        NODE_ENV: 'production',
+        EPRESS_API_URL: 'http://localhost:8544'
+      }
+    }
+  ]
+}
+```
+
+然后运行：
+```bash
+npm install -g pm2
+pm2 start ecosystem.config.cjs
+```
 
 ---
 
@@ -354,7 +432,12 @@ npm run start:client
 3.  **使用新镜像重启节点**
     使用初次安装时的 `docker run` 命令启动一个新容器。Docker 会自动将现有的 `epress-data` 数据卷挂载到新容器上。
     ```bash
-    docker run -d -p 8543:8543 -p 8544:8544 -v epress-data:/app/data --name my-epress-node --restart=always ghcr.io/epressworld/epress:latest
+    docker run -d \
+      -p 8543:8543 -p 8544:8544 \
+      -v epress-data:/app/data \
+      --restart unless-stopped \
+      --name my-epress-node \
+      ghcr.io/epressworld/epress:latest
     ```
 
 4.  **运行数据库迁移（如果需要）**
@@ -369,10 +452,7 @@ npm run start:client
 
 如果您从源码运行，请按照以下步骤升级您的节点：
 
-1.  **停止服务器**：
-    ```bash
-    npm run stop
-    ```
+1.  **停止服务器**（前台运行时按 `Ctrl+C`）。
 2.  **获取最新代码**：
     ```bash
     git pull
@@ -388,7 +468,7 @@ npm run start:client
 5.  **构建并重启服务器**：
     ```bash
     npm run build
-    npm run start
+    npm start
     ```
 
 ### 故障排除
@@ -398,11 +478,9 @@ npm run start:client
 docker logs my-epress-node
 ```
 
-**源码/PM2**：查看 PM2 日志：
+**源码**：查看终端输出日志。如果使用 systemd：
 ```bash
-npm run logs
-# 或
-pm2 logs
+sudo journalctl -u epress -f
 ```
 
 ---

@@ -27,23 +27,28 @@ For a quick setup without custom configurations, use the official pre-built imag
 
 #### 2.1 Start Your Node
 
-Start your node using the following command. Docker will automatically create the `epress-data` volume on the first run if it doesn’t exist.
+Start your node using the following command. Docker will automatically create the `epress-data` volume on the first run if it doesn't exist.
 
 ```bash
-docker run -d -p 8543:8543 -p 8544:8544 -v epress-data:/app/data --name my-epress-node --restart=always ghcr.io/epressworld/epress:latest
+docker run -d \
+  -p 8543:8543 -p 8544:8544 \
+  -v epress-data:/app/data \
+  --restart unless-stopped \
+  --name my-epress-node \
+  ghcr.io/epressworld/epress:latest
 ```
 
 - `-d`: Runs the container in the background.
 - `-p 8543:8543` (frontend) and `-p 8544:8544` (backend): Maps the necessary container ports to your host.
-- `-v epress-data:/app/data`: Mounts the `epress-data` volume to persist your node’s database and configuration.
+- `-v epress-data:/app/data`: Mounts the `epress-data` volume to persist your node's database and configuration.
+- `--restart unless-stopped`: Ensures the node automatically restarts if it crashes or the system reboots.
 - `--name my-epress-node`: Assigns a convenient name to your container.
-- `--restart=always`: Ensures the node automatically restarts if it goes down.
 
 #### 2.2 Complete Setup via Web Interface
 
 Once the container is running, open your browser and navigate to `http://localhost:8543`.
 
-You will be automatically redirected to the web-based installation wizard. This user-friendly interface will guide you through configuring your node. The settings you configure here, such as your node’s address, title, and mail server settings, will be stored in the database within the `epress-data` volume.
+You will be automatically redirected to the web-based installation wizard. This user-friendly interface will guide you through configuring your node. The settings you configure here, such as your node's address, title, and mail server settings, will be stored in the database within the `epress-data` volume.
 
 ### 3. Method 2: Custom-Built Image
 
@@ -105,7 +110,6 @@ Ensure the following software is installed:
 - **Git**: For cloning the repository.
 - **Node.js**: Version 20.x or higher (download from [Node.js official site](https://nodejs.org/)).
 - **npm**: Typically included with Node.js.
-- **PM2**: Process manager for production deployments (install globally with `npm install -g pm2`).
 
 ### 2. Clone the epress Repository
 
@@ -142,22 +146,48 @@ For production deployment:
 
 ```bash
 npm run build
-npm run start
+npm start
 ```
 
-This uses PM2 to manage both the server and client processes. PM2 provides:
-- Automatic restart on crashes
-- Log management
-- Process monitoring
+This starts both server and client processes. Logs are prefixed with `[server]` and `[client]` for easy identification.
 
-**PM2 Commands**:
-- `npm run stop` - Stop all processes
-- `npm run restart` - Restart all processes
-- `npm run logs` - View process logs
-- `pm2 list` - List all running processes
-- `pm2 monit` - Real-time monitoring
+**Note**: `npm start` does not provide process supervision. If the process crashes, it will not automatically restart. For production, consider using a process manager like systemd or Docker.
 
-### 6. Standalone Server/Client
+### 6. Using systemd for Process Management (Linux)
+
+For production deployments on Linux, you can use systemd to manage the epress node:
+
+**Create a service file** `/etc/systemd/system/epress.service`:
+```ini
+[Unit]
+Description=ePress Node
+After=network.target
+
+[Service]
+Type=simple
+User=epress
+WorkingDirectory=/path/to/epress
+ExecStart=/usr/bin/node commands/start.mjs
+Restart=on-failure
+RestartSec=10
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
+```
+
+**Enable and start the service**:
+```bash
+sudo systemctl enable epress
+sudo systemctl start epress
+```
+
+**View logs**:
+```bash
+sudo journalctl -u epress -f
+```
+
+### 7. Standalone Server/Client
 
 You can also run the server and client separately:
 
@@ -171,13 +201,13 @@ npm run start:server
 npm run start:client
 ```
 
-### 7. Complete Setup via Web Interface
+### 8. Complete Setup via Web Interface
 
 Once the server is running, open your browser and navigate to `http://localhost:8543`.
 
-You will be automatically redirected to the web-based installation wizard. This interface will guide you through configuring your node’s application settings (Node Address, Profile, Mail Server, etc.). These settings will be saved to the database.
+You will be automatically redirected to the web-based installation wizard. This interface will guide you through configuring your node's application settings (Node Address, Profile, Mail Server, etc.). These settings will be saved to the database.
 
-### 8. Customizing Infrastructure Configuration (Optional)
+### 9. Customizing Infrastructure Configuration (Optional)
 
 The project includes a default `.env` file with standard infrastructure settings. If you need to override these settings (e.g., to change server ports or the database file path), create a new file named `.env.local` in the project root.
 
@@ -191,7 +221,7 @@ EPRESS_CLIENT_PORT=8080
 EPRESS_SERVER_PORT=8081
 ```
 
-### 9. Using a Different Database (e.g., PostgreSQL)
+### 10. Using a Different Database (e.g., PostgreSQL)
 
 By default, epress uses SQLite for easy setup. For production environments, you can switch to a more robust database like PostgreSQL or MySQL.
 
@@ -218,11 +248,11 @@ By default, epress uses SQLite for easy setup. For production environments, you 
 
 ## Reverse Proxy Mode (Caddy/Nginx)
 
-For production deployments with large file uploads, you can use an external reverse proxy (Caddy or Nginx) instead of Next.js’s built-in rewrites. This eliminates the double memory overhead for file uploads.
+For production deployments with large file uploads, you can use an external reverse proxy (Caddy or Nginx) instead of Next.js's built-in rewrites. This eliminates the double memory overhead for file uploads.
 
 ### 1. Enable Reverse Proxy Mode
 
-Set the environment variable:
+Set the environment variable in your `.env.local`:
 ```
 EPRESS_REVERSE_PROXY=true
 ```
@@ -248,12 +278,14 @@ server {
         proxy_pass http://localhost:8544;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
+        proxy_request_buffering off;  # Important for large file uploads
     }
 
     location /ewp/ {
         proxy_pass http://localhost:8544;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
+        proxy_request_buffering off;
     }
 
     location / {
@@ -263,6 +295,8 @@ server {
     }
 }
 ```
+
+**Note**: `proxy_request_buffering off` is crucial for handling large file uploads efficiently in Nginx.
 
 ---
 
@@ -292,6 +326,50 @@ npm run start:client
 ```
 
 The frontend will connect to the backend API via `EPRESS_API_URL`.
+
+---
+
+## Optional: Using PM2 (Advanced Users)
+
+If you prefer PM2 for process management, you can create your own `ecosystem.config.cjs`:
+
+```javascript
+module.exports = {
+  apps: [
+    {
+      name: 'epress-server',
+      script: './commands/server.mjs',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '512M',
+      env: {
+        NODE_ENV: 'production'
+      }
+    },
+    {
+      name: 'epress-client',
+      script: 'node_modules/.bin/next',
+      args: 'start -p 8543',
+      cwd: './client',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '512M',
+      env: {
+        NODE_ENV: 'production',
+        EPRESS_API_URL: 'http://localhost:8544'
+      }
+    }
+  ]
+}
+```
+
+Then run with:
+```bash
+npm install -g pm2
+pm2 start ecosystem.config.cjs
+```
 
 ---
 
@@ -345,7 +423,7 @@ Common Docker commands:
     ```
 
 2.  **Stop and Remove the Current Container**:
-    Find your running container’s name or ID and then stop and remove it. This action will not affect your data stored in the `epress-data` volume.
+    Find your running container's name or ID and then stop and remove it. This action will not affect your data stored in the `epress-data` volume.
     ```bash
     docker stop my-epress-node
     docker rm my-epress-node
@@ -354,7 +432,12 @@ Common Docker commands:
 3.  **Restart Your Node with the New Image**:
     Start a new container using the same `docker run` command from the initial setup. Docker will automatically attach the existing `epress-data` volume to the new container.
     ```bash
-    docker run -d -p 8543:8543 -p 8544:8544 -v epress-data:/app/data --name my-epress-node --restart=always ghcr.io/epressworld/epress:latest
+    docker run -d \
+      -p 8543:8543 -p 8544:8544 \
+      -v epress-data:/app/data \
+      --restart unless-stopped \
+      --name my-epress-node \
+      ghcr.io/epressworld/epress:latest
     ```
 
 4.  **Run Database Migrations (If Required)**:
@@ -369,10 +452,7 @@ Your node is now upgraded and running the latest version.
 
 To upgrade your node when running from source, follow these steps:
 
-1.  **Stop your server**:
-    ```bash
-    npm run stop
-    ```
+1.  **Stop your server** (press `Ctrl+C` if running in foreground).
 2.  **Get the latest code**:
     ```bash
     git pull
@@ -388,7 +468,7 @@ To upgrade your node when running from source, follow these steps:
 5.  **Build and restart the server**:
     ```bash
     npm run build
-    npm run start
+    npm start
     ```
 
 ### Troubleshooting
@@ -398,11 +478,9 @@ To upgrade your node when running from source, follow these steps:
 docker logs my-epress-node
 ```
 
-**Source/PM2**: View PM2 logs:
+**Source**: Check terminal output for logs. If using systemd:
 ```bash
-npm run logs
-# or
-pm2 logs
+sudo journalctl -u epress -f
 ```
 
 ---
