@@ -16,11 +16,6 @@ test.before(async (t) => {
   // Run migrations
   await knex.migrate.latest()
 
-  const testAccount = {
-    name: "Angela Adams",
-    user: "angela.adams91@ethereal.email",
-    pass: "nqwaTtpAnfNJanxnPe",
-  }
   process.env.INITIAL_DATA_NODE_AVATAR =
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
   process.env.INITIAL_DATA_NODE_ADDRESS = TEST_ETHEREUM_ADDRESS_NODE_A
@@ -31,8 +26,6 @@ test.before(async (t) => {
   process.env.INITIAL_DATA_DEFAULT_LANGUAGE = "en"
   process.env.INITIAL_DATA_DEFAULT_THEME = "light"
   process.env.INITIAL_DATA_WALLETCONNECT_PROJECT_ID = ""
-  process.env.INITIAL_DATA_MAIL_TRANSPORT = `smtp://${testAccount.user}:${testAccount.pass}@smtp.ethereal.email:587`
-  process.env.INITIAL_DATA_MAIL_FROM = "no-reply@epress.world"
   await knex.seed.run()
   // 3. Initialize Fastify app and GraphQL client
   const app = await setupServer() // Call the actual createServer function to build the complete app

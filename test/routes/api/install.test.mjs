@@ -73,8 +73,6 @@ const INSTALL_TYPES = {
     { name: "defaultLanguage", type: "string" },
     { name: "defaultTheme", type: "string" },
     { name: "walletConnectProjectId", type: "string" },
-    { name: "mailTransport", type: "string" },
-    { name: "mailFrom", type: "string" },
   ],
 }
 
@@ -129,8 +127,6 @@ test.serial(
       defaultLanguage: "",
       defaultTheme: "",
       walletConnectProjectId: "",
-      mailTransport: "",
-      mailFrom: "",
     }
     const typedData = createInstallTypedData(
       node,
@@ -184,8 +180,6 @@ test.serial(
     }
 
     const settings = {
-      mailTransport: "smtp://user:pass@smtp.example.com",
-      mailFrom: "noreply@example.com",
       defaultLanguage: "en",
       defaultTheme: "light",
       walletConnectProjectId: "test-project-id-12345",
@@ -233,12 +227,6 @@ test.serial(
     t.truthy(jwtSecret)
     t.is(jwtSecret.length, 64)
 
-    const mailTransport = await Setting.get("mail_transport")
-    t.is(mailTransport, "smtp://user:pass@smtp.example.com")
-
-    const mailFrom = await Setting.get("mail_from")
-    t.is(mailFrom, "noreply@example.com")
-
     const walletConnectProjectId = await Setting.get("walletconnect_projectid")
     t.is(walletConnectProjectId, "test-project-id-12345")
 
@@ -276,8 +264,6 @@ test.serial(
       defaultLanguage: "",
       defaultTheme: "",
       walletConnectProjectId: "",
-      mailTransport: "",
-      mailFrom: "",
     }
 
     const typedData = createInstallTypedData(node, settings, timestamp)
@@ -294,10 +280,6 @@ test.serial(
     })
 
     t.is(response.statusCode, 200)
-
-    // Verify empty settings are not saved
-    const mailTransport = await Setting.get("mail_transport")
-    t.falsy(mailTransport)
 
     // Verify defaults are applied
     const defaultLanguage = await Setting.get("default_language")
@@ -340,8 +322,6 @@ test.serial(
       defaultLanguage: "",
       defaultTheme: "",
       walletConnectProjectId: "",
-      mailTransport: "",
-      mailFrom: "",
     }
 
     const typedData = createInstallTypedData(node, settings, timestamp)
@@ -412,8 +392,6 @@ test.serial(
       defaultLanguage: "",
       defaultTheme: "",
       walletConnectProjectId: "",
-      mailTransport: "",
-      mailFrom: "",
     }
     const typedData = createInstallTypedData(
       node,
@@ -484,8 +462,6 @@ test.serial(
       defaultLanguage: "",
       defaultTheme: "",
       walletConnectProjectId: "",
-      mailTransport: "",
-      mailFrom: "",
     }
     const typedData = createInstallTypedData(
       node,
@@ -524,8 +500,6 @@ test.serial(
       defaultLanguage: "",
       defaultTheme: "",
       walletConnectProjectId: "",
-      mailTransport: "",
-      mailFrom: "",
     }
     const typedData = createInstallTypedData(
       node,
@@ -566,8 +540,6 @@ test.serial(
       defaultLanguage: "",
       defaultTheme: "",
       walletConnectProjectId: "",
-      mailTransport: "",
-      mailFrom: "",
     }
     const typedData = createInstallTypedData(
       node,
@@ -613,8 +585,6 @@ test.serial(
       defaultLanguage: "",
       defaultTheme: "",
       walletConnectProjectId: "",
-      mailTransport: "",
-      mailFrom: "",
     }
     const typedData = createInstallTypedData(
       node,
@@ -660,8 +630,6 @@ test.serial(
       defaultLanguage: "",
       defaultTheme: "",
       walletConnectProjectId: "",
-      mailTransport: "",
-      mailFrom: "",
     }
     const typedData = createInstallTypedData(
       node,
@@ -707,8 +675,6 @@ test.serial(
       defaultLanguage: "",
       defaultTheme: "",
       walletConnectProjectId: "",
-      mailTransport: "",
-      mailFrom: "",
     }
     const typedData = createInstallTypedData(
       node,
@@ -754,8 +720,6 @@ test.serial(
       defaultLanguage: "",
       defaultTheme: "",
       walletConnectProjectId: "",
-      mailTransport: "",
-      mailFrom: "",
     }
     const typedData = createInstallTypedData(
       node,
@@ -805,8 +769,6 @@ test.serial(
       defaultLanguage: "",
       defaultTheme: "",
       walletConnectProjectId: "",
-      mailTransport: "",
-      mailFrom: "",
     }
     const typedData = createInstallTypedData(
       node,
@@ -852,8 +814,6 @@ test.serial(
       defaultLanguage: "",
       defaultTheme: "",
       walletConnectProjectId: "",
-      mailTransport: "",
-      mailFrom: "",
     }
     const typedData = createInstallTypedData(
       node,
@@ -895,8 +855,6 @@ test.serial(
       defaultLanguage: "",
       defaultTheme: "",
       walletConnectProjectId: "",
-      mailTransport: "",
-      mailFrom: "",
     }
     const typedData = createInstallTypedData(
       node,
@@ -942,8 +900,6 @@ test.serial(
       defaultLanguage: "",
       defaultTheme: "",
       walletConnectProjectId: "",
-      mailTransport: "",
-      mailFrom: "",
     }
     const typedData = createInstallTypedData(
       node,
@@ -991,8 +947,6 @@ test.serial(
       defaultLanguage: "",
       defaultTheme: "",
       walletConnectProjectId: "",
-      mailTransport: "",
-      mailFrom: "",
     }
     const typedData = createInstallTypedData(
       node,
@@ -1034,8 +988,6 @@ test.serial(
       defaultLanguage: "",
       defaultTheme: "",
       walletConnectProjectId: "",
-      mailTransport: "",
-      mailFrom: "",
     }
     const typedData1 = createInstallTypedData(
       node1,
@@ -1072,8 +1024,6 @@ test.serial(
       defaultLanguage: "",
       defaultTheme: "",
       walletConnectProjectId: "",
-      mailTransport: "",
-      mailFrom: "",
     }
     const typedData2 = createInstallTypedData(
       node2,
@@ -1117,8 +1067,6 @@ test.serial(
       defaultLanguage: "",
       defaultTheme: "",
       walletConnectProjectId: "",
-      mailTransport: "",
-      mailFrom: "",
     }
     const typedData = createInstallTypedData(
       node,
@@ -1195,8 +1143,6 @@ test.serial(
       defaultLanguage: "",
       defaultTheme: "",
       walletConnectProjectId: "",
-      mailTransport: "",
-      mailFrom: "",
     }
     const typedData = createInstallTypedData(
       node,
@@ -1256,8 +1202,6 @@ test.serial(
       defaultLanguage: "",
       defaultTheme: "",
       walletConnectProjectId: "",
-      mailTransport: "",
-      mailFrom: "",
     }
     const typedData1 = createInstallTypedData(
       node1,
@@ -1295,8 +1239,6 @@ test.serial(
       defaultLanguage: "",
       defaultTheme: "",
       walletConnectProjectId: "",
-      mailTransport: "",
-      mailFrom: "",
     }
     const typedData2 = createInstallTypedData(
       node2,
