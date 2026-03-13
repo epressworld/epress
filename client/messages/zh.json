@@ -230,6 +230,7 @@
     "submitting": "提交中...",
     "required": "此字段为必填项",
     "commentSubmitSuccessShort": "评论提交成功",
+    "commentSubmitSuccessEthereum": "评论发表成功",
     "commentDeleteSuccess": "评论删除成功",
     "verifyingComment": "正在验证评论...",
     "deletingComment": "正在删除评论...",

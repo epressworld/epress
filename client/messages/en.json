@@ -230,6 +230,7 @@
     "submitting": "Submitting...",
     "required": "This field is required",
     "commentSubmitSuccessShort": "Comment submitted successfully",
+    "commentSubmitSuccessEthereum": "Comment submitted successfully",
     "commentDeleteSuccess": "Comment deleted successfully",
     "verifyingComment": "Verifying comment...",
     "deletingComment": "Deleting comment...",
