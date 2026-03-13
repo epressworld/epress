@@ -196,7 +196,6 @@ test("Success: fetch COMMENT should return comment information", async (t) => {
     node.address,
     "Comment author address should match",
   )
-  // commenter_email field is hidden to protect user privacy
   t.truthy(data.fetch.publication, "Publication association should be loaded")
   t.is(
     data.fetch.publication.id,
