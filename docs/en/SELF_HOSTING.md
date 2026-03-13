@@ -48,7 +48,7 @@ docker run -d \
 
 Once the container is running, open your browser and navigate to `http://localhost:8543`.
 
-You will be automatically redirected to the web-based installation wizard. This user-friendly interface will guide you through configuring your node. The settings you configure here, such as your node's address, title, and mail server settings, will be stored in the database within the `epress-data` volume.
+You will be automatically redirected to the web-based installation wizard. This user-friendly interface will guide you through configuring your node. The settings you configure here, such as your node's address and title, will be stored in the database within the `epress-data` volume.
 
 ### 3. Method 2: Custom-Built Image
 
