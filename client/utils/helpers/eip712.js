@@ -241,8 +241,6 @@ export const installTypedData = (node, settings, timestamp) => {
         { name: "defaultLanguage", type: "string" },
         { name: "defaultTheme", type: "string" },
         { name: "walletConnectProjectId", type: "string" },
-        { name: "mailTransport", type: "string" },
-        { name: "mailFrom", type: "string" },
       ],
     },
     message: {

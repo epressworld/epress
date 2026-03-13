@@ -36,11 +36,6 @@ export const seed = async (knex) => {
       key: "walletconnect_projectid",
       value: process.env.INITIAL_DATA_WALLETCONNECT_PROJECT_ID || "",
     },
-    {
-      key: "mail_transport",
-      value: process.env.INITIAL_DATA_MAIL_TRANSPORT || "",
-    },
-    { key: "mail_from", value: process.env.INITIAL_DATA_MAIL_FROM || "" },
     { key: "avatar", value: process.env.INITIAL_DATA_NODE_AVATAR || "" },
     { key: "jwt_secret", value: crypto.randomBytes(32).toString("hex") },
     { key: "jwt_expires_in", value: "24h" },

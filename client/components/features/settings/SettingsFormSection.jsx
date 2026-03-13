@@ -2,18 +2,13 @@
 
 import {
   Button,
-  Field,
   HStack,
-  Input,
-  InputGroup,
   Separator,
-  Spinner,
   Switch,
   Text,
   VStack,
 } from "@chakra-ui/react"
-import { FaCheckCircle } from "react-icons/fa"
-import { LuCircleAlert, LuSettings } from "react-icons/lu"
+import { LuSettings } from "react-icons/lu"
 import { FormField, LanguageSelect, Link, ThemeSelector } from "@/components/ui"
 import { usePushNotification } from "@/contexts/PushNotificationContext"
 import { useSettingsForm } from "@/hooks/form"
@@ -22,14 +17,7 @@ import { TokenGenerator } from "./TokenGenerator"
 
 export function SettingsFormSection({ onSuccess }) {
   const { t } = useIntl()
-  const {
-    form,
-    isLoading,
-    onSubmit,
-    validateMailTransport,
-    mailTransportValidating,
-    mailTransportValid,
-  } = useSettingsForm()
+  const { form, isLoading, onSubmit } = useSettingsForm()
 
   const {
     isSupported,
@@ -47,7 +35,6 @@ export function SettingsFormSection({ onSuccess }) {
       onSuccess()
     }
   }
-  const mailFromRequired = mailTransportValid || !!form.watch("mailTransport")
 
   return (
     <form onSubmit={form.handleSubmit(handleSubmit)}>
@@ -81,66 +68,8 @@ export function SettingsFormSection({ onSuccess }) {
           helperText={t("settings.pwaAppNameHelper")}
           {...form.register("pwaAppName")}
         />
-
-        {/* Mail Server Settings Group */}
-        <VStack align="stretch" gap={3}>
-          <Text fontWeight="semibold" fontSize="md">
-            {t("settings.mailServerSettings")}
-          </Text>
-
-          <Field.Root invalid={!!form.formState.errors.mailTransport}>
-            <Field.Label>{t("settings.mailTransport")}</Field.Label>
-            <InputGroup
-              endElement={
-                mailTransportValidating ? (
-                  <Spinner size="sm" />
-                ) : mailTransportValid === true ? (
-                  <FaCheckCircle color="green" size={20} />
-                ) : mailTransportValid === false ? (
-                  <LuCircleAlert color="red" size={20} />
-                ) : null
-              }
-            >
-              <Input
-                {...form.register("mailTransport", {
-                  validate: validateMailTransport,
-                })}
-                placeholder={t("settings.mailTransportPlaceholder")}
-              />
-            </InputGroup>
-            <Field.HelperText>
-              {t("settings.mailTransportHelper")}
-            </Field.HelperText>
-            <Field.ErrorText>
-              {form.formState.errors.mailTransport?.message}
-            </Field.ErrorText>
-          </Field.Root>
-
-          <Field.Root invalid={!!form.formState.errors.mailFrom}>
-            <Field.Label>{t("settings.mailFrom")}</Field.Label>
-            <Input
-              {...form.register("mailFrom", {
-                required: {
-                  value: mailFromRequired,
-                  message: t("settings.mailFromRequired"),
-                },
-                pattern: {
-                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                  message: t("settings.invalidEmailFormat"),
-                },
-              })}
-              placeholder={t("settings.mailFromPlaceholder")}
-              type="email"
-            />
-            <Field.HelperText>{t("settings.mailFromHelper")}</Field.HelperText>
-            <Field.ErrorText>
-              {form.formState.errors.mailFrom?.message}
-            </Field.ErrorText>
-          </Field.Root>
-        </VStack>
       </VStack>
       <VStack gap={6} mt={3} align="stretch">
-        {/* RSS 设置 */}
         <VStack align="stretch" gap={2}>
           <HStack justify="space-between">
             <VStack align="start" gap={1}>
@@ -164,7 +93,6 @@ export function SettingsFormSection({ onSuccess }) {
           </HStack>
         </VStack>
 
-        {/* 关注设置 */}
         <VStack align="stretch" gap={2}>
           <HStack justify="space-between">
             <VStack align="start" gap={1}>
@@ -188,7 +116,6 @@ export function SettingsFormSection({ onSuccess }) {
           </HStack>
         </VStack>
 
-        {/* 评论设置 */}
         <VStack align="stretch" gap={2}>
           <HStack justify="space-between">
             <VStack align="start" gap={1}>
@@ -218,7 +145,6 @@ export function SettingsFormSection({ onSuccess }) {
         <Button
           type="submit"
           loading={isLoading}
-          disabled={mailTransportValidating}
           loadingText={t("settings.saving")}
           colorPalette="orange"
         >
@@ -226,7 +152,6 @@ export function SettingsFormSection({ onSuccess }) {
         </Button>
         <Separator />
 
-        {/* 通知设置 */}
         <VStack align="stretch" gap={2}>
           <HStack justify="space-between">
             <VStack align="start" gap={1}>
@@ -256,7 +181,6 @@ export function SettingsFormSection({ onSuccess }) {
           </HStack>
         </VStack>
         <Separator />
-        {/* Token 生成功能 */}
         <VStack align="stretch" gap={4}>
           <VStack align="start" gap={1}>
             <Text fontSize="sm" fontWeight="medium">

@@ -1,4 +1,3 @@
-// test/graphql/settings.test.mjs
 import test from "ava"
 import { Setting } from "../../server/models/index.mjs"
 import { TEST_ETHEREUM_ADDRESS_NODE_A } from "../setup.mjs"
@@ -7,9 +6,8 @@ test.beforeEach(async (_t) => {
   await Setting.knex()("settings").where({ key: "pwa_app_name" }).delete()
 })
 
-test("settings query should return settings data without mailTransport", async (t) => {
+test("settings query should return settings data", async (t) => {
   const { graphqlClient } = t.context
-  await Setting.set("mail_transport", "test")
   await Setting.set("enableRSS", "true")
 
   const query = `
@@ -20,9 +18,6 @@ test("settings query should return settings data without mailTransport", async (
         allowComment
         defaultLanguage
         defaultTheme
-        mail {
-          mailTransport
-        }
       }
     }
   `
@@ -36,47 +31,7 @@ test("settings query should return settings data without mailTransport", async (
   t.is(data.settings.allowFollow, true, "allowFollow should be true")
   t.is(data.settings.allowComment, true, "allowComment should be true")
   t.is(data.settings.defaultLanguage, "en", "defaultLanguage should be en")
-  t.is(data.settings.defaultTheme, "light", "defaultLanguage should be light")
-  t.is(data.settings.mail.mailTransport, null, "defaultLanguage should be null")
-})
-
-test("settings query should return settings data with mailTransport", async (t) => {
-  const { graphqlClient, createClientJwt } = t.context
-
-  await Setting.set("mail_transport", "test")
-  const query = `
-    query GetSettings {
-      settings {
-        enableRSS
-        allowFollow
-        allowComment
-        defaultLanguage
-        defaultTheme
-        mail {
-          mailTransport
-        }
-      }
-    }
-  `
-
-  // Arrange: Get valid JWT for self node owner
-  const ownerAddress = TEST_ETHEREUM_ADDRESS_NODE_A
-  const token = await createClientJwt(ownerAddress)
-
-  const { data, errors } = await graphqlClient.query(query, {
-    headers: {
-      authorization: `Bearer ${token}`,
-    },
-  })
-
-  t.falsy(errors, "Should not have any GraphQL errors")
-  t.truthy(data.settings, "Settings data should exist")
-
-  t.is(data.settings.enableRSS, true, "enableRSS should be true")
-  t.is(data.settings.allowFollow, true, "allowFollow should be true")
-  t.is(data.settings.allowComment, true, "allowComment should be true")
-  t.is(data.settings.defaultLanguage, "en", "defaultLanguage should be en")
-  t.is(data.settings.mail.mailTransport, "test", "mailTransport should be test")
+  t.is(data.settings.defaultTheme, "light", "defaultTheme should be light")
 })
 
 test("settings query should return pwaAppName when not set", async (t) => {
@@ -120,15 +75,12 @@ test("settings query should return pwaAppName when set", async (t) => {
   )
 })
 
-// Test case 2: Successfully update settings
 test("updateSettings mutation should update a public setting with valid JWT", async (t) => {
   const { graphqlClient, createClientJwt } = t.context
 
-  // Arrange: Get valid JWT for self node owner
   const ownerAddress = TEST_ETHEREUM_ADDRESS_NODE_A
   const token = await createClientJwt(ownerAddress)
 
-  // Act: Send mutation to update enableRSS
   const mutation = `
     mutation UpdateSettings($input: UpdateSettingsInput!) {
       updateSettings(input: $input) {
@@ -138,7 +90,7 @@ test("updateSettings mutation should update a public setting with valid JWT", as
     }
   `
 
-  const input = { enableRSS: false } // Change enableRSS from true to false
+  const input = { enableRSS: false }
 
   const { data, errors } = await graphqlClient.query(mutation, {
     variables: { input },
@@ -147,7 +99,6 @@ test("updateSettings mutation should update a public setting with valid JWT", as
     },
   })
 
-  // Assertions
   t.falsy(errors, "Should not have any GraphQL errors")
   t.truthy(data.updateSettings, "Should return updated settings data")
   t.is(
@@ -156,14 +107,12 @@ test("updateSettings mutation should update a public setting with valid JWT", as
     "enableRSS should be updated to false",
   )
 
-  // Verify other settings remain unchanged
   t.is(
     data.updateSettings.allowFollow,
     true,
     "allowFollow should remain unchanged",
   )
 
-  // Cleanup: Reset settings for subsequent tests
   await Setting.knex()("settings")
     .where({ key: "enable_rss" })
     .update({ value: "true" })
@@ -200,23 +149,18 @@ test("updateSettings mutation should update pwaAppName with valid JWT", async (t
     "pwaAppName should be updated to 'My PWA App'",
   )
 
-  // Verify in database
   const savedValue = await Setting.get("pwa_app_name")
   t.is(savedValue, "My PWA App", "pwa_app_name should be saved in database")
 
-  // Cleanup
   await Setting.knex()("settings").where({ key: "pwa_app_name" }).delete()
 })
 
-// Test case 3: Successfully update another setting
 test("updateSettings mutation should update a private setting with valid JWT", async (t) => {
   const { graphqlClient, createClientJwt } = t.context
 
-  // Prepare: Get valid JWT for self node owner
   const ownerAddress = TEST_ETHEREUM_ADDRESS_NODE_A
   const token = await createClientJwt(ownerAddress)
 
-  // Execute: Send mutation to update someSecretKey
   const mutation = `
     mutation UpdateSettings($input: UpdateSettingsInput!) {
       updateSettings(input: $input) {
@@ -235,7 +179,6 @@ test("updateSettings mutation should update a private setting with valid JWT", a
     },
   })
 
-  // Assertions
   t.falsy(errors, "Should not have any GraphQL errors")
   t.truthy(data.updateSettings, "Should return updated settings data")
   t.is(
@@ -244,13 +187,11 @@ test("updateSettings mutation should update a private setting with valid JWT", a
     "allowFollow should be updated to false",
   )
 
-  // Cleanup: Reset settings for subsequent tests
   await Setting.knex()("settings")
     .where({ key: "allow_follow" })
     .update({ value: "true" })
 })
 
-// Test case 4: Unauthenticated failure
 test("updateSettings mutation should return 401 Unauthorized without JWT", async (t) => {
   const { graphqlClient } = t.context
 
@@ -276,7 +217,6 @@ test("updateSettings mutation should return 401 Unauthorized without JWT", async
   )
 })
 
-// Test case 5: Invalid JWT failure
 test("updateSettings mutation should return 401 Unauthorized with invalid JWT", async (t) => {
   const { graphqlClient } = t.context
 
@@ -306,7 +246,6 @@ test("updateSettings mutation should return 401 Unauthorized with invalid JWT", 
   )
 })
 
-// Test case 6: Input type validation failure
 test("updateSettings mutation should return VALIDATION_FAILED for invalid input type", async (t) => {
   const { graphqlClient, createClientJwt } = t.context
   const token = await createClientJwt(TEST_ETHEREUM_ADDRESS_NODE_A)
@@ -319,7 +258,7 @@ test("updateSettings mutation should return VALIDATION_FAILED for invalid input 
     }
   `
 
-  const input = { enableRSS: "not-a-boolean" } // Invalid type
+  const input = { enableRSS: "not-a-boolean" }
 
   const { data, errors } = await graphqlClient.query(mutation, {
     variables: { input },
@@ -330,7 +269,6 @@ test("updateSettings mutation should return VALIDATION_FAILED for invalid input 
 
   t.truthy(errors, "Should return GraphQL errors")
   t.is(data, null, "Data should be null")
-  console.log(errors)
   t.true(
     errors.some((e) =>
       e.message.includes("Boolean cannot represent a non boolean value"),
@@ -380,14 +318,11 @@ test.serial(
       "allowFollow should remain unchanged",
     )
 
-    // Cleanup: Restore original value
     await Setting.knex()("settings")
       .where({ key: "allow_comment" })
       .update({ value: "true" })
   },
 )
-
-// --- VAPID Public Key Tests ---
 
 test.serial(
   "settings query should return vapidPublicKey when configured",
@@ -430,7 +365,6 @@ test.serial(
     }
   `
 
-    // No authentication header
     const { data, errors } = await graphqlClient.query(query, {})
 
     t.falsy(errors, "Should not have any GraphQL errors")
@@ -441,8 +375,6 @@ test.serial(
     )
   },
 )
-
-// --- saveSubscription Mutation Tests ---
 
 test.serial(
   "subscribeNotification should save new subscription with valid JWT",
@@ -477,7 +409,6 @@ test.serial(
     t.true(data.subscribeNotification.success, "success should be true")
     t.truthy(data.subscribeNotification.message, "message should exist")
 
-    // Verify subscription was saved
     const savedSubscriptions = await Setting.get("notification_subscriptions")
     t.truthy(savedSubscriptions, "Subscriptions should be saved")
     t.is(savedSubscriptions.length, 1, "Should have one subscription")
@@ -487,7 +418,6 @@ test.serial(
       "Endpoint should match",
     )
 
-    // Cleanup
     await Setting.set("notification_subscriptions", [])
   },
 )
@@ -550,13 +480,11 @@ test.serial(
       },
     }
 
-    // Save first subscription
     await graphqlClient.query(mutation, {
       variables: { subscription: subscription1 },
       headers: { Authorization: `Bearer ${token}` },
     })
 
-    // Update with same endpoint but different keys
     const subscription2 = {
       endpoint: "https://push.example.com/subscription/test123",
       keys: {
@@ -573,7 +501,6 @@ test.serial(
     t.falsy(errors, "Should not have any GraphQL errors")
     t.true(data.subscribeNotification.success, "success should be true")
 
-    // Verify subscription was updated, not duplicated
     const savedSubscriptions = await Setting.get("notification_subscriptions")
     t.is(savedSubscriptions.length, 1, "Should still have one subscription")
     t.is(
@@ -582,7 +509,6 @@ test.serial(
       "Keys should be updated",
     )
 
-    // Cleanup
     await Setting.set("notification_subscriptions", [])
   },
 )
@@ -618,13 +544,11 @@ test.serial(
       },
     }
 
-    // Save first subscription
     await graphqlClient.query(mutation, {
       variables: { subscription: subscription1 },
       headers: { Authorization: `Bearer ${token}` },
     })
 
-    // Save second subscription
     const { data, errors } = await graphqlClient.query(mutation, {
       variables: { subscription: subscription2 },
       headers: { Authorization: `Bearer ${token}` },
@@ -633,7 +557,6 @@ test.serial(
     t.falsy(errors, "Should not have any GraphQL errors")
     t.true(data.subscribeNotification.success, "success should be true")
 
-    // Verify both subscriptions are saved
     const savedSubscriptions = await Setting.get("notification_subscriptions")
     t.is(savedSubscriptions.length, 2, "Should have two subscriptions")
     t.truthy(
@@ -645,7 +568,6 @@ test.serial(
       "Second subscription should exist",
     )
 
-    // Cleanup
     await Setting.set("notification_subscriptions", [])
   },
 )
@@ -679,7 +601,6 @@ test.serial("unsubscribeNotification should remove subscription", async (t) => {
     },
   }
 
-  // Save first subscription
   const { data: subscribeData } = await graphqlClient.query(subscribeMutation, {
     variables: { subscription: subscription1 },
     headers: { Authorization: `Bearer ${token}` },
@@ -689,7 +610,6 @@ test.serial("unsubscribeNotification should remove subscription", async (t) => {
     "subscribe should be true",
   )
 
-  // Save second subscription
   const { data, errors } = await graphqlClient.query(unsubscribeMutation, {
     variables: { endpoint: subscription1.endpoint },
     headers: { Authorization: `Bearer ${token}` },
@@ -698,7 +618,6 @@ test.serial("unsubscribeNotification should remove subscription", async (t) => {
   t.falsy(errors, "Should not have any GraphQL errors")
   t.true(data.unsubscribeNotification.success, "success should be true")
 
-  // Verify both subscriptions are saved
   const savedSubscriptions = await Setting.get("notification_subscriptions")
   t.is(savedSubscriptions.length, 0, "Should have 0 subscriptions")
 })

@@ -1,7 +1,6 @@
 "use client"
 
 import {
-  Alert,
   Avatar,
   Box,
   Button,
@@ -16,10 +15,8 @@ import {
   Icon,
   Image,
   Input,
-  InputGroup,
   Progress,
   Select,
-  Separator,
   Spinner,
   Stack,
   Steps,
@@ -43,7 +40,6 @@ import { useWallet } from "@/hooks/data"
 import { useIntl } from "@/hooks/utils"
 import { installTypedData } from "@/utils/helpers"
 
-// Helper function to get window.location.origin safely
 const getOrigin = () => {
   if (typeof window !== "undefined") {
     return window.location.origin
@@ -51,12 +47,6 @@ const getOrigin = () => {
   return ""
 }
 
-// #region Sub-Components
-// ############################################################################
-
-/**
- * Renders the header section of the installer.
- */
 function InstallHeader({ t }) {
   return (
     <Box textAlign="center">
@@ -80,9 +70,6 @@ function InstallHeader({ t }) {
   )
 }
 
-/**
- * Renders the form fields for Step 0: Node Configuration.
- */
 function StepNodeConfig({ form, t }) {
   const { register, formState, watch, setValue } = form
   const fileInputRef = useRef(null)
@@ -105,7 +92,6 @@ function StepNodeConfig({ form, t }) {
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      // 2MB
       toaster.create({
         title: t("installer.fileTooLarge"),
         description: t("installer.imageSizeError"),
@@ -305,21 +291,14 @@ function StepNodeConfig({ form, t }) {
   )
 }
 
-/**
- * Renders the form fields for Step 1: Advanced Settings.
- */
 function StepAdvancedSettings({
   form,
   t,
   languageCollection,
   themeCollection,
   defaultValues,
-  validateMailTransport,
-  mailTransportValidating,
-  mailTransportValid,
-  mailFromRequired,
 }) {
-  const { register, formState, setValue } = form
+  const { register, setValue } = form
 
   return (
     <Card.Root mt={8}>
@@ -407,82 +386,13 @@ function StepAdvancedSettings({
             </Field.HelperText>
             <Field.ErrorText />
           </Field.Root>
-
-          <Separator my={2} />
-
-          <VStack align="stretch" gap={4}>
-            <Text fontWeight="semibold" fontSize="md">
-              {t("installer.mailServerSettings")}
-            </Text>
-
-            <Field.Root invalid={!!formState.errors.settings?.mailTransport}>
-              <Field.Label>{t("installer.mailTransportOptional")}</Field.Label>
-              <InputGroup
-                endElement={
-                  mailTransportValidating ? (
-                    <Spinner size="sm" />
-                  ) : mailTransportValid === true ? (
-                    <Icon as={FaCheckCircle} color="green.500" />
-                  ) : mailTransportValid === false ? (
-                    <Icon as={LuCircleAlert} color="red.500" />
-                  ) : null
-                }
-              >
-                <Input
-                  {...register("settings.mailTransport", {
-                    validate: validateMailTransport,
-                  })}
-                  placeholder={t("installer.mailTransportPlaceholder")}
-                />
-              </InputGroup>
-              <Field.HelperText>
-                {t("installer.mailTransportHelper")}
-              </Field.HelperText>
-              <Field.ErrorText>
-                {formState.errors.settings?.mailTransport?.message}
-              </Field.ErrorText>
-            </Field.Root>
-
-            <Field.Root invalid={!!formState.errors.settings?.mailFrom}>
-              <Field.Label>
-                {t("installer.mailFromOptional")}
-                <Field.RequiredIndicator />
-              </Field.Label>
-              <Input
-                {...register("settings.mailFrom", {
-                  required: {
-                    value: mailFromRequired,
-                    message: t("installer.mailFromRequired"),
-                  },
-                  pattern: {
-                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                    message: t("installer.invalidEmailFormat"),
-                  },
-                })}
-                placeholder={t("installer.mailFromPlaceholder")}
-                type="email"
-              />
-              <Field.HelperText>
-                {t("installer.mailFromHelper")}
-              </Field.HelperText>
-              <Field.ErrorText>
-                {formState.errors.settings?.mailFrom?.message}
-              </Field.ErrorText>
-            </Field.Root>
-          </VStack>
         </Stack>
       </Card.Body>
     </Card.Root>
   )
 }
 
-const ReviewItem = ({
-  watchedValues,
-  label,
-  value,
-  isAvatar = false,
-  isEmpty = false,
-}) => {
+const ReviewItem = ({ watchedValues, label, value, isAvatar = false }) => {
   const { t } = useIntl()
 
   return (
@@ -503,20 +413,10 @@ const ReviewItem = ({
       ) : (
         <Text>{value || t("installer.notSet")}</Text>
       )}
-      {isEmpty && (
-        <Alert.Root mt={1} status="warning">
-          <Alert.Indicator />
-          <Alert.Content>
-            {t("installer.mailTransportEmptyWarning")}
-          </Alert.Content>
-        </Alert.Root>
-      )}
     </Box>
   )
 }
-/**
- * Renders the summary for Step 2: Review & Install.
- */
+
 function StepReview({ form, t }) {
   const watchedValues = form.watch()
 
@@ -571,26 +471,12 @@ function StepReview({ form, t }) {
             label={t("installer.walletConnectProjectId")}
             value={watchedValues.settings.walletConnectProjectId}
           />
-          <ReviewItem
-            watchedValues={watchedValues}
-            label={t("installer.mailTransport")}
-            value={watchedValues.settings.mailTransport}
-            isEmpty={!watchedValues.settings.mailTransport}
-          />
-          <ReviewItem
-            watchedValues={watchedValues}
-            label={t("installer.mailFrom")}
-            value={watchedValues.settings.mailFrom}
-          />
         </Stack>
       </Card.Body>
     </Card.Root>
   )
 }
 
-/**
- * Renders the installation progress spinner.
- */
 function InstallProgress({ t }) {
   return (
     <VStack gap={4}>
@@ -650,9 +536,7 @@ function InstallStepsResult({ installResult }) {
     </>
   )
 }
-/**
- * Renders the final result of the installation (success or error).
- */
+
 function InstallResult({ t, installResult }) {
   const { type, title, description } = installResult
 
@@ -699,7 +583,6 @@ function InstallResult({ t, installResult }) {
     )
   }
 
-  // Error case
   return (
     <VStack gap={4}>
       <Center>
@@ -718,9 +601,6 @@ function InstallResult({ t, installResult }) {
   )
 }
 
-/**
- * Renders the "Previous" and "Next" / "Sign & Install" buttons.
- */
 function InstallNavigation({
   steps,
   t,
@@ -729,7 +609,6 @@ function InstallNavigation({
   isSigning,
   isInstalling,
   installResult,
-  mailTransportValidating,
 }) {
   const { value: currentStep, hasPrevStep, hasNextStep, count } = steps
   const isLastReviewStep = currentStep === count - 1
@@ -754,7 +633,7 @@ function InstallNavigation({
         <Button
           colorPalette="orange"
           onClick={isLastReviewStep ? onInstallClick : onNextClick}
-          disabled={mailTransportValidating || isSigning || isInstalling}
+          disabled={isSigning || isInstalling}
           isLoading={isSigning}
           loadingText={t("installer.signing") || "Signing..."}
           rightIcon={<GrNext />}
@@ -769,19 +648,12 @@ function InstallNavigation({
   )
 }
 
-// #endregion
-// ############################################################################
-
-/**
- * Main Install Page Component
- */
 export default function InstallPage() {
   const t = useTranslations()
   const router = useRouter()
   const { address } = useAccount()
   const { signEIP712Data } = useWallet()
 
-  // Step definition
   const installSteps = [
     {
       title: t("installer.nodeConfiguration"),
@@ -797,13 +669,10 @@ export default function InstallPage() {
     },
   ]
 
-  // State
   const [isCheckingStatus, setIsCheckingStatus] = useState(true)
   const [isSigning, setIsSigning] = useState(false)
   const [isInstalling, setIsInstalling] = useState(false)
   const [installResult, setInstallResult] = useState(null)
-  const [mailTransportValidating, setMailTransportValidating] = useState(false)
-  const [mailTransportValid, setMailTransportValid] = useState(null)
   const [typedData, setTypedData] = useState(null)
   const [signature, setSignature] = useState(null)
 
@@ -812,7 +681,6 @@ export default function InstallPage() {
     count: installSteps.length,
   })
 
-  // Form setup
   const defaultValues = {
     node: {
       address: "",
@@ -822,8 +690,6 @@ export default function InstallPage() {
       avatar: "",
     },
     settings: {
-      mailTransport: "",
-      mailFrom: "",
       defaultLanguage: "en",
       defaultTheme: "light",
       walletConnectProjectId: "69d8a07245b4715f6a73ed8bce668e6a",
@@ -835,7 +701,6 @@ export default function InstallPage() {
     mode: "onChange",
   })
 
-  // Data collections for selects
   const languageCollection = createListCollection({
     items: [
       { label: t("installer.languageEnglish"), value: "en" },
@@ -850,7 +715,6 @@ export default function InstallPage() {
     ],
   })
 
-  // Effects
   useEffect(() => {
     document.title = "Installer - epress"
   }, [])
@@ -860,7 +724,6 @@ export default function InstallPage() {
   }, [form])
 
   useEffect(() => {
-    // Check if already installed
     const checkStatus = async () => {
       try {
         const response = await fetch("/api/install")
@@ -881,44 +744,12 @@ export default function InstallPage() {
     form.setValue("node.address", address, { shouldValidate: true })
   }, [address, form])
 
-  // Call performInstall when moving to the final step *after* signing
   useEffect(() => {
     if (steps.value === steps.count && signature && typedData) {
       performInstall()
     }
-  }, [steps.value, steps.count, signature, typedData]) // `performInstall` is memoized
+  }, [steps.value, steps.count, signature, typedData])
 
-  // Async Functions
-  const validateMailTransport = async (value) => {
-    if (!value || value.trim() === "") {
-      setMailTransportValid(null)
-      return true // Optional field
-    }
-    setMailTransportValidating(true)
-    setMailTransportValid(null)
-    try {
-      const response = await fetch("/api/smtp_check", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mailTransport: value }),
-      })
-      const data = await response.json()
-      if (data.valid) {
-        setMailTransportValid(true)
-        return true
-      } else {
-        setMailTransportValid(false)
-        return data.error || t("installer.mailTransportInvalid")
-      }
-    } catch (_error) {
-      setMailTransportValid(false)
-      return t("installer.mailTransportInvalid")
-    } finally {
-      setMailTransportValidating(false)
-    }
-  }
-
-  // Memoized performInstall function
   const performInstall = useCallback(async () => {
     if (!typedData || !signature) {
       console.error("Install called without signature or typedData.")
@@ -929,9 +760,6 @@ export default function InstallPage() {
     setInstallResult(null)
 
     try {
-      // 创建typedData对象
-
-      // 构建新的API请求格式
       const requestData = {
         typedData,
         signature,
@@ -947,12 +775,8 @@ export default function InstallPage() {
 
       const data = await response.json()
 
-      // --- 修复开始 ---
-
       if (!response.ok) {
-        // 服务器返回了 500 错误
         if (data.result) {
-          // 我们有步骤信息
           const failedStep = data.result.find((step) => !step.success)
           setInstallResult({
             title: t("installer.installationFailed"),
@@ -960,17 +784,14 @@ export default function InstallPage() {
               failedStep?.error ||
               `Installation failed at "${failedStep?.step}"`,
             type: "error",
-            steps: data.result, // <--- 直接使用 data.result
+            steps: data.result,
           })
         } else {
-          // 500 错误，但没有 result 数组（例如其他服务器错误）
           throw new Error(data.message || "Installation failed")
         }
-        return // 退出函数
+        return
       }
 
-      // 既然 response.ok 为 true，我们知道所有步骤都成功了
-      // (根据 install.mjs 的逻辑，不再需要检查 allStepsSuccessful)
       setInstallResult({
         title: t("installer.installationSuccessful"),
         description: t("installer.installationSuccessfulDescription"),
@@ -978,24 +799,18 @@ export default function InstallPage() {
         steps: data.result,
         node: data.node,
       })
-
-      // 不再需要 'else' 块 (死代码)
-
-      // --- 修复结束 ---
     } catch (error) {
-      // 这个 catch 块现在只处理网络错误 (fetch 失败) 或 JSON 解析错误
       setInstallResult({
         title: t("installer.installationFailed"),
         description: error.message,
         type: "error",
-        steps: null, // 我们在这里没有步骤信息
+        steps: null,
       })
     } finally {
       setIsInstalling(false)
     }
-  }, [typedData, signature, t, installResult?.steps])
+  }, [typedData, signature, t])
 
-  // Navigation Handlers
   const getFieldsForStep = (step) => {
     switch (step) {
       case 0:
@@ -1011,8 +826,6 @@ export default function InstallPage() {
           "settings.defaultLanguage",
           "settings.defaultTheme",
           "settings.walletConnectProjectId",
-          "settings.mailTransport",
-          "settings.mailFrom",
         ]
       default:
         return []
@@ -1033,7 +846,6 @@ export default function InstallPage() {
   }
 
   const handleInstallClick = async () => {
-    // Validate all fields first
     const isValid = await form.trigger()
     if (!isValid) {
       toaster.create({
@@ -1049,7 +861,6 @@ export default function InstallPage() {
       const td = installTypedData(node, settings, Math.floor(Date.now() / 1000))
       const sig = await signEIP712Data(td)
 
-      // Set state and move to the final step
       setTypedData(td)
       setSignature(sig)
       steps.goToNextStep()
@@ -1062,9 +873,6 @@ export default function InstallPage() {
       setIsSigning(false)
     }
   }
-
-  const mailFromRequired =
-    mailTransportValid || !!form.watch("settings.mailTransport")
 
   return (
     <Box>
@@ -1094,10 +902,6 @@ export default function InstallPage() {
                 languageCollection={languageCollection}
                 themeCollection={themeCollection}
                 defaultValues={defaultValues}
-                validateMailTransport={validateMailTransport}
-                mailTransportValidating={mailTransportValidating}
-                mailTransportValid={mailTransportValid}
-                mailFromRequired={mailFromRequired}
               />
             </Steps.Content>
 
@@ -1124,7 +928,6 @@ export default function InstallPage() {
               isSigning={isSigning}
               isInstalling={isInstalling}
               installResult={installResult}
-              mailTransportValidating={mailTransportValidating}
             />
           </Steps.RootProvider>
         </VStack>

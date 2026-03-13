@@ -130,11 +130,6 @@ export const UPDATE_SETTINGS = gql`
       defaultLanguage
       defaultTheme
       walletConnectProjectId
-      mail {
-        enabled
-        mailTransport
-        mailFrom
-      }
       enableRSS
       allowFollow
       allowComment

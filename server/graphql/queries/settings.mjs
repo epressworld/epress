@@ -1,18 +1,6 @@
-// server/graphql/queries/settings.mjs
 import { graphql } from "solidify.js"
 import { Setting } from "../../models/setting.mjs"
 
-// 定义 Mail 配置对象类型
-const MailType = graphql.type("ObjectType", {
-  name: "Mail",
-  fields: {
-    enabled: { type: graphql.type("NonNull", graphql.type("Boolean")) },
-    mailTransport: { type: graphql.type("String") },
-    mailFrom: { type: graphql.type("String") },
-  },
-})
-
-// 定义 GraphQL Settings 对象类型
 const SettingsType = graphql.type("ObjectType", {
   name: "Settings",
   fields: {
@@ -23,15 +11,13 @@ const SettingsType = graphql.type("ObjectType", {
     defaultTheme: { type: graphql.type("NonNull", graphql.type("String")) },
     walletConnectProjectId: { type: graphql.type("String") },
     pwaAppName: { type: graphql.type("String") },
-    mail: { type: graphql.type("NonNull", MailType) },
     vapidPublicKey: { type: graphql.type("String") },
   },
 })
 
-// 定义 'settings' 查询的解析器
 const settingsQuery = {
   settings: {
-    type: SettingsType, // 使用新定义的 SettingsType
+    type: SettingsType,
     resolve: async (_parent, _args, context) => {
       const { request } = context
 
@@ -39,7 +25,6 @@ const settingsQuery = {
 
       const allSettings = await Setting.getAll()
 
-      // 设置默认值
       const defaults = {
         enableRSS: false,
         allowFollow: true,
@@ -47,17 +32,9 @@ const settingsQuery = {
         defaultLanguage: "en",
         defaultTheme: "light",
         walletConnectProjectId: null,
-        mailTransport: "",
-        mailFrom: "",
         vapidPublicKey: null,
       }
 
-      // 检查邮件是否已配置
-      const mailTransport = allSettings.mail_transport || defaults.mailTransport
-      const mailFrom = allSettings.mail_from || defaults.mailFrom
-      const mailEnabled = !!(mailTransport && mailFrom)
-
-      // 映射数据库字段到 GraphQL 字段
       const result = {
         enableRSS: allSettings.enable_rss === "true" || defaults.enableRSS,
         allowFollow:
@@ -71,13 +48,6 @@ const settingsQuery = {
           allSettings.walletconnect_projectid ||
           defaults.walletConnectProjectId,
         pwaAppName: allSettings.pwa_app_name || null,
-        // 新的 mail 对象结构
-        mail: {
-          enabled: mailEnabled,
-          mailTransport: context.user ? mailTransport : null,
-          mailFrom: context.user ? mailFrom : null,
-        },
-        // VAPID 公钥 - 所有人都可以访问
         vapidPublicKey: allSettings.notification_vapid_keys?.publicKey,
       }
 

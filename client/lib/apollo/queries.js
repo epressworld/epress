@@ -304,11 +304,6 @@ export const PAGE_DATA = gql`
       walletConnectProjectId
       vapidPublicKey
       pwaAppName
-      mail {
-        enabled
-        mailTransport
-        mailFrom
-      }
     }
     profile {
       address

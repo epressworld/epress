@@ -233,8 +233,6 @@ async function runDatabaseInstall(knex, data, log) {
     process.env.INITIAL_DATA_DEFAULT_THEME = data.defaultTheme
     process.env.INITIAL_DATA_WALLETCONNECT_PROJECT_ID =
       data.walletConnectProjectId
-    process.env.INITIAL_DATA_MAIL_TRANSPORT = data.mailTransport
-    process.env.INITIAL_DATA_MAIL_FROM = data.mailFrom
 
     await knex.seed.run()
 
