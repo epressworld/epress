@@ -234,4 +234,4 @@ const updateProfileMutation = {
   },
 }
 
-export { updateProfileMutation, UpdateProfileInput }
+export { UpdateProfileInput, updateProfileMutation }

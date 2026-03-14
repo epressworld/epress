@@ -86,11 +86,11 @@ const cleanupInterval = setInterval(cleanupExpiredVisitors, 60 * 1000)
 // 导出清理函数和常量供测试使用
 export {
   cleanupExpiredVisitors,
-  visitors,
-  VISITOR_TIMEOUT,
   cleanupInterval,
-  MAX_VISITORS,
   evictOldestVisitor,
+  MAX_VISITORS,
+  VISITOR_TIMEOUT,
+  visitors,
 }
 
 /**

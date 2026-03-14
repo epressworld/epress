@@ -273,4 +273,5 @@ const commentMutations = {
 }
 
 const types = [CreateCommentInput]
+
 export { commentMutations, types }

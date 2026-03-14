@@ -290,4 +290,4 @@ const notificationMutation = {
   },
 }
 
-export { updateSettingsMutation, notificationMutation }
+export { notificationMutation, updateSettingsMutation }

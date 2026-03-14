@@ -7,7 +7,6 @@ if (!Model.knex()) {
   Model.connect(knexfile)
 }
 
-export { Model }
 export * from "./comment.mjs"
 export * from "./connection.mjs"
 export * from "./content.mjs"
@@ -16,3 +15,4 @@ export * from "./node.mjs"
 export * from "./publication.mjs"
 export * from "./setting.mjs"
 export * from "./token.mjs"
+export { Model }
