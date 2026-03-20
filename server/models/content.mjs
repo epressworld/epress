@@ -132,33 +132,26 @@ export class Content extends Model {
       let totalSize = 0
 
       const fileBuffer = await new Promise((resolve, reject) => {
+        const timeoutMs = process.env.NODE_ENV === "test" ? 5000 : 30000
+        const timeoutId = setTimeout(() => {
+          sourceStream.destroy()
+          reject(new Error("File read timeout"))
+        }, timeoutMs)
+
         sourceStream.on("data", (chunk) => {
           chunks.push(chunk)
           totalSize += chunk.length
         })
 
         sourceStream.on("end", () => {
+          clearTimeout(timeoutId)
           const buffer = Buffer.concat(chunks)
           resolve(buffer)
         })
 
         sourceStream.on("error", (err) => {
+          clearTimeout(timeoutId)
           reject(err)
-        })
-
-        // 添加超时处理
-        const timeoutMs = process.env.NODE_ENV === "test" ? 5000 : 30000
-        const timeoutId = setTimeout(() => {
-          reject(new Error("File read timeout"))
-        }, timeoutMs)
-
-        // 在流结束时清理定时器
-        sourceStream.on("end", () => {
-          clearTimeout(timeoutId)
-        })
-
-        sourceStream.on("error", () => {
-          clearTimeout(timeoutId)
         })
       })
 

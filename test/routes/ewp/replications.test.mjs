@@ -566,3 +566,136 @@ test("Success: should trigger profile sync if X-Epress-Profile-Updated is higher
   // Verify nock was called for both content fetch and profile fetch
   t.true(nock.isDone(), "All nock mocks should have been called")
 })
+
+// --- Security and validation tests ---
+
+test("Failure: should reject replication with missing typedData.domain", async (t) => {
+  const { app, testAccount, followeeNode } = t.context
+
+  const mockContent = "# Test Content"
+  const contentHash = `0x${await hash.sha256(mockContent)}`
+  const timestamp = Math.floor(Date.now() / 1000)
+
+  const typedData = createStatementOfSourceTypedData(
+    contentHash,
+    followeeNode.address,
+    timestamp,
+  )
+
+  // Remove domain to create invalid structure
+  const invalidTypedData = { ...typedData }
+  delete invalidTypedData.domain
+
+  const signature = await generateSignature(testAccount, typedData, "typedData")
+
+  const response = await app.inject({
+    method: "POST",
+    url: "/ewp/replications",
+    payload: {
+      typedData: invalidTypedData,
+      signature,
+    },
+  })
+
+  t.is(response.statusCode, 400, "Should return 400 Bad Request")
+  t.deepEqual(JSON.parse(response.payload), { error: "INVALID_PAYLOAD" })
+})
+
+test("Failure: should reject replication with missing typedData.message", async (t) => {
+  const { app, testAccount, followeeNode } = t.context
+
+  const mockContent = "# Test Content"
+  const contentHash = `0x${await hash.sha256(mockContent)}`
+
+  const typedData = createStatementOfSourceTypedData(
+    contentHash,
+    followeeNode.address,
+  )
+
+  // Remove message to create invalid structure
+  const invalidTypedData = { ...typedData }
+  delete invalidTypedData.message
+
+  const signature = await generateSignature(testAccount, typedData, "typedData")
+
+  const response = await app.inject({
+    method: "POST",
+    url: "/ewp/replications",
+    payload: {
+      typedData: invalidTypedData,
+      signature,
+    },
+  })
+
+  t.is(response.statusCode, 400, "Should return 400 Bad Request")
+  t.deepEqual(JSON.parse(response.payload), { error: "INVALID_PAYLOAD" })
+})
+
+test("Failure: should reject replication when publisherNode does not exist in database", async (t) => {
+  const { app } = t.context
+
+  // Create a new node that we follow, then delete it to simulate non-existence
+  const randomAccount = generateTestAccount()
+
+  const mockContent = "# Test Content"
+  const contentHash = `0x${await hash.sha256(mockContent)}`
+
+  const typedData = createStatementOfSourceTypedData(
+    contentHash,
+    randomAccount.address,
+  )
+
+  const signature = await generateSignature(
+    randomAccount,
+    typedData,
+    "typedData",
+  )
+
+  // The node doesn't exist in our database
+  const response = await app.inject({
+    method: "POST",
+    url: "/ewp/replications",
+    payload: {
+      typedData,
+      signature,
+    },
+  })
+
+  t.is(response.statusCode, 401, "Should return 401 Unauthorized")
+  t.deepEqual(JSON.parse(response.payload), { error: "NOT_FOLLOWING" })
+})
+
+test("Failure: should reject replication when signature content is tampered", async (t) => {
+  const { app, testAccount, followeeNode } = t.context
+
+  const originalContent = "# Original Content"
+  const contentHash = `0x${await hash.sha256(originalContent)}`
+
+  const typedData = createStatementOfSourceTypedData(
+    contentHash,
+    followeeNode.address,
+  )
+
+  const signature = await generateSignature(testAccount, typedData, "typedData")
+
+  // Tamper with the typedData after signing - change the contentHash
+  const tamperedTypedData = {
+    ...typedData,
+    message: {
+      ...typedData.message,
+      contentHash: `0x${"a".repeat(64)}`, // Different content hash
+    },
+  }
+
+  const response = await app.inject({
+    method: "POST",
+    url: "/ewp/replications",
+    payload: {
+      typedData: tamperedTypedData,
+      signature,
+    },
+  })
+
+  t.is(response.statusCode, 400, "Should return 400 Bad Request")
+  t.deepEqual(JSON.parse(response.payload), { error: "INVALID_SIGNATURE" })
+})

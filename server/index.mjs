@@ -63,6 +63,10 @@ export default async function () {
 
   // Decorate the server instance with the start time
   server.decorate("serverStartedAt", serverStartedAt)
+
+  // Decorate request with config cache placeholder (must be before onRequest hook)
+  server.decorateRequest("config", null)
+
   server.addHook("onRequest", async (request) => {
     // Initialize config cache for this request
     request.config = {
@@ -109,9 +113,6 @@ export default async function () {
       return await Setting.get("jwt_secret")
     },
   })
-
-  // Decorate request with config cache to avoid repeated database queries
-  server.decorateRequest("config", null)
 
   // Decorate request with permission checking method
   server.decorateRequest("cani", function (permission) {

@@ -81,15 +81,22 @@ export class Publication extends Model {
     }
   }
 
-  // 更新评论计数
-  static async updateCommentCount(publicationId) {
-    const count = await Comment.query()
+  /**
+   * 更新评论计数
+   * @param {number} publicationId - Publication ID
+   * @param {Object} trx - 事务对象（可选）
+   * @returns {Promise<number>} 更新后的评论数量
+   */
+  static async updateCommentCount(publicationId, trx = null) {
+    const query = trx ? Comment.query(trx) : Comment.query()
+
+    const count = await query
       .where("publication_id", publicationId)
       .resultSize()
 
-    await Publication.query()
-      .findById(publicationId)
-      .patch({ comment_count: count })
+    const updateQuery = trx ? Publication.query(trx) : Publication.query()
+
+    await updateQuery.findById(publicationId).patch({ comment_count: count })
 
     return count
   }
