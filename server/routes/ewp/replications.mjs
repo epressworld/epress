@@ -11,7 +11,22 @@ router.post("/replications", async (request, reply) => {
   if (!typedData || !signature) {
     return reply.code(400).send({ error: "INVALID_PAYLOAD" })
   }
+
+  // 1.1 Validate typedData structure
+  if (
+    !typedData.domain ||
+    !typedData.types ||
+    !typedData.primaryType ||
+    !typedData.message
+  ) {
+    return reply.code(400).send({ error: "INVALID_PAYLOAD" })
+  }
+
+  // 1.2 Validate required message fields
   const { contentHash, publisherAddress, timestamp } = typedData.message
+  if (!contentHash || !publisherAddress || timestamp === undefined) {
+    return reply.code(400).send({ error: "INVALID_PAYLOAD" })
+  }
 
   // 2. Authorization: Check if the publisher is followed by the self node
   const selfNode = await Node.query().findOne({ is_self: true })
