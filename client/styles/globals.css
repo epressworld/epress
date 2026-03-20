@@ -368,6 +368,16 @@
   border-radius: 4px;
 }
 
+/* RainbowKit modal z-index fix - ensure it's above Chakra UI Drawer */
+[data-rk] {
+  z-index: 10000 !important;
+}
+
+[data-rk] > * {
+  z-index: 10000 !important;
+  pointer-events: auto;
+}
+
 /* 滚动条样式 */
 ::-webkit-scrollbar {
   width: 8px;
