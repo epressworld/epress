@@ -1,5 +1,5 @@
 import mercurius from "mercurius"
-import { graphql } from "solidify.js"
+import { graphql, Model } from "solidify.js"
 import { getAddress, isAddress, recoverTypedDataAddress } from "viem"
 import { Comment, Publication, Setting } from "../../models/index.mjs"
 import { hash } from "../../utils/crypto.mjs"
@@ -159,9 +159,11 @@ const commentMutations = {
         signature: signature,
       }
 
-      const newComment = await Comment.query().insert(newCommentData)
-
-      await Publication.updateCommentCount(publication_id)
+      const newComment = await Model.knex().transaction(async (trx) => {
+        const comment = await Comment.query(trx).insert(newCommentData)
+        await Publication.updateCommentCount(publication_id, trx)
+        return comment
+      })
 
       request.log.info(
         { comment_id: newComment.id, publication_id },
@@ -198,8 +200,11 @@ const commentMutations = {
       }
 
       if (context.user && context.request.cani("delete:comments")) {
-        await comment.$query().delete()
-        await Publication.updateCommentCount(comment.publication_id)
+        const publicationId = comment.publication_id
+        await Model.knex().transaction(async (trx) => {
+          await comment.$query(trx).delete()
+          await Publication.updateCommentCount(publicationId, trx)
+        })
         return comment
       }
 
@@ -256,9 +261,11 @@ const commentMutations = {
         )
       }
 
-      await comment.$query().delete()
-
-      await Publication.updateCommentCount(comment.publication_id)
+      const publicationId = comment.publication_id
+      await Model.knex().transaction(async (trx) => {
+        await comment.$query(trx).delete()
+        await Publication.updateCommentCount(publicationId, trx)
+      })
 
       request.log.info(
         {
