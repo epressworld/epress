@@ -1,6 +1,6 @@
 # epress: A Decentralized Content and Social Network
 
-**Version 1.0**  
+**Version 1.1**  
 **by Garbin Huang ([garbin.blog](https://garbin.blog))**  
 **September 24, 2025**
 
@@ -597,7 +597,7 @@ The boundary of privacy lies at the moment a user decides what content, at what 
 
 This design philosophy also means that the EWP protocol itself **will not** provide an additional privacy layer (such as encryption or access control) for content that has already entered the public domain. The protocol's focus is on guaranteeing the authenticity of this public record.
 
-### 11.2 Content Responsibility
+### 11.2 Content Responsibility and the Nature of Signed Expression
 
 In the epress network, once a user publishes content via signature, the content unit with its accompanying Proof of Source (PoS) will be synchronized and copied by follower nodes, with each node storing a local replica with the PoS. This means that content, once signed and published, is theoretically impossible to completely destroy. Does this imply that users must bear permanent responsibility for the content they sign?
 
@@ -605,7 +605,30 @@ To answer this question, we must return to the fundamental definition of PoS. Th
 
 This stands in stark contrast to contractual liability in the real world. A contract typically involves multiple parties, stipulates rights and obligations, and uses signatures to confirm the consensus of all parties. In the process of signing a PoS, there is no second or third party, so there is no need to define subjects of obligation or power relations. PoS is essentially a unilateral identity credential for information circulation within the network. By design, it does not entail responsibility for the content itself, unless the content explicitly states such obligations.
 
-A typical scenario is as follows: a user publishes a statement to the public space via a PoS, but over time, their views may change or even completely repudiate their previous position. In this case, the user simply needs to issue a new PoS to publish updated content, a revised statement, or an explicit retraction. This mechanism reflects the epress philosophy of privacy and sovereignty: users have absolute autonomy before publication, while public content can be dynamically revised through subsequent iterations, rather than being subject to mandatory permanent responsibility.
+#### 11.2.1 The Temporal Nature of All Expression
+
+Every human expression is inherently bounded by time. A scientist's conclusion published in 2010 may be overturned by evidence in 2020. A person's political view at age 25 may be sincerely revised by age 40. This is not weakness or inconsistency — it is the normal, healthy operation of a thinking mind engaging with a changing world.
+
+PoS faithfully records this reality. When a user signs a piece of content, the signature asserts: "I, at this specific moment in time, authored and stand behind this statement." It does not assert: "I will hold this view forever." The timestamp in the PoS is not merely a technical field — it is a semantic boundary. The signed statement is true within its time context, and the network preserves that time-bound truth precisely.
+
+This means the epress network is not a trap that permanently locks users to past positions. It is an honest archive of how a person's thinking has evolved. The chain of a user's PoS records over time is not a liability — it is potentially their most valuable intellectual asset: a verifiable, high-fidelity record of a sovereign mind in dialogue with the world.
+
+#### 11.2.2 Updating, Correcting, and Retracting
+
+The primary mechanism for handling changed views is not deletion, but iteration — and this is by design, not by limitation.
+
+When a user's views change or even completely reverse a previously published position, the user simply needs to issue a new PoS to publish updated content, a revised statement, or an explicit retraction. **The evolution of thought is itself a first-class citizen of the network.** A subsequent PoS that says "I no longer hold the view expressed in [contentHash]" is not an admission of failure — it is a contribution to the intellectual record that demonstrates intellectual honesty and growth.
+
+This iterative model has a deeper epistemic value. On centralized platforms, deleted posts leave no trace, making it impossible to distinguish between "I changed my mind" and "I am hiding what I once said." On epress, the full chain of a person's evolving views is transparent and verifiable. This is more honest, not less forgiving.
+
+#### 11.2.3 The Role of Local Publication
+
+The perceived tension between "permanence" and "human nature" is largely resolved at the architecture level, not the protocol level, through the deliberate two-state publication model defined in Section 6.1.
+
+- **Local Publication** is the appropriate space for drafts, exploratory thinking, emotional expression, and any content the user is not yet ready to commit to as a public statement. It exists only on the user's own node, is freely editable or deletable at any time, and carries no network-wide commitment.
+- **Signed Publication** is the content a user has consciously chosen to release into the network as a verifiable, citable public record.
+
+The act of signing is, by design, a deliberate threshold. It should be understood as the equivalent of submitting a manuscript to a public archive: an intentional act of saying "I am ready for this to be part of the public record." That friction is not a bug — it is a feature that encourages more intentional public expression.
 
 ### 11.3 On Censorship
 
