@@ -2,7 +2,7 @@
 
 **Version 1.1**  
 **by Garbin Huang ([garbin.blog](https://garbin.blog))**  
-**September 24, 2025**
+**March 31, 2026**
 
 ## Abstract
 
@@ -725,3 +725,12 @@ In this paper, we have proposed an architecture for a decentralized content and 
 This architecture is founded on the user's independent cryptographic identity, defining each self-hosted node as an indivisible sovereign territory. Nodes communicate through an open peer-to-peer protocol, and all publicly published content circulates on the network in the form of verifiable, timestamped "Proofs of Source."
 
 The end result is the realization of a system where control over digital identity, social graphs, and content records is intrinsic to the individual, requiring no trust in any centralized third party.
+
+---
+
+## Version History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.1 | March 31, 2026 | Expanded Section 11.2 with subsections on temporal nature of expression, iterative updates, and the role of local publication |
+| 1.0 | September 24, 2025 | Initial release |
