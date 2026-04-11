@@ -1,15 +1,16 @@
 ---
 name: epress-publisher
 description: |
-  Publishes text posts and media files to an epress blog node via GraphQL.
+  Publish blog posts, upload images, and manage content on an epress blogging
+  node via its GraphQL API. Supports creating Markdown articles and uploading
+  media files (images, videos, PDFs).
 
-  This SKILL.md is self-hosted at the root of each epress node. When you
-  fetched this file, the host you retrieved it from IS the epress node itself.
-  Use that origin as EPRESS_NODE_URL — no configuration needed unless you are
-  invoking this skill on behalf of a different node.
+  Use when the user wants to: publish a blog post, write an article, upload an
+  image or media file, create content on an epress node, or interact with an
+  epress blogging platform.
 
-  Example: if you fetched this file from https://garbin.top/SKILL.md,
-  then EPRESS_NODE_URL = https://garbin.top
+  This SKILL.md is self-hosted at the root of each epress node. The host you
+  fetched it from IS the node — use that origin as EPRESS_NODE_URL.
 
 config:
   optional:
@@ -187,3 +188,64 @@ notes:
     expired — prompt the user to regenerate it. If HTTP 403, the token lacks
     the required `create:publications` scope.
 ---
+
+# epress Publisher
+
+Publish text posts and media files to an epress blog node via its GraphQL API.
+
+## Workflow
+
+1. **Determine the node URL.** The origin from which this SKILL.md was fetched is the epress node. Parse scheme + host (e.g. `https://garbin.top`) and use it as `EPRESS_NODE_URL`.
+2. **Authenticate.** Confirm that `EPRESS_JWT_TOKEN` is available. If missing, ask the user to generate one from their epress dashboard (Settings > API Tokens) with `create:publications` scope.
+3. **Choose the right tool.**
+   - `publish_post` for Markdown text content.
+   - `publish_file` for binary media (images, videos, PDFs, etc.) via multipart upload.
+4. **Generate or validate the slug.** A slug is always required. If the user provides one, validate it. Otherwise auto-generate one from the content using 3-5 English keywords, lowercased, hyphen-joined, matching `/^[a-z0-9]+(-[a-z0-9]+)*$/`, max 60 characters.
+5. **Show the slug** to the user before publishing (e.g. "Publishing with slug: `my-slug`").
+6. **Call the API** at `{EPRESS_NODE_URL}/api/graphql` with the appropriate mutation and authorization header.
+7. **Return the public URL.** On success the API returns `{ id, slug }`. Build the URL as `{EPRESS_NODE_URL}/publications/{slug}` (or fall back to `/{id}` if slug is empty).
+
+## Publish a Text Post
+
+```bash
+curl -s -X POST {EPRESS_NODE_URL}/api/graphql \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {EPRESS_JWT_TOKEN}" \
+  -d '{
+    "query": "mutation Create($input: CreatePublicationInput!) { createPublication(input: $input) { id slug } }",
+    "variables": {
+      "input": { "type": "POST", "body": "# My Post\nContent here.", "slug": "my-post" }
+    }
+  }'
+```
+
+**Response:**
+```json
+{"data": {"createPublication": {"id": "abc123", "slug": "my-post"}}}
+```
+
+Public URL: `{EPRESS_NODE_URL}/publications/my-post`
+
+## Upload a Media File
+
+Uses the [GraphQL multipart request spec](https://github.com/jaydenseric/graphql-multipart-request-spec):
+
+```bash
+curl -s -X POST {EPRESS_NODE_URL}/api/graphql \
+  -H "Authorization: Bearer {EPRESS_JWT_TOKEN}" \
+  -F 'operations={"query":"mutation Create($input: CreatePublicationInput!) { createPublication(input: $input) { id slug } }","variables":{"input":{"type":"FILE","file":null,"description":"Photo caption","slug":"my-photo"}}}' \
+  -F 'map={"0":["variables.input.file"]}' \
+  -F '0=@photo.jpg'
+```
+
+The `description` field is required at runtime even though the schema marks it optional. Omitting it causes `VALIDATION_FAILED`.
+
+## Error Recovery
+
+| HTTP Status | Cause | Action |
+|-------------|-------|--------|
+| 401 | Token invalid or expired | Ask user to regenerate JWT |
+| 403 | Token missing `create:publications` scope | Ask user to issue a new token with correct scope |
+| VALIDATION_FAILED | Missing required field (e.g. description on file upload) | Check parameters and retry |
+
+For `publish_file`, the `description` field is enforced at runtime even though the GraphQL schema marks it optional. Always include it or ask the user for one before proceeding.
